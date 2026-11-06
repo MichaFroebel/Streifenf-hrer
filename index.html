@@ -196,7 +196,31 @@ nav a.on svg{color:#d9a400}
 .dmgtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.dmgtabs .chip.on{background:var(--navy);color:#fff}
 .dmgtools{display:flex;gap:6px;margin-bottom:8px}.dmgtools .btn{flex:1;padding:9px 6px}
 .dmgwrap{display:flex;justify-content:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px}
-#dmgCanvas{touch-action:none;display:block;cursor:crosshair}
+#dmgCanvas{display:block;cursor:crosshair}
+/* Kennzeichen */
+.plate{display:flex;align-items:stretch;height:84px;width:100%;max-width:520px;background:#fff;border:3.5px solid #111;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.2);box-sizing:border-box}
+.plate .eu{width:44px;flex:none;background:#003399;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#fff}
+.plate .eu svg{width:28px;height:28px}.plate .eu b{font:700 19px/1 Arial,sans-serif}
+.plate .pfield{flex:1;display:flex;align-items:center;justify-content:space-between;gap:5px;padding:0 6px;min-width:0}
+.plate .pz{box-sizing:border-box;height:58px;border:2px solid #111;border-radius:6px;outline:0;background:#fff;color:#111;font:700 clamp(22px,7.6vw,40px)/1 "DIN Condensed","DIN Alternate","Arial Narrow","Roboto Condensed","sans-serif-condensed",Arial,sans-serif;font-stretch:condensed;letter-spacing:0;text-transform:uppercase;padding:0 1px;min-width:0;text-align:center}
+.plate .pz::placeholder{color:#cdd2da}
+.plate .pz:focus{background:#fff6cc;box-shadow:0 0 0 2px #f2c230}
+.plate .pzA{flex:3.2 1 0}.plate .pzB{flex:2.9 1 0}.plate .pzC{flex:4 1 0}
+.plate .seals{flex:none;display:flex;flex-direction:column;gap:4px}.plate .seals i{width:13px;height:13px;border-radius:50%;border:1.5px solid #b9bfc8;display:block}
+.plate .pzS{flex:none;font:700 clamp(22px,7.6vw,40px)/1 "DIN Condensed","Arial Narrow","sans-serif-condensed",Arial,sans-serif;font-stretch:condensed;color:#111}
+.plate .pzS:empty{display:none}
+.plate.ausl .pfield{padding:0 10px}
+.plate .pzF{box-sizing:border-box;width:100%;height:58px;border:2px solid #111;border-radius:6px;outline:0;background:#fff;color:#111;font:700 36px/1 "DIN Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;text-align:center}
+.plate .pzF:focus{background:#fff6cc;box-shadow:0 0 0 2px #f2c230}
+.plate .pzF::placeholder{color:#cdd2da;text-transform:none}
+.combo{position:relative}.combo .inp{padding-right:44px}
+.combobtn{position:absolute;right:4px;top:4px;bottom:4px;width:38px;border:0;border-radius:8px;background:var(--chip);color:var(--ink);font-size:18px;cursor:pointer}
+.combolist{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;max-height:260px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);-webkit-overflow-scrolling:touch}
+.combolist button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);padding:12px 14px;font:inherit;font-size:16px;cursor:pointer}
+.combolist button:active{background:var(--chip)}
+.combohint{padding:10px 14px;font-size:13px;color:var(--muted)}
+.kzmode{display:flex;gap:6px;margin-bottom:8px}.kzmode .chip.on{background:var(--navy);color:#fff}
+.kzopt{display:flex;gap:16px;margin:4px 0 2px}
 .astime{display:flex;gap:8px}.astime .inp{flex:1}.astime .btn{flex:none}
 .abside{background:var(--chip);border-radius:12px;padding:10px 12px;margin-bottom:8px}.abside b{display:block;margin-bottom:6px;font-size:14px}
 .abrow2{display:flex;gap:8px;flex-wrap:wrap}.abrow2 .btn{flex:1}
@@ -1456,6 +1480,7 @@ function abFlush(){ clearTimeout(abT); if(!abWork) return; const l = abList(), i
 function abSet(k, v){
   const r = abRec(); if(!r) return;
   r.f[k] = v; r.upd = Date.now();
+  if(/^kz/.test(k) || ['marke', 'modell'].includes(k)) asCompose(r.f);
   clearTimeout(abT); abT = setTimeout(abFlush, 250);
   if(k === 'art'){ const b = document.getElementById('artFreiBox'); if(b) b.hidden = v !== 'Eigener Zusatz'; }
 }
@@ -1472,7 +1497,7 @@ app.addEventListener('change', abHandler);
 app.addEventListener('click', async e => {
   const b = e.target.closest('[data-ab]'); if(!b) return;
   const a = b.dataset.ab;
-  if(a === 'geo') return abGeo(b.dataset.target || 'ort');
+  if(a === 'geo') return abGeo(b.dataset.target || 'ort', b.dataset.info);
   if(a === 'now'){ const d = new Date(), v = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); abSetMany({[b.dataset.target]: v}); asDauer(); return; }
   if(a === 'ocr'){ abOcrSide = b.dataset.side; const c = document.getElementById(b.dataset.src === 'gal' ? 'abgal' : 'abcam'); c.value = ''; c.click(); return; }
   if(a === 'export') return abExport();
@@ -1482,8 +1507,8 @@ app.addEventListener('change', e => { if((e.target.id === 'abcam' || e.target.id
 let abOcrSide = 'front';
 
 /* ---------- Standort ---------- */
-function abGeo(target){
-  const info = document.getElementById('geoInfo');
+function abGeo(target, infoId){
+  const info = document.getElementById(infoId || 'geoInfo');
   if(!navigator.geolocation){ info.textContent = 'Standort wird von diesem Gerät nicht unterstützt.'; return; }
   info.textContent = 'Standort wird ermittelt …';
   navigator.geolocation.getCurrentPosition(async pos => {
@@ -1750,11 +1775,16 @@ function viewAbschlepp(r){
     ${abIn('Tagebuch-Nr. / GZ (32-21.1/…) – darf leer bleiben', 'tgb', f.tgb, 'wird sonst auf der Wache eingetragen')}
    </div></div>
    <div class="detail"><div class="body"><h4>Fahrzeug und Verstoß</h4>
-    <div class="abrow"><div>${abIn('Kennzeichen', 'kennz', f.kennz, 'S-AB 1234')}</div><div>${abIn('Fabrikat/Typ', 'fabrikat', f.fabrikat, 'VW Golf')}</div></div>
+    <label class="lbl">Kennzeichen</label>
+    <div class="kzmode"><button class="chip${f.kzAusl ? '' : ' on'}" data-kzmode="de">🇩🇪 Deutsch</button><button class="chip${f.kzAusl ? ' on' : ''}" data-kzmode="aus">🌍 Ausland</button></div>
+    <div id="kzBox">${plateHTML(f)}</div>
+    <div class="abrow"><div><label class="lbl">Marke</label><div class="combo"><input class="inp" data-f="marke" id="markeIn" value="${esc(f.marke || '')}" placeholder="Marke" autocomplete="off"><button type="button" class="combobtn" data-combo="toggle" aria-label="Liste öffnen">▾</button><div class="combolist" id="markeList" hidden></div></div></div><div>${abIn('Modell, Farbe', 'modell', f.modell, 'z. B. Golf, blau')}</div></div>
     <div class="abgrp" style="margin-top:10px"><b>Verstoß</b>${asCk(0, 'VZ 283 (absolutes Haltverbot)', f)}<input class="inp abtx" data-f="zz" value="${esc(f.zz || '')}" placeholder="Zusatzzeichen (ZZ), z. B. 1020-30">${asCk(1, 'Andere:', f)}<input class="inp abtx" data-f="andere" value="${esc(f.andere || '')}" placeholder="z. B. Feuerwehrzufahrt, Gehweg …"></div>
    </div></div>
    <div class="detail"><div class="body"><h4>Ort und Zeiten</h4>
-    <label class="lbl">Entgegennahme Auftrag – Ort, Stadtteil</label><input class="inp" data-f="ortAuftrag" value="${esc(f.ortAuftrag || '')}" placeholder="z. B. Wache Mitte">
+    <label class="lbl">Entgegennahme Auftrag – Ort, Stadtteil</label>
+    <button class="btn primary big" data-ab="geo" data-target="ortAuftrag" data-info="geoInfoA">📍 Aktuellen Standort übernehmen</button><div id="geoInfoA" class="small"></div>
+    <textarea class="inp" data-f="ortAuftrag" rows="2" placeholder="z. B. Wache Mitte">${esc(f.ortAuftrag || '')}</textarea>
     ${asTime('Entgegennahme Auftrag – Uhrzeit', 'zeitAuftrag', f.zeitAuftrag)}
     <label class="lbl">Ankunft Einsatzort – Ort, Stadtteil</label>
     <button class="btn primary big" data-ab="geo" data-target="ortAnkunft">📍 Aktuellen Standort übernehmen</button><div id="geoInfo" class="small"></div>
@@ -1779,7 +1809,7 @@ function viewAbschlepp(r){
     <div class="dmgtabs">${AS_IMGS.map(([k, l]) => `<button class="chip${(f.dmgSel || 'image2') === k ? ' on' : ''}" data-dmgsel="${k}">${l}${(f.dmg && f.dmg[k] && f.dmg[k].length) ? ' •' : ''}</button>`).join('')}</div>
     <div class="dmgtools"><button class="btn${(f.dmgTool || 's') === 's' ? ' primary' : ''}" data-dmgtool="s">// Kratzer</button><button class="btn${f.dmgTool === 'c' ? ' primary' : ''}" data-dmgtool="c">O Delle</button><button class="btn" data-dmgact="undo">↶</button><button class="btn" data-dmgact="clear">Leeren</button></div>
     <div class="dmgwrap"><canvas id="dmgCanvas"></canvas></div>
-    <p class="small">Kratzer: mit dem Finger über die Stelle ziehen. Delle: auf die Stelle tippen. Die Markierungen erscheinen im Word-Dokument in der Skizze.</p>
+    <p class="small">Werkzeug wählen und auf die beschädigte Stelle tippen: // = Kratzer, O = Delle. Die Markierungen erscheinen im Word-Dokument in der Skizze.</p>
     ${abTa('Schäden / Anmerkungen (Schadensprotokoll)', 'schaden', f.schaden, 'z. B. Kratzer Tür vorne links, Delle Heckklappe', 4)}
    </div></div>
    <div class="detail"><div class="body">
@@ -1876,6 +1906,7 @@ function dmgDraw(ctx, w, h, marks){
   for(const m of marks){
     if(m.t === 's' && m.p.length){ ctx.lineWidth = lw; ctx.beginPath(); m.p.forEach(([x, y], i) => i ? ctx.lineTo(x * w, y * h) : ctx.moveTo(x * w, y * h)); if(m.p.length === 1) ctx.lineTo(m.p[0][0] * w + 1, m.p[0][1] * h + 1); ctx.stroke(); }
     if(m.t === 'c'){ ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(m.x * w, m.y * h, w * 0.03, 0, Math.PI * 2); ctx.stroke(); }
+    if(m.t === 'k'){ ctx.lineWidth = lw; const L = w * 0.028, d = w * 0.012, cx = m.x * w, cy = m.y * h; ctx.beginPath(); [-d, d].forEach(o => { ctx.moveTo(cx + o - L * 0.45, cy + L); ctx.lineTo(cx + o + L * 0.45, cy - L); }); ctx.stroke(); }
   }
 }
 async function dmgRender(b64, marks){
@@ -1910,15 +1941,11 @@ function dmgCommit(mark){
   r.upd = Date.now(); abFlush();
   const tab = app.querySelector(`[data-dmgsel="${k}"]`); if(tab && !/•/.test(tab.textContent)) tab.textContent += ' •';
 }
-app.addEventListener('pointerdown', e => {
+app.addEventListener('click', e => {
   const cv = e.target.closest && e.target.closest('#dmgCanvas'); if(!cv) return;
-  e.preventDefault(); const tool = abRec().f.dmgTool || 's', p = dmgPos(cv, e);
-  if(tool === 'c'){ dmgCommit({t:'c', x:p[0], y:p[1]}); dmgPaint(); return; }
-  dmgCur = {t:'s', p:[p]}; try { cv.setPointerCapture(e.pointerId); } catch(_){}
+  const tool = abRec().f.dmgTool || 's', p = dmgPos(cv, e);
+  dmgCommit(tool === 'c' ? {t:'c', x:p[0], y:p[1]} : {t:'k', x:p[0], y:p[1]}); dmgPaint();
 });
-app.addEventListener('pointermove', e => { if(!dmgCur || e.target.id !== 'dmgCanvas') return; e.preventDefault(); dmgCur.p.push(dmgPos(e.target, e)); dmgPaint(); });
-const dmgEnd = () => { if(!dmgCur) return; const m = dmgCur; dmgCur = null; m.p = m.p.map(([x, y]) => [Math.round(x * 1000) / 1000, Math.round(y * 1000) / 1000]); dmgCommit(m); dmgPaint(); };
-app.addEventListener('pointerup', dmgEnd); app.addEventListener('pointercancel', dmgEnd);
 app.addEventListener('click', async e => {
   const sel = e.target.closest('[data-dmgsel]'), tool = e.target.closest('[data-dmgtool]'), act = e.target.closest('[data-dmgact]');
   if(!sel && !tool && !act) return;
@@ -1931,6 +1958,85 @@ app.addEventListener('click', async e => {
     abFlush(); dmgPaint(); }
 });
 window.addEventListener('resize', () => { if(document.getElementById('dmgCanvas')) dmgInit(); });
+
+/* ---------- Kennzeichen-Schild und Marken ---------- */
+const CAR_BRANDS = ['Alfa Romeo','Audi','BMW','BYD','Citroën','Cupra','Dacia','DS','Fiat','Ford','Honda','Hyundai','Iveco','Jaguar','Jeep','Kia','Land Rover','Lexus','MAN','Mazda','Mercedes-Benz','MG','Mini','Mitsubishi','Nissan','Opel','Peugeot','Polestar','Porsche','Renault','Seat','Škoda','Smart','Subaru','Suzuki','Tesla','Toyota','Volvo','VW'];
+const EU_STARS = (() => { let g = ''; for(let i = 0; i < 12; i++){ const a = i * Math.PI / 6; g += `<circle cx="${(10 + 6.2 * Math.cos(a)).toFixed(2)}" cy="${(10 + 6.2 * Math.sin(a)).toFixed(2)}" r="1.15" fill="#ffd400"/>`; } return `<svg viewBox="0 0 20 20" aria-hidden="true">${g}</svg>`; })();
+function kzSplit(f){
+  if(f.kzA != null || !f.kennz) return;
+  const m = /^([A-ZÄÖÜ]{1,3})[-\s]+([A-Z]{1,2})\s*(\d{1,4})\s*([EH])?$/.exec(String(f.kennz).toUpperCase().trim());
+  if(m){ f.kzA = m[1]; f.kzB = m[2]; f.kzC = m[3]; f.kzE = m[4] === 'E'; f.kzH = m[4] === 'H'; }
+}
+function plateHTML(f){
+  kzSplit(f);
+  if(f.marke === '__andere'){ f.marke = f.markeFrei || ''; }
+  if(!f.marke && f.fabrikat){ const b = CAR_BRANDS.find(x => f.fabrikat.toLowerCase().startsWith(x.toLowerCase())); if(b){ f.marke = b; f.modell = f.fabrikat.slice(b.length).trim(); } else f.marke = f.fabrikat; }
+  if(f.kzAusl) return `<div class="plate ausl"><div class="pfield"><input class="pzF" data-f="kzFrei" value="${esc(f.kzFrei || '')}" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Kennzeichen" aria-label="Ausländisches Kennzeichen"></div></div>
+    ${abIn('Land (optional)', 'kzLand', f.kzLand, 'z. B. F, PL, CH')}`;
+  return `<div class="kzde"><div class="plate"><div class="eu">${EU_STARS}<b>D</b></div><div class="pfield">
+    <input class="pz pzA" data-f="kzA" value="${esc(f.kzA || '')}" maxlength="3" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="S" aria-label="Unterscheidungszeichen (Ort)">
+    <span class="seals"><i></i><i></i></span>
+    <input class="pz pzB" data-f="kzB" value="${esc(f.kzB || '')}" maxlength="2" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="AB" aria-label="Buchstaben">
+    <input class="pz pzC" data-f="kzC" value="${esc(f.kzC || '')}" maxlength="4" inputmode="numeric" autocomplete="off" placeholder="1234" aria-label="Zahl">
+    <span class="pzS" id="kzSuffix">${f.kzE ? 'E' : f.kzH ? 'H' : ''}</span></div></div>
+    <div class="kzopt"><label class="abck"><input type="checkbox" data-f="kzE"${f.kzE ? ' checked' : ''}><span>E (Elektro)</span></label><label class="abck"><input type="checkbox" data-f="kzH"${f.kzH ? ' checked' : ''}><span>H (Oldtimer)</span></label></div></div>`;
+}
+function asCompose(f){
+  if(f.kzAusl){ f.kennz = (f.kzFrei || '') + (f.kzLand ? ' (' + f.kzLand + ')' : ''); }
+  else if(f.kzA != null || f.kzB != null || f.kzC != null){
+    const suf = f.kzE ? 'E' : f.kzH ? 'H' : '';
+    f.kennz = (f.kzA || '') + (f.kzB ? '-' + f.kzB : '') + (f.kzC ? ' ' + f.kzC + suf : '');
+    const sx = document.getElementById('kzSuffix'); if(sx) sx.textContent = suf;
+  }
+  const marke = f.marke || '';
+  if(marke || f.modell) f.fabrikat = [marke, f.modell].filter(Boolean).join(' ');
+}
+app.addEventListener('beforeinput', e => {
+  const t = e.target; if(!t.classList || !t.classList.contains('pz')) return;
+  if(e.data && /[\s\-]/.test(e.data)){ e.preventDefault(); const nx = t.parentNode.querySelectorAll('.pz')[[...t.parentNode.querySelectorAll('.pz')].indexOf(t) + 1]; if(nx) nx.focus(); }
+});
+app.addEventListener('input', e => {
+  const t = e.target; if(!t.classList || !t.classList.contains('pz')) return;
+  const isC = t.classList.contains('pzC');
+  const v = isC ? t.value.replace(/\D/g, '') : t.value.toUpperCase().replace(/[^A-ZÄÖÜ]/g, '');
+  if(v !== t.value){ t.value = v; abSet(t.dataset.f, v); }
+  const all = [...t.parentNode.querySelectorAll('.pz')], i = all.indexOf(t);
+  if(v.length >= +t.maxLength && all[i + 1]) all[i + 1].focus();
+}, true);
+app.addEventListener('keydown', e => {
+  const t = e.target; if(!t.classList || !t.classList.contains('pz') || e.key !== 'Backspace' || t.value) return;
+  const all = [...t.parentNode.querySelectorAll('.pz')], i = all.indexOf(t); if(i > 0){ e.preventDefault(); all[i - 1].focus(); }
+});
+app.addEventListener('change', e => { if(['kzE', 'kzH'].includes(e.target.dataset.f)){ const r = abRec(); if(e.target.checked){ const o = e.target.dataset.f === 'kzE' ? 'kzH' : 'kzE'; r.f[o] = false; const el = app.querySelector(`[data-f="${o}"]`); if(el) el.checked = false; } asCompose(r.f); abFlush(); } });
+
+app.addEventListener('input', e => { const t = e.target; if(t.classList && (t.classList.contains('pzF') || t.dataset.f === 'kzLand')){ const v = t.value.toUpperCase(); if(v !== t.value){ const p = t.selectionStart; t.value = v; try { t.setSelectionRange(p, p); } catch(_){} } } }, true);
+app.addEventListener('click', e => {
+  const b = e.target.closest('[data-kzmode]'); if(!b) return;
+  const r = abRec(); if(!r) return; r.f.kzAusl = b.dataset.kzmode === 'aus';
+  app.querySelectorAll('[data-kzmode]').forEach(x => x.classList.toggle('on', x === b));
+  asCompose(r.f); abFlush();
+  document.getElementById('kzBox').innerHTML = plateHTML(r.f);
+  const first = app.querySelector(r.f.kzAusl ? '.pzF' : '.pzA'); if(first) first.focus();
+});
+
+/* ---------- Marken-Auswahlliste (funktioniert auf iPhone und Android) ---------- */
+function comboFill(filter){
+  const l = document.getElementById('markeList'); if(!l) return;
+  const q = (filter || '').trim().toLowerCase();
+  const items = CAR_BRANDS.filter(b => !q || b.toLowerCase().includes(q));
+  l.innerHTML = (items.length ? items : []).map(b => `<button type="button" data-brand="${b}">${b}</button>`).join('') + (q && !CAR_BRANDS.some(b => b.toLowerCase() === q) ? `<div class="combohint">„${esc(filter.trim())}“ wird übernommen</div>` : '');
+}
+function comboOpen(open, filter){ const l = document.getElementById('markeList'); if(!l) return; if(open){ comboFill(filter); l.hidden = false; } else l.hidden = true; }
+app.addEventListener('click', e => {
+  const t = e.target.closest('[data-combo="toggle"]');
+  if(t){ const l = document.getElementById('markeList'); comboOpen(l.hidden, ''); return; }
+  const b = e.target.closest('[data-brand]');
+  if(b){ const inp = document.getElementById('markeIn'); inp.value = b.dataset.brand; abSet('marke', b.dataset.brand); comboOpen(false); abFlush(); return; }
+  if(!e.target.closest('.combo')) comboOpen(false);
+});
+app.addEventListener('focusin', e => { if(e.target.id === 'markeIn') comboOpen(true, ''); });
+app.addEventListener('input', e => { if(e.target.id === 'markeIn') comboOpen(true, e.target.value); });
+app.addEventListener('keydown', e => { if(e.target.id === 'markeIn' && (e.key === 'Enter' || e.key === 'Escape')){ comboOpen(false); if(e.key === 'Enter') e.target.blur(); } });
 
 </script>
 <script data-app>if("serviceWorker" in navigator && location.protocol==="https:" && !/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("sw.js").catch(()=>{});}</script>

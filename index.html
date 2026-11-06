@@ -1416,7 +1416,7 @@ function viewBericht(r){
     <div class="abrow"><div>${abIn('Geburtsdatum', 'gebdat', f.gebdat, 'TT.MM.JJJJ')}</div><div>${abIn('Geburtsort', 'gebort', f.gebort, '')}</div></div>
     ${abTa('Wohnort / Anschrift', 'anschrift', f.anschrift, 'Straße Nr, PLZ Ort', 2)}
     ${abIn('oder Firma', 'firma', f.firma, 'nur bei Firmen')}
-    <p class="small">⚠ Erkannte Daten immer mit dem Ausweis vergleichen.</p>
+    <p class="small">Tipp: erst Vorderseite (Name, Geburtsort), dann Rückseite (Anschrift; die Zeilen mit „&lt;&lt;&lt;“ prüfen das Geburtsdatum per Prüfziffer). Ausweis flach, hell, ohne Spiegelung, formatfüllend.<br>⚠ Erkannte Daten immer mit dem Ausweis vergleichen.</p>
    </div></div>
 
    <div class="detail"><div class="body"><h4>Verstoß</h4><div class="abgrid">${abChecks(AB_VERSTOSS, f)}</div>
@@ -1517,7 +1517,9 @@ async function abOcr(file, side){
     const canvas = await abPrep(file);
     const w = await Tesseract.createWorker('deu', 1, { logger: m => { if(m.status === 'recognizing text') info.textContent = `Lese Ausweis … ${Math.round(m.progress * 100)} %`; } });
     const { data } = await w.recognize(canvas); await w.terminate();
-    const res = parseAusweis(data.text, side);
+    const res = parseAusweis(data.text, side), cur = abRec().f;
+    if(side === 'back'){ ['name', 'vorname'].forEach(k => { if(cur[k]) delete res[k]; }); if(cur.gebdat && !res._gebOk) delete res.gebdat; }
+    delete res._gebOk;
     const got = Object.keys(res);
     if(got.length){ abSetMany(res); info.innerHTML = `✓ Erkannt: ${got.map(k => ({name:'Name', vorname:'Vorname', gebdat:'Geburtsdatum', gebort:'Geburtsort', anschrift:'Anschrift'})[k]).join(', ')}. <b>Bitte mit dem Ausweis vergleichen.</b>`; }
     else info.innerHTML = 'Nichts sicher erkannt. Tipp: Ausweis flach, gut beleuchtet, ohne Spiegelung, formatfüllend fotografieren – oder von Hand eintragen.';
@@ -1526,39 +1528,77 @@ async function abOcr(file, side){
     info.textContent = 'Texterkennung nicht verfügbar (keine Internetverbindung beim ersten Laden?). Bitte von Hand eintragen.';
   }
 }
+const MRZ_DIG = s => s.replace(/[OQD]/g, '0').replace(/[IL|]/g, '1').replace(/Z/g, '2').replace(/S/g, '5').replace(/B/g, '8').replace(/G/g, '6');
+function mrzCheck(digits, check){ const w = [7, 3, 1]; let sum = 0; for(let i = 0; i < digits.length; i++){ const c = digits[i]; const v = /\d/.test(c) ? +c : c === '<' ? 0 : c.charCodeAt(0) - 55; sum += v * w[i % 3]; } return sum % 10 === +check; }
+const capW = s => s.toLowerCase().replace(/(^|[\s\-])([a-zäöüß])/g, (m, a, b) => a + b.toUpperCase());
+const STOPW = /BUNDES|PUBLIK|UTSCHLAND|DEUTSCH|PERSON|RSONAL|AUSW|IDENTI|CARTE|PASS|SPECIMEN|MUSTERAUSWEIS|GERMANY|NATIONAL/;
+const capsWord = l => { const ws = (l.match(/[A-ZÄÖÜ][A-ZÄÖÜ\-]{2,}/g) || []).filter(w => !STOPW.test(w)); return ws.sort((a, b) => b.length - a.length)[0] || ''; };
+const yearOk = y => y >= 1900 && y <= new Date().getFullYear();
+function parseMRZ(lines){
+  const out = {};
+  const L = lines.map(l => l.replace(/\s/g, '').replace(/[«‹]/g, '<').toUpperCase()).filter(l => /<</.test(l) || /<{3,}/.test(l));
+  if(!L.length) return out;
+  // Geburtsdatum mit Prüfziffer
+  for(const raw of L){ const l = MRZ_DIG(raw); const m = /(\d{6})(\d)[MF<X](\d{6})(\d)/.exec(l); if(m){ const yy = +m[1].slice(0, 2), cy = new Date().getFullYear() % 100; out.gebdat = `${m[1].slice(4, 6)}.${m[1].slice(2, 4)}.${(yy > cy ? 1900 : 2000) + yy}`; out._gebOk = mrzCheck(m[1], m[2]); break; } }
+  // Namen: Paare NACHNAME<<VORNAME
+  const cand = [];
+  for(let raw of L){
+    let l = raw.replace(/[^A-Z0-9<]/g, '');
+    if(/^P[A-Z<][A-Z<]{3}/.test(l)) l = l.slice(5);
+    const tok = l.split(/<</);
+    for(let i = 0; i < tok.length - 1; i++){
+      const sn = tok[i], gn = tok[i + 1];
+      if(!/^[A-Z]+(<[A-Z]+)*$/.test(sn) || sn.length < 2 || /^(IDD?|I|P|A|C)$/.test(sn) || !/^[A-Z]{2,}/.test(gn)) continue;
+      let g = gn.split('<').filter(x => x.length >= 2).join(' ').replace(/\d.*$/, '');
+      const tail = g.match(/[SCKLEZ]{4,}$/); if(tail) g = g.slice(0, -tail[0].length);
+      cand.push({sn:sn.replace(/</g, ' '), gn:g.trim()});
+      break;
+    }
+  }
+  if(cand.length){
+    const cnt = {}; cand.forEach(c => cnt[c.sn] = (cnt[c.sn] || 0) + 1);
+    const best = cand.slice().sort((a, b) => cnt[b.sn] - cnt[a.sn])[0];
+    out.name = best.sn; if(best.gn) out.vorname = capW(best.gn);
+  }
+  return out;
+}
 function parseAusweis(text, side){
-  const out = {}, cap = s => s.toLowerCase().replace(/(^|[\s\-])([a-zäöüß])/g, (m, a, b) => a + b.toUpperCase());
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  // Maschinenlesbare Zone (MRZ) – Rückseite Personalausweis oder Reisepass
-  const mrz = lines.map(l => l.replace(/\s/g, '').replace(/«/g, '<').toUpperCase()).filter(l => /<<|<{3,}/.test(l) && l.length >= 25);
-  if(mrz.length >= 2){
-    let nameLine = null; const pl = mrz.find(l => /^P[A-Z<]/.test(l));
-    if(pl) nameLine = pl.slice(5); else { const cand = mrz.filter(l => /^[A-Z<]+$/.test(l) && /[A-Z]<<[A-Z]/.test(l)); nameLine = cand[cand.length - 1]; }
-    if(nameLine){ const [sn, gn] = nameLine.split('<<'); if(sn) out.name = sn.replace(/</g, ' ').trim(); if(gn) out.vorname = cap(gn.replace(/</g, ' ').trim()); }
-    for(const l of mrz){ const m = /(\d{6})\d[MF<X](\d{6})\d/.exec(l); if(m){ const yy = +m[1].slice(0, 2), cy = new Date().getFullYear() % 100; out.gebdat = `${m[1].slice(4, 6)}.${m[1].slice(2, 4)}.${(yy > cy ? 1900 : 2000) + yy}`; break; } }
+  let out = {};
+  // Maschinenlesbare Zone (Rückseite Personalausweis / Reisepass)
+  const mrz = parseMRZ(lines);
+  // Vorderseite: Name, Vorname, Geburtsdatum, Geburtsort
+  if(side === 'front'){
+    const dateRe = /(\d{2})\s*[.:,]\s*(\d{2})\s*[.:,]\s*(\d{4})/;
+    const di = lines.findIndex(l => dateRe.test(l) && (/DEUTSCH|D\b/.test(l) || yearOk(+l.match(dateRe)[3]) && +l.match(dateRe)[3] < new Date().getFullYear() - 10));
+    const vi = lines.findIndex(l => /V[eo]r?n?[a-z]*m[ae]n|Given|Pr[eé]nom/i.test(l));
+    const caps = lines.map((l, i) => ({i, w: /\d/.test(l.replace(/\s/g, '')) && !/[A-ZÄÖÜ]{3,}/.test(l) ? '' : capsWord(l)})).filter(x => x.w && !/<</.test(lines[x.i]));
+    let hdr = -1; lines.slice(0, 6).forEach((l, i) => { if(/BUNDES|PUBLIK|RSONAL|AUSW|IDENTI|CARTE|\b[A-Z0-9]{9}\b/.test(l.replace(/\s(?=[A-Z0-9]\b)/g, ''))) hdr = i; });
+    const before = caps.filter(x => x.i > hdr && x.w.length >= 3 && (vi >= 0 ? x.i < vi : (di < 0 || x.i < di)));
+    if(before.length) out.name = before[0].w;
+    if(vi >= 0){ const v = caps.find(x => x.i > vi && (di < 0 || x.i < di)); if(v) out.vorname = capW(v.w); }
+    if(di >= 0){
+      const m = lines[di].match(dateRe); if(m && yearOk(+m[3])) out.gebdat = `${m[1]}.${m[2]}.${m[3]}`;
+      const ort = caps.find(x => x.i > di && !/DEUTSCH/.test(x.w)); if(ort) out.gebort = capW(ort.w);
+    }
+    // MRZ nur ergänzen (Vorderseite hat Umlaute)
+    if(!out.name && mrz.name) out.name = mrz.name;
+    if(!out.vorname && mrz.vorname) out.vorname = mrz.vorname;
+    if(mrz.gebdat && (mrz._gebOk || !out.gebdat)) out.gebdat = mrz.gebdat;
+  } else {
+    Object.assign(out, mrz);
+    // Anschrift
+    const pi = lines.findIndex(l => /\b\d{5}\s+[A-ZÄÖÜ]{2,}/.test(l));
+    if(pi >= 0){
+      const cm = lines[pi].match(/\b(\d{5})\s+([A-ZÄÖÜ][A-ZÄÖÜa-zäöüß\-\. ]+?)(?:\s{2,}|\s+[^A-Za-zÄÖÜäöüß]|$)/);
+      const streetRe = /([A-ZÄÖÜ][A-ZÄÖÜa-zäöüß\.\-]{3,}(?:\s[A-ZÄÖÜa-zäöüß\.\-]{2,})*)[\s\-\.]+(\d{1,4}\s?[a-zA-Z]?)\b/;
+      const pool = lines.slice(Math.max(0, pi - 1), pi + 4).map(l => l.replace(/\b\d{2,3}\s?cm\b/i, ' ').replace(/^\S*\s*\d{5}.*$/, ''));
+      let st = null;
+      for(const l of pool){ const m = l.match(streetRe); if(m && !/Address|Anschrift|Adresse|Größe|Height|Taille/i.test(m[1])){ if(!st || /STR|WEG|PLATZ|ALLEE|GASSE|RING|DAMM|UFER|STEIG|HOF|BERG|STAFFEL|MARKT|PFAD/i.test(m[1])) st = m; if(/STR|WEG|PLATZ|ALLEE|GASSE|RING|DAMM|UFER|STEIG|STAFFEL|MARKT|PFAD/i.test(m[1])) break; } }
+      out.anschrift = [st ? capW(st[1].replace(/[\-\.]+$/, '')).replace(/strasse\b/gi, 'straße').replace(/Str\b/g, 'Str.') + ' ' + st[2].replace(/\s/g, '') : '', cm ? `${cm[1]} ${capW(cm[2].trim())}` : ''].filter(Boolean).join(', ');
+    }
   }
-  const after = re => { const i = lines.findIndex(l => re.test(l)); return i >= 0 ? lines.slice(i + 1, i + 4) : []; };
-  const clean = s => (s || '').replace(/[^A-Za-zÄÖÜäöüß\-' ]/g, '').trim();
-  if(side === 'front' || !out.name){
-    const n = after(/^(Name|Surname|Nom)\b|Name\s*\/\s*Surname/i).find(l => /[A-ZÄÖÜ]{2,}/.test(l)); if(n && !out.name) out.name = clean(n);
-    const v = after(/Vorname|Given name|Prénoms/i).find(l => /[A-ZÄÖÜ]{2,}/.test(l)); if(v && !out.vorname) out.vorname = cap(clean(v));
-  }
-  const dm = text.match(/\b(\d{2})[.\s](\d{2})[.\s]((19|20)\d{2})\b/);
-  const gi = lines.findIndex(l => /Geburtstag|Geburtsdatum|Date of birth/i.test(l));
-  if(gi >= 0){ const seg = lines.slice(gi, gi + 3).join(' '); const m = seg.match(/(\d{2})[.\s](\d{2})[.\s]((19|20)\d{2})/); if(m) out.gebdat = `${m[1]}.${m[2]}.${m[3]}`; }
-  else if(dm && side === 'front' && !out.gebdat) out.gebdat = `${dm[1]}.${dm[2]}.${dm[3]}`;
-  const go = after(/Geburtsort|Place of birth|Lieu de naissance/i).find(l => /[A-ZÄÖÜ]{2,}/.test(l)); if(go) out.gebort = cap(clean(go));
-  // Anschrift (Rückseite deutscher Personalausweis)
-  const plz = lines.findIndex(l => /\b\d{5}\s+[A-ZÄÖÜa-zäöüß]/.test(l));
-  if(plz >= 0){
-    const city = lines[plz].match(/\b(\d{5})\s+(.+)$/);
-    const ai = lines.findIndex(l => /Anschrift|Address|Adresse/i.test(l));
-    let street = '';
-    const cand = [lines[plz + 1], lines[plz - 1], ai >= 0 ? lines[ai + 1] : ''].filter(Boolean);
-    street = cand.find(l => /[A-Za-zÄÖÜäöüß.\-]{3,}.*\d+\s*[a-zA-Z]?\s*$/.test(l) && !/\d{5}/.test(l)) || '';
-    out.anschrift = [cap(street.replace(/[^A-Za-zÄÖÜäöüß0-9.\-\/ ]/g, '').trim()), city ? `${city[1]} ${cap(clean(city[2]))}` : ''].filter(Boolean).join(', ');
-  }
-  Object.keys(out).forEach(k => { if(!out[k]) delete out[k]; });
+  Object.keys(out).forEach(k => { if(!out[k] && out[k] !== false) delete out[k]; });
   return out;
 }
 

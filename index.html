@@ -527,7 +527,7 @@ function route(){
   if(h.startsWith('t-') && THEMES.find(t => t.id === h.slice(2))){ view = 'theme'; themeId = h.slice(2); }
   else if(h.startsWith('c/')){ const [, tid, cid] = h.split('/'); const t = THEMES.find(x => x.id === tid); if(t && t.cards.find(c => c.id === cid)){ view = 'card'; themeId = tid; cardId = cid; } else view = 'start'; }
   else if(h.startsWith('m/') && MASS.find(m => m.id === h.slice(2))){ view = 'mass'; massId = h.slice(2); }
-  else if(['start','massnahmen','lernen','zeichen','notfall','telefon','berichte','kennzeichen','bubatz'].includes(h)){ view = h; telPath = []; }
+  else if(['start','massnahmen','lernen','zeichen','notfall','telefon','berichte','kennzeichen','bubatz','azubi'].includes(h)){ view = h; telPath = []; }
   else if(h === 'bericht/neu'){ const r = abNew(); location.replace('#bericht/' + r.id); return; }
   else if(h === 'bericht/neu-streife'){ const r = abNew('streife'); location.replace('#bericht/' + r.id); return; }
   else if(h === 'bericht/neu-tnd'){ const r = abNew('tnd'); location.replace('#bericht/' + r.id); return; }
@@ -544,10 +544,11 @@ function setHeader(title, sub){
   $('#back').hidden = view === 'start'; $('#logo').hidden = view !== 'start';
 }
 function render(top){
-  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.v === view || (['theme','card'].includes(view) && a.dataset.v==='start') || (view==='mass' && a.dataset.v==='massnahmen') || (view==='bericht' && a.dataset.v==='berichte')));
+  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.v === view || (['theme','card','azubi'].includes(view) && a.dataset.v==='start') || (view==='mass' && a.dataset.v==='massnahmen') || (view==='bericht' && a.dataset.v==='berichte')));
   let html = '';
   if(view === 'start'){ setHeader('SVD Streifenführer','Städtischer Vollzugsdienst · Lernen & Nachschlagen'); html = viewStart(); }
-  else if(view === 'theme'){ const t = THEMES.find(x => x.id === themeId); setHeader(t.t, 'Thema'); html = viewTheme(t); }
+  else if(view === 'azubi'){ setHeader('Ausbildung', 'Azubis · Lernen & Nachschlagen'); html = viewAzubi(); }
+  else if(view === 'theme'){ const t = THEMES.find(x => x.id === themeId); setHeader(t.t, AZUBI_IDS.includes(t.id) ? 'Ausbildung' : 'Thema'); html = viewTheme(t); }
   else if(view === 'card'){ const t = THEMES.find(x => x.id === themeId); setHeader(t.t, 'Thema'); html = viewCard(t, t.cards.find(c => c.id === cardId)); }
   else if(view === 'mass'){ const m = MASS.find(x => x.id === massId); setHeader('Maßnahmen', 'Checkliste'); html = viewMassDetail(m); }
   else if(view === 'kennzeichen'){ setHeader('Kennzeichen-Auskunft', 'Zulassungsbezirk und Sonderkennzeichen'); html = viewKennzeichen(); }
@@ -572,11 +573,25 @@ window.addEventListener('hashchange', () => { if(!document.body.classList.contai
 const go = h => { if(location.hash === h) route(); else location.hash = h; };
 
 /* ================== Start ================== */
+ICONS.i_azubi = '<circle cx="12" cy="6.5" r="3.2"/><path d="M5 21v-1.5A5.5 5.5 0 0 1 10.5 14h3a5.5 5.5 0 0 1 5.5 5.5V21"/><path d="M12 14v7M8.5 17.5h7"/>';
+const AZUBI_IDS = ['grundlagen', 'funk', 'polizeirecht', 'stadtrecht', 'strg', 'strafrecht', 'jugendschutz', 'eigensicherung', 'einsatzmittel'];
+function viewAzubi(){
+  const mW = mastery(QW), mK = mastery(QK);
+  return `<div class="detail"><div class="dhd">${ico('i_azubi', '#fde7c8')}<div class="dt"><h2>Ausbildung</h2><span>Grundlagen, Recht und Einsatz – alles für die Ausbildung an einem Ort</span></div></div></div>`
+   + `<div class="sec">Grundlagen &amp; Kommunikation</div>` + azuGrid(['grundlagen', 'funk'])
+   + `<div class="sec">Recht</div>` + azuGrid(['polizeirecht', 'stadtrecht', 'strg', 'strafrecht', 'jugendschutz'])
+   + `<div class="sec">Sicherheit im Einsatz</div>` + azuGrid(['eigensicherung', 'einsatzmittel'])
+   + `<div class="sec">Üben</div>` + grid([tile('#lernen', 'lernen', null, 'Lernen & Prüfen', (QW.length + QK.length) + ' Fragen · ' + Math.round((mW.pct + mK.pct) / 2) + ' %'), tile('#massnahmen', 'massnahmen', null, 'Maßnahmen', MASS.length + ' Checklisten')]);
+}
+function azuGrid(ids){
+  return grid(ids.map(id => { const i = THEMES.findIndex(t => t.id === id); if(i < 0) return ''; const t = THEMES[i]; return tile('#t-' + t.id, t.icon, t.bg, esc(t.t), t.cards.length + ' Seiten', '', {si:i, ek:'editTheme', ea:t.id}); }).filter(Boolean));
+}
 function viewStart(){
   const seg = `<div class="seg"><button class="${startTab==='kat'?'on':''}" data-tab="kat">Kategorien</button><button class="${startTab==='fav'?'on':''}" data-tab="fav">Favoriten${FAVS.length ? ' ('+FAVS.length+')' : ''}</button></div>`;
   if(startTab === 'fav') return seg + viewFavs() + disclaimer();
   const mW = mastery(QW), mK = mastery(QK);
-  return seg + `<div class="sec">Themen</div>` + grid(THEMES.map((t,i) => tile('#t-'+t.id, t.icon, t.bg, esc(t.t), t.cards.length + ' Seiten', '', {si:i, ek:'editTheme', ea:t.id})), 'themes')
+  const azu = THEMES.filter(t => AZUBI_IDS.includes(t.id));
+  return seg + `<div class="sec">Themen</div>` + grid([tile('#azubi', 'i_azubi', '#fde7c8', 'Ausbildung (Azubis)', azu.length + ' Themen · ' + azu.reduce((n, t) => n + t.cards.length, 0) + ' Seiten')].concat(THEMES.map((t,i) => AZUBI_IDS.includes(t.id) ? '' : tile('#t-'+t.id, t.icon, t.bg, esc(t.t), t.cards.length + ' Seiten', '', {si:i, ek:'editTheme', ea:t.id})).filter(Boolean)), 'themes')
   + `<div class="sec">Werkzeuge</div>` + grid([
      tile('#massnahmen','massnahmen',null,'Maßnahmen', MASS.length + ' Checklisten'),
      tile('#lernen','lernen',null,'Lernen & Prüfen', (QW.length + QK.length) + ' Fragen · ' + Math.round((mW.pct + mK.pct)/2) + ' %'),
@@ -1048,7 +1063,9 @@ function applyOrder(key, order){
   else if(key === 'telnum') arr = TEL[telPath[0]].subs[telPath[1]].items;
   else if(key === 'quiz') arr = D.quiz;
   if(!arr) return;
-  const copy = [...arr]; arr.splice(0, arr.length, ...order.map(i => copy[i]));
+  const copy = [...arr];
+  if(order.length < arr.length){ const pos = [...order].sort((a, b) => a - b); const res = [...copy]; pos.forEach((p, k) => { res[p] = copy[order[k]]; }); arr.splice(0, arr.length, ...res); }
+  else arr.splice(0, arr.length, ...order.map(i => copy[i]));
   saveDraft();
   if(key === 'quiz') quizRender(false); else render(false);
   toast('Reihenfolge gespeichert');

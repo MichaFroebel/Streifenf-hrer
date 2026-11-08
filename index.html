@@ -1973,6 +1973,113 @@ async function mrzRead(canvas, info, n, data, an0){
     return (best.score || 0) >= 3 ? best : {};
   } finally { await w.terminate(); }
 }
+
+/* ---------- Anschrift (Rückseite) gezielt lesen ---------- */
+const ADDR_STR = /STR|WEG|PLATZ|ALLEE|GASSE|RING|DAMM|UFER|STEIG|STAFFEL|MARKT|PFAD|HOF|BERG|HALDE|GARTEN|WALD|TAL|BÜHL|BUEHL|STEIGE|WEIL|ACKER|WIESE|AU\b|ZEILE|GRABEN|KAMP|CHAUSSEE|PROMENADE|STIEGE/;
+const addrDig = s => s.replace(/[OQD]/g, '0').replace(/[IlL|]/g, '1').replace(/S/g, '5').replace(/Z/g, '2').replace(/B/g, '8').replace(/G/g, '6');
+// zerrissene Wörter zusammenfügen: „PLI ENSAU STRASS E“ → „PLIENSAUSTRASSE“, „TÜBINGER STRASSE“ bleibt getrennt
+const ADDR_PREP = new Set(['AM','IM','AN','AUF','IN','ZUM','ZUR','DER','DIE','DAS','DEN','DEM','VOM','VON','BEI','UNTER','OBER','OBERE','UNTERE','ALTE','ALTER','NEUE','NEUER','HINTER','VOR','ST.','ST','SANKT','BAD','GROSSE','KLEINE','LANGE','HOHE','OBEREN','UNTEREN']);
+const ADDR_FULL = /^(STRASSE|STRAßE|WEG|PLATZ|ALLEE|GASSE|RING|DAMM|UFER|STEIG|STAFFEL|MARKT|PFAD|STEIGE)$/;
+function addrMerge(name){
+  const up = name.toUpperCase(), tk = up.split(/\s+/).filter(Boolean), out = [];
+  for(const t of tk){
+    const last = out[out.length - 1];
+    const frag = /^(S?TRASS?E?|RASSE|ASSE|SSE|SE|STR|WEG|GASSE|PLATZ|ALLEE)$/.test(t) || t.length <= 3;
+    if(last && !ADDR_PREP.has(t) && !ADDR_PREP.has(last) && !(ADDR_FULL.test(t) && /ER$/.test(last)) && (frag || last.length <= 3) && !/-$/.test(last)) out[out.length - 1] = last + t;
+    else out.push(t);
+  }
+  return out.join(' ');
+}
+function parseAddrText(text){
+  const L = String(text || '').split('\n').map(l => l.replace(/[|_~»«]/g, ' ').replace(/\s+/g, ' ').trim()
+    // rechte Spalte (Größe, Augenfarbe …) abschneiden
+    .replace(/\s+(Gr[öo]ß|Grofs|Height|Taille|Augen|Colour|Ordens|Behörde|Datum|\d{2,3}\s?-?cm\b).*$/i, '')
+    .replace(/\s+(BRAUN|BLAU|GRÜN|GRUEN|GRAU|SCHWARZ)\b.*$/, '').trim()).filter(l => l.length >= 3);
+  let plz = null, pi = -1;
+  L.forEach((l, i) => {
+    if(plz) return;
+    const m = l.match(/(?:^|\s)([0-9OQDIlSZBG]{5})\s+([A-ZÄÖÜ][A-ZÄÖÜa-zäöüß.\-\/() ]{1,40})$/) || l.match(/(?:^|\s)(\d{5})\s+([A-ZÄÖÜ][A-ZÄÖÜa-zäöüß.\-\/() ]{1,40})/);
+    if(!m) return; const p = addrDig(m[1]); if(!/^\d{5}$/.test(p) || /^00/.test(p)) return;
+    const city = m[2].replace(/(\s+\S{1,2})+$/, '').replace(/[.\-\/ ]+$/, '').trim();
+    if(city.replace(/[^A-Za-zÄÖÜäöüß]/g, '').length < 2 || /\d/.test(city)) return;
+    plz = [p, city]; pi = i;
+  });
+  const streetRe = /^([A-ZÄÖÜ][A-ZÄÖÜa-zäöüß.\-' ]{2,}?)\s*\.?\s*(\d{1,4}(?:\s?[A-Za-z](?![A-Za-z]))?(?:\s?[-\/]\s?\d{1,4}(?:\s?[A-Za-z](?![A-Za-z]))?)?)(?=\s|$)/;
+  let st = null;
+  const cand = L.map((l, i) => ({l: l.replace(/^[^A-ZÄÖÜ]+/, ''), i})).filter(x => x.i !== pi && (pi < 0 || Math.abs(x.i - pi) <= 3));
+  for(const x of cand){
+    const m = x.l.match(streetRe); if(!m) continue;
+    if(/Anschrift|Address|Adresse|Größe|Height|Taille|Augen|Colour|Behörde|Authority|Datum|Date/i.test(m[1])) continue;
+    const name = addrMerge(m[1].replace(/\s+$/, ''));
+    const sc = (ADDR_STR.test(name.toUpperCase()) ? 2 : 0) + (pi >= 0 && x.i === pi + 1 ? 1 : 0) + (pi >= 0 && x.i === pi - 1 ? 0.5 : 0);
+    if(!st || sc > st.sc) st = {name, nr:m[2].replace(/\s/g, ''), sc};
+  }
+  const fmtStreet = n => capW(n.replace(/([A-ZÄÖÜ]{4,})[Z2] (?=[A-ZÄÖÜ]+ ?-)/g, '$1-').replace(/\s*-\s*/g, '-').toLowerCase().replace(/strasse/g, 'straße')).replace(/str\.?$/, 'str.').replace(/\bStr\b\.?/g, 'Str.');
+  const fmtCity = c => capW(c.toLowerCase()).replace(/ (Am|An|Im|In|Ob|Der|Die|Dem|Den|Vor|Bei|Unter|Auf)(?= )/g, m => m.toLowerCase());
+  return {
+    street: st ? `${fmtStreet(st.name)} ${st.nr.toLowerCase()}` : '',
+    plz: plz ? `${plz[0]} ${fmtCity(plz[1])}` : '',
+    ok: !!(st && plz)
+  };
+}
+const isAddrLabel = t => idNorm(t).split(/[^a-z]+/).some(w => w && (idWordIs(w, ['anschrift', 'address', 'adresse']) || /^(anschr|addre|adres)/.test(w)));
+
+/* PLZ online gegen Ortsnamen prüfen (OpenPLZ API) und einzelne Lesefehler korrigieren */
+async function plzVerify(plzOrt){
+  const m = /^(\d{5}) (.+)$/.exec(plzOrt || ''); if(!m) return plzOrt;
+  const [, plz, ort] = m, base = ort.split(/[\s,(-]/)[0];
+  const get = async u => { const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 4000); try { const r = await fetch(u, {signal:ac.signal, headers:{Accept:'application/json'}}); return r.ok ? await r.json() : []; } finally { clearTimeout(t); } };
+  try {
+    const official = async p => { const r = await get(`https://openplzapi.org/de/Localities?postalCode=${p}&page=1&pageSize=10`); const n = r && r[0] && r[0].name; return n && idLev(idNorm(n.split(/[\s,(-]/)[0]), idNorm(base)) <= 2 ? n : ort; };
+    const byName = await get(`https://openplzapi.org/de/Localities?name=${encodeURIComponent(base)}&page=1&pageSize=50`);
+    const codes = [...new Set((byName || []).map(x => x.postalCode))];
+    if(codes.includes(plz)) return `${plz} ${await official(plz)}`;
+    const near = codes.filter(c => [...c].filter((ch, i) => ch !== plz[i]).length === 1);
+    if(near.length === 1) return `${near[0]} ${await official(near[0])}`;
+    if(!codes.length){
+      const byPlz = await get(`https://openplzapi.org/de/Localities?postalCode=${plz}&page=1&pageSize=10`);
+      if(byPlz && byPlz[0] && byPlz[0].name && idLev(idNorm(byPlz[0].name), idNorm(base)) <= 2) return `${plz} ${byPlz[0].name}${ort.slice(base.length)}`;
+    }
+  } catch(e){}
+  return plzOrt;
+}
+async function addrZoneRead(w, canvas, data, info){
+  const L = ocrLines(data).filter(l => l.text);
+  const img = canvas._img || canvas, sc = canvas._sc || 1, IW = img.naturalWidth || img.width, IH = img.naturalHeight || img.height;
+  const zones = [];
+  const li = L.findIndex(l => isAddrLabel(l.text));
+  if(li >= 0){
+    const lb = L[li].b, lh = Math.max(10, lb.y1 - lb.y0);
+    let bottom = lb.y1 + lh * 7;
+    const nx = L.findIndex((l, k) => k > li && l.b.y0 > lb.y1 + lh * 2.2 && (idLabelType(l.text) || /Größe|Height|Augen|Colour|Behörde|Authority|Datum|Ordens|Künstler/i.test(l.text)));
+    if(nx > 0) bottom = Math.min(bottom, L[nx].b.y0 - 2);
+    zones.push({x:lb.x0 - lh * 1.5, y:lb.y1 + 1, w:Math.max(lb.x1 - lb.x0, canvas.width * 0.6) + lh * 3, h:bottom - lb.y1});
+  }
+  const pl = L.findIndex(l => /\d{5}\s+[A-ZÄÖÜ]{2,}/.test(l.text));
+  if(pl >= 0){ const b = L[pl].b, lh = Math.max(10, b.y1 - b.y0); zones.push({x:b.x0 - lh * 2, y:b.y0 - lh * 3, w:Math.max(b.x1 - b.x0, canvas.width * 0.55) + lh * 4, h:lh * 7.5}); }
+  if(!zones.length) zones.push({x:0, y:0, w:canvas.width * 0.75, h:canvas.height * 0.5});
+  // rechte Spalte (Größe/Augenfarbe) nicht mitlesen
+  const rc = L.filter(l => /Gr[öo]ß|Height|Taille|Augen|Colour/i.test(l.text)).map(l => l.b.x0);
+  zones.forEach(z => { const lim = rc.filter(x => x > z.x + canvas.width * 0.2); if(lim.length) z.w = Math.min(z.w, Math.min(...lim) - z.x - 8); });
+  await w.setParameters({tessedit_pageseg_mode:'6', tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜẞabcdefghijklmnopqrstuvwxyzäöüß0123456789-./' "});
+  let best = null, n = 0;
+  try {
+    for(const z of zones){
+      const x = Math.max(0, z.x / sc), y = Math.max(0, z.y / sc), ww = Math.min(IW - x, z.w / sc), hh = Math.min(IH - y, z.h / sc);
+      if(ww < 30 || hh < 20) continue;
+      const base = imgCrop(img, x, y, ww, hh, 1600, 0);
+      for(const m of ['contrast', 'adapt', 'otsu']){
+        n++; if(info) info.textContent = `Lese Anschrift … (${n})`;
+        const r = await w.recognize(imgVariant(base, m));
+        const a = parseAddrText(r.data.text);
+        const score = (a.street ? 1 : 0) + (a.plz ? 1 : 0);
+        if(!best || score > best.score) best = {...a, score};
+        if(a.ok) return a;
+      }
+    }
+  } finally { await w.setParameters({tessedit_char_whitelist:'', tessedit_pageseg_mode:'3'}); }
+  return best || {};
+}
 async function abOcr(file, side){
   const info = document.getElementById('ocrInfo');
   try {
@@ -1996,6 +2103,7 @@ async function abOcr(file, side){
     // Rückseite: Anschrift notfalls mit lokaler Schwelle (ungleichmäßiges Licht) erneut lesen
     if(side === 'back' && !res.anschrift && canvas._c1){ try { const r2 = await w.recognize(imgVariant(canvas._c1, 'adapt'), {}, {text:true, blocks:true}); const a2 = parseAusweis(confText(r2.data), 'back'); if(a2.anschrift) res.anschrift = a2.anschrift; } catch(e){} }
     // Zweiter, gezielter Lesedurchgang unter den Beschriftungen (nur Großbuchstaben)
+    if(side === 'back'){ try { const a = await addrZoneRead(w, canvas, data, info); if(a.plz) a.plz = await plzVerify(a.plz); if(a.ok || (!res.anschrift && (a.street || a.plz))) res.anschrift = [a.street, a.plz].filter(Boolean).join(', '); } catch(e){} }
     if(side === 'front'){ try { info.textContent = 'Lese Namen genauer …'; const z = await idZoneRead(w, canvas, data); if(z.name) res.name = z.name; if(z.vorname) res.vorname = z.vorname; } catch(e){} }
     await w.terminate();
     if(side === 'back'){ ['name', 'vorname'].forEach(k => { if(cur[k]) delete res[k]; }); if(cur.gebdat && !res._gebOk) delete res.gebdat; }

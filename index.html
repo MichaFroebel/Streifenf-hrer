@@ -311,9 +311,11 @@ body.noscroll{overflow:hidden}
 .dollangs .chip{display:flex;flex-direction:column;align-items:center;flex:0 0 auto;padding:6px 10px;line-height:1.2}.dollangs .chip small{font-size:11px;opacity:.7}
 .dolyn{display:flex;gap:8px;margin-top:8px}.dolyn .btn{flex:1;margin:0;font-size:18px;font-weight:700}
 .dolgrp{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:10px}
-.dolrow{display:grid;grid-template-columns:1fr auto;gap:2px 10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;color:var(--ink);cursor:pointer;font:inherit}
-.dolrow:last-child{border-bottom:0}.dolde{font-size:13px;opacity:.7;grid-column:1}.doltr{font-size:16px;font-weight:600;grid-column:1}.dolplay{grid-row:1/3;grid-column:2;align-self:center;font-size:20px}
-.dolrow:active{background:rgba(127,127,127,.12)}
+.dolrow{display:flex;align-items:stretch;border-bottom:1px solid var(--line)}.dolrow:last-child{border-bottom:0}
+.dolmain{flex:1;display:flex;flex-direction:column;gap:2px;text-align:left;background:none;border:0;padding:10px 12px;color:var(--ink);cursor:pointer;font:inherit}
+.dolmain:active{background:rgba(127,127,127,.12)}.dolde{font-size:13px;opacity:.7}.doltr{font-size:16px;font-weight:600}
+.dolplay{flex:0 0 60px;border:0;border-left:1px solid var(--line);background:rgba(37,99,235,.08);font-size:24px;cursor:pointer}
+.dolplay:active,.dolplay.on{background:rgba(37,99,235,.3)}
 .dolov{position:fixed;inset:0;z-index:70;background:#fff;color:#111;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 14px)}
 .doltop{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700}.doltop .btn{margin:0}
 .dolbig{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(28px,8.5vw,48px);font-weight:700;line-height:1.25;padding:10px 4px;overflow:auto}
@@ -4033,10 +4035,10 @@ function viewDolmetscher(){
   const sec = DOL.map(c => {
     const items = c.p.map((p, i) => ({p, i})).filter(({p}) => !q || p[0].toLowerCase().includes(q) || p[li + 1].toLowerCase().includes(q));
     if(!items.length) return '';
-    return `<div class="sec">${c.ic} ${c.k}</div><div class="dolgrp">${items.map(({p, i}) => `<button class="dolrow" data-dol="${DOL.indexOf(c)}:${i}"><span class="dolde">${esc(p[0])}</span><span class="doltr"${rtl ? ' dir="rtl"' : ''} lang="${L[0]}">${esc(p[li + 1])}</span><span class="dolplay">🔊</span></button>`).join('')}</div>`;
+    return `<div class="sec">${c.ic} ${c.k}</div><div class="dolgrp">${items.map(({p, i}) => `<div class="dolrow"><button class="dolmain" data-dol="${DOL.indexOf(c)}:${i}"><span class="dolde">${esc(p[0])}</span><span class="doltr"${rtl ? ' dir="rtl"' : ''} lang="${L[0]}">${esc(p[li + 1])}</span></button><button class="dolplay" data-dolsay="${DOL.indexOf(c)}:${i}" aria-label="Vorlesen">🔊</button></div>`).join('')}</div>`;
   }).join('');
   const yn = DOL_YN[L[0]];
-  return `<div class="detail"><div class="dhd">${ico('i_dolm', '#dbe7fb')}<div class="dt"><h2>Dolmetscher</h2><span>Satz antippen → wird groß angezeigt und vorgelesen</span></div></div><div class="body">
+  return `<div class="detail"><div class="dhd">${ico('i_dolm', '#dbe7fb')}<div class="dt"><h2>Dolmetscher</h2><span>🔊 = sofort vorlesen · Satz antippen = groß anzeigen</span></div></div><div class="body">
     <div class="dollangs">${DOL_LANGS.map(l => `<button class="chip${l[0] === dolLang ? ' on' : ''}" data-dollang="${l[0]}"><b>${esc(l[1])}</b><small>${l[2]}</small></button>`).join('')}</div>
     <div class="row" style="gap:8px;margin-top:8px"><input class="inp" id="dolQ" placeholder="Satz suchen …" value="${esc(dolQ)}" style="flex:1;margin:0"><button class="btn" data-dolrate="1" style="margin:0">${dolRate < 0.8 ? '🐢 langsam' : '▶ normal'}</button></div>
     <div class="small" style="margin-top:6px">Kein Ton? Stummschalter am iPhone aus, Lautstärke hoch, ggf. Stimme laden. <button class="btn" data-doltest="1" style="margin:0 0 0 4px;padding:2px 10px;min-height:30px">🔊 Ton testen</button></div>
@@ -4065,6 +4067,8 @@ function dolShow(text, de, L){
 document.addEventListener('click', e => {
   const lb = e.target.closest('[data-dollang]');
   if(lb){ dolLang = lb.dataset.dollang; try { store.set('dolang', dolLang); } catch(err){} render(false); return; }
+  const sy = e.target.closest('[data-dolsay]');
+  if(sy){ const [ci, pi] = sy.dataset.dolsay.split(':').map(Number), li = dolIdx(); sy.classList.add('on'); setTimeout(() => sy.classList.remove('on'), 900); dolSpeak(DOL[ci].p[pi][li + 1], DOL_LANGS[li][3]); return; }
   const r = e.target.closest('[data-dol]');
   if(r){ const [ci, pi] = r.dataset.dol.split(':').map(Number), li = dolIdx(), p = DOL[ci].p[pi]; dolShow(p[li + 1], p[0], DOL_LANGS[li]); return; }
   const yn = e.target.closest('[data-dolyn]');

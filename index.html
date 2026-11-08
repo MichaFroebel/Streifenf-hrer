@@ -3528,7 +3528,7 @@ function viewSonder(r){
    </div></div>
    ${uFotos(f)}
    <div class="detail"><div class="body"><h4>Antreffbericht</h4>
-    <p class="small" style="margin-top:0">Erstellt aus dieser Anzeige einen Antreffbericht mit den dort geforderten Angaben (Art, Ort, Zeit, Person, Verstoß, Maßnahmen, Sachverhalt).${f.antreffId && abGet(f.antreffId) ? ' <b>Bereits erstellt</b> – erneutes Tippen aktualisiert ihn.' : ''}</p>
+    <p class="small" style="margin-top:0">Erstellt aus dieser Anzeige einen Antreffbericht mit den dort geforderten Angaben (Art, Ort, Zeit, Person, Verstoß, Maßnahmen, Sachverhalt). Der Antreffbericht bekommt eine <b>eigene Tagebuchnummer</b>.${f.antreffId && abGet(f.antreffId) ? ' <b>Bereits erstellt</b> – erneutes Tippen aktualisiert ihn.' : ''}</p>
     <button class="btn primary big" data-sn="antreff">📝 ${f.antreffId && abGet(f.antreffId) ? 'Antreffbericht aktualisieren und öffnen' : 'Antreffbericht daraus erstellen'}</button>
    </div></div>
    ${uAbschluss(r)}
@@ -3536,7 +3536,7 @@ function viewSonder(r){
 }
 /* Antreffbericht aus der Sondernutzungsanzeige erzeugen */
 function snToAntreff(f){
-  const a = {art:f.sTyp === 'musik' ? 'Straßenmusiker' : 'Bettler', datum:f.datum, von:f.von, bis:f.bis || '', tgb:f.tgb || '', ort:f.ort || f.spielort || '', ek:f.ek || '',
+  const a = {art:f.sTyp === 'musik' ? 'Straßenmusiker' : 'Bettler', datum:f.datum, von:f.von, bis:f.bis || '', ort:f.ort || f.spielort || '', ek:f.ek || '',
     name:f.name || '', vorname:f.vorname || '', gebdat:f.gebdat || '', gebort:f.gebort || '', anschrift:(f.anschrift || '') + (f.ofw && !/ohne festen Wohnsitz/i.test(f.anschrift || '') ? (f.anschrift ? ' – ' : '') + 'ohne festen Wohnsitz' : ''),
     funktion:f.funktion || 'GVB', unterschrift:f.unterschrift || '', nebenstelle:f.nebenstelle || '', sb:f.sb || '', berichtArt:'Sachverhalt', bericht:f.bericht || snAutoText(f)};
   for(let i = 0; i <= 29; i++) a['c' + i] = false;
@@ -3569,7 +3569,7 @@ async function snMakeAntreff(){
   if(ex){ const i = list.findIndex(x => x.id === id); list[i].f = Object.assign({}, list[i].f, data); list[i].upd = Date.now(); abSave(list); }
   else {
     const n = abNew(); id = n.id; const l2 = abList(), i = l2.findIndex(x => x.id === id);
-    l2[i].f = Object.assign({}, l2[i].f, data, {an:'Funkleitstelle', zk:'32-21.1', quelle:r.id}); abSave(l2);
+    l2[i].f = Object.assign({}, l2[i].f, data, {an:'Funkleitstelle', zk:'32-21.1', tgb:'', quelle:r.id}); abSave(l2);
     const l3 = abList(), j = l3.findIndex(x => x.id === r.id); if(j >= 0){ l3[j].f.antreffId = id; abSave(l3); }
     abWork = null;
   }

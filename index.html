@@ -1541,7 +1541,7 @@ function viewBericht(r){
     <div class="abrow"><div>${abIn('Geburtsdatum', 'gebdat', f.gebdat, 'TTMMJJJJ oder TT.MM.JJJJ').replace('<input ', '<input inputmode="numeric" data-datum="1" ')}</div><div>${abIn('Geburtsort', 'gebort', f.gebort, '')}</div></div>
     ${abTa('Wohnort / Anschrift', 'anschrift', f.anschrift, 'Straße Hausnummer, PLZ Ort', 2)}
     ${abIn('oder Firma', 'firma', f.firma, 'nur bei Firmen')}
-    <p class="small">Tipp: erst Vorderseite (Name, Geburtsort), dann Rückseite (Anschrift; die Zeilen mit „&lt;&lt;&lt;“ prüfen das Geburtsdatum per Prüfziffer). Ausweis flach hinlegen oder nur am Rand halten (Finger nicht über Name und Daten), hell, ohne Spiegelung, formatfüllend.<br>⚠ Erkannte Daten immer mit dem Ausweis vergleichen.</p>
+    <p class="small">Tipp: erst Vorderseite (Name, Geburtsort), dann Rückseite (Anschrift; die Zeilen mit „&lt;&lt;&lt;“ prüfen das Geburtsdatum per Prüfziffer). Ausweis flach hinlegen oder nur am Rand halten (Finger nicht über Name und Daten), hell, ohne Spiegelung, formatfüllend.<br>Am zuverlässigsten: <b>Rückseite</b> scannen – die maschinenlesbare Zone (&lt;&lt;&lt;-Zeilen) wird mit Prüfziffer gelesen.<br>Alternative ohne Foto: ins Feld tippen und „<b>Text scannen</b>“ wählen (iPhone, Live Text) bzw. das Kamera-/Scan-Symbol der Tastatur (Android).<br>⚠ Erkannte Daten immer mit dem Ausweis vergleichen.</p>
    </div></div>
 
    <div class="detail"><div class="body"><h4>Verstoß</h4><div class="abgrid">${abChecks(AB_VERSTOSS, f)}</div>
@@ -1748,6 +1748,53 @@ async function idZoneRead(w, canvas, data){
   if(gi >= 0){ const v = await zone(gi, ['sn', 'other']); if(v) out.vorname = capW(v); }
   return out;
 }
+
+/* ---------- MRZ mit speziell trainiertem Modell lesen (web-mrz-reader, ISC) ---------- */
+const MRZ_LANG = 'https://cdn.jsdelivr.net/npm/web-mrz-reader@2.0.3/public/model';
+const mrzTrans = s => String(s || '').toUpperCase().replace(/Ä/g, 'AE').replace(/Ö/g, 'OE').replace(/Ü/g, 'UE').replace(/ẞ|ß/g, 'SS').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z ]/g, ' ').replace(/\s+/g, ' ').trim();
+// Umlaute aus dem Klartext (Vorderseite) in den MRZ-Namen zurückholen: FROEBEL + FRÜBEL → FRÖBEL
+function mrzUmlaut(mrzName, plain){
+  const m = String(mrzName || ''), p = String(plain || '').toUpperCase(); let out = '', i = 0, j = 0;
+  const U = {AE:'Ä', OE:'Ö', UE:'Ü'};
+  while(i < m.length){
+    const pair = m.slice(i, i + 2);
+    if(U[pair] && /[ÄÖÜ]/.test(p[j] || '')){ out += U[pair]; i += 2; j += 1; continue; }
+    if(pair === 'SS' && /ẞ|ß/.test(p[j] || '')){ out += 'ß'; i += 2; j += 1; continue; }
+    out += m[i]; i++; j++;
+  }
+  return out;
+}
+function mrzParse(text){
+  const L = String(text || '').split('\n').map(l => l.replace(/\s/g, '').toUpperCase().replace(/[«‹]/g, '<')).filter(l => l.length >= 20 && /</.test(l));
+  const out = {};
+  for(const l of L){
+    const m = /(\d{6})(\d)[MFX<](\d{6})(\d)/.exec(l);
+    if(m && mrzCheck(m[1], m[2])){ const yy = +m[1].slice(0, 2), cy = new Date().getFullYear() % 100; out.gebdat = `${m[1].slice(4, 6)}.${m[1].slice(2, 4)}.${(yy > cy ? 1900 : 2000) + yy}`; out._gebOk = true; break; }
+  }
+  for(let l of L){
+    if(/^P[A-Z<]/.test(l)) l = l.slice(5);
+    else if(/\d/.test(l)) continue;
+    const mm = /^([A-Z]+(?:<[A-Z]+)*)<<([A-Z]+(?:<[A-Z]+)*)/.exec(l);
+    if(!mm) continue;
+    const sn = mm[1].replace(/</g, ' '), gn = mm[2].replace(/</g, ' ');
+    if(!nameOk(sn)) continue;
+    out.name = sn; if(nameOk(gn)) out.vorname = gn; break;
+  }
+  return out;
+}
+async function mrzRead(canvas, info, n){
+  const w = await Tesseract.createWorker('mrz', 1, {langPath:MRZ_LANG, logger:m => { if(m.status === 'recognizing text' && info) info.textContent = `Lese maschinenlesbare Zone … ${Math.round(m.progress * 100)} %`; }});
+  try {
+    await w.setParameters({tessedit_pageseg_mode:'6', tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<'});
+    const H = canvas.height, tries = [[0.5, 0.5], [0.3, 0.7], [0, 1]].slice(0, n || 3);
+    for(const [t, h] of tries){
+      const r = await w.recognize(canvas, {rectangle:{left:0, top:Math.round(H * t), width:canvas.width, height:Math.round(H * h)}});
+      const res = mrzParse(r.data.text); res._raw = r.data.text;
+      if(res.name || res._gebOk) return res;
+    }
+    return {};
+  } finally { await w.terminate(); }
+}
 async function abOcr(file, side){
   const info = document.getElementById('ocrInfo');
   try {
@@ -1761,11 +1808,22 @@ async function abOcr(file, side){
     if(side === 'front'){ try { info.textContent = 'Lese Namen genauer …'; const z = await idZoneRead(w, canvas, data); if(z.name) res.name = z.name; if(z.vorname) res.vorname = z.vorname; } catch(e){} }
     await w.terminate();
     if(side === 'back'){ ['name', 'vorname'].forEach(k => { if(cur[k]) delete res[k]; }); if(cur.gebdat && !res._gebOk) delete res.gebdat; }
+    // Maschinenlesbare Zone mit eigenem Modell (Rückseite Personalausweis, Reisepass): Namen und Geburtsdatum mit Prüfziffer
+    let mz = {};
+    try { mz = await mrzRead(canvas, info, side === 'back' ? 3 : 1); } catch(e){}
+    if(mz.name){
+      const plainN = res.name || cur.name || '', plainV = res.vorname || cur.vorname || '';
+      res.name = mrzTrans(plainN).replace(/ /g, '') === mz.name.replace(/ /g, '') ? plainN.toUpperCase() : mrzUmlaut(mz.name, plainN);
+      if(mz.vorname) res.vorname = capW(mrzTrans(plainV).replace(/ /g, '') === mz.vorname.replace(/ /g, '') ? plainV : mrzUmlaut(mz.vorname, plainV.toUpperCase()));
+    }
+    if(mz._gebOk){ res.gebdat = mz.gebdat; res._gebOk = true; }
+    const mrzOk = !!(mz.name || mz._gebOk);
+    const umlHint = mz.name && /AE|OE|UE/.test((res.name || '') + ' ' + (res.vorname || '').toUpperCase()) ? ' <br>⚠ In der maschinenlesbaren Zone stehen Umlaute als AE/OE/UE – bitte prüfen (z. B. FROEBEL = Fröbel). Tipp: zuerst die Vorderseite scannen, dann wird automatisch korrigiert.' : '';
     delete res._gebOk;
     const got = Object.keys(res);
-    if(got.length){ abSetMany(res); info.innerHTML = `✓ Erkannt: ${got.map(k => ({name:'Name', vorname:'Vorname', gebdat:'Geburtsdatum', gebort:'Geburtsort', anschrift:'Anschrift'})[k]).join(', ')}. <b>Bitte mit dem Ausweis vergleichen.</b>`; }
+    if(got.length){ abSetMany(res); info.innerHTML = `✓ Erkannt: ${got.map(k => ({name:'Name', vorname:'Vorname', gebdat:'Geburtsdatum', gebort:'Geburtsort', anschrift:'Anschrift'})[k]).join(', ')}${mrzOk ? ' (maschinenlesbare Zone geprüft ✓)' : ''}. <b>Bitte mit dem Ausweis vergleichen.</b>${umlHint}`; }
     else info.innerHTML = 'Nichts sicher erkannt. Tipp: Ausweis flach, gut beleuchtet, ohne Spiegelung, formatfüllend fotografieren – oder von Hand eintragen.';
-    info.insertAdjacentHTML('beforeend', `<details><summary>Erkannter Rohtext</summary><pre class="ocrraw">${esc(data.text)}</pre></details>`);
+    info.insertAdjacentHTML('beforeend', `<details><summary>Erkannter Rohtext</summary><pre class="ocrraw">${esc(data.text)}${mz._raw ? '\n--- MRZ ---\n' + esc(mz._raw) : ''}</pre></details>`);
   } catch(err){
     info.textContent = 'Texterkennung nicht verfügbar (keine Internetverbindung beim ersten Laden?). Bitte von Hand eintragen.';
   }

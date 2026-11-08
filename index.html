@@ -1711,7 +1711,7 @@ function abPrep(file){
       const x = c.getContext('2d'); x.drawImage(im, 0, 0, c.width, c.height);
       const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
       for(let i = 0; i < p.length; i += 4){ let g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2]; g = Math.max(0, Math.min(255, (g - 128) * 1.5 + 128)); p[i] = p[i+1] = p[i+2] = g; }
-      x.putImageData(d, 0, 0); URL.revokeObjectURL(url); res(c);
+      x.putImageData(d, 0, 0); c._img = im; c._sc = sc; res(c);
     };
     im.onerror = rej; im.src = url;
   });
@@ -1719,8 +1719,8 @@ function abPrep(file){
 
 /* Zeilen mit Position aus dem Tesseract-Ergebnis */
 function ocrLines(data){
-  if(data.lines && data.lines.length) return data.lines.map(l => ({text:l.text.trim(), b:l.bbox}));
-  const out = []; (data.blocks || []).forEach(bl => (bl.paragraphs || []).forEach(p => (p.lines || []).forEach(l => out.push({text:l.text.trim(), b:l.bbox}))));
+  if(data.lines && data.lines.length) return data.lines.map(l => ({text:l.text.trim(), b:l.bbox, baseline:l.baseline}));
+  const out = []; (data.blocks || []).forEach(bl => (bl.paragraphs || []).forEach(p => (p.lines || []).forEach(l => out.push({text:l.text.trim(), b:l.bbox, baseline:l.baseline}))));
   return out;
 }
 async function idZoneRead(w, canvas, data){
@@ -1764,35 +1764,213 @@ function mrzUmlaut(mrzName, plain){
   }
   return out;
 }
-function mrzParse(text){
-  const L = String(text || '').split('\n').map(l => l.replace(/\s/g, '').toUpperCase().replace(/[«‹]/g, '<')).filter(l => l.length >= 20 && /</.test(l));
-  const out = {};
-  for(const l of L){
-    const m = /(\d{6})(\d)[MFX<](\d{6})(\d)/.exec(l);
-    if(m && mrzCheck(m[1], m[2])){ const yy = +m[1].slice(0, 2), cy = new Date().getFullYear() % 100; out.gebdat = `${m[1].slice(4, 6)}.${m[1].slice(2, 4)}.${(yy > cy ? 1900 : 2000) + yy}`; out._gebOk = true; break; }
-  }
-  for(let l of L){
-    if(/^P[A-Z<]/.test(l)) l = l.slice(5);
-    else if(/\d/.test(l)) continue;
-    const mm = /^([A-Z]+(?:<[A-Z]+)*)<<([A-Z]+(?:<[A-Z]+)*)/.exec(l);
-    if(!mm) continue;
-    const sn = mm[1].replace(/</g, ' '), gn = mm[2].replace(/</g, ' ');
-    if(!nameOk(sn)) continue;
-    out.name = sn; if(nameOk(gn)) out.vorname = gn; break;
-  }
-  return out;
+/* --- Bildvarianten für die Texterkennung --- */
+function imgCrop(img, x, y, w, h, outW, angle){
+  const sc = outW / w, c = document.createElement('canvas'); c.width = Math.round(w * sc); c.height = Math.round(h * sc);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+  g.translate(c.width / 2, c.height / 2); if(angle) g.rotate(-angle); g.scale(sc, sc);
+  g.drawImage(img, -(x + w / 2), -(y + h / 2));
+  return c;
 }
-async function mrzRead(canvas, info, n){
-  const w = await Tesseract.createWorker('mrz', 1, {langPath:MRZ_LANG, logger:m => { if(m.status === 'recognizing text' && info) info.textContent = `Lese maschinenlesbare Zone … ${Math.round(m.progress * 100)} %`; }});
+function imgVariant(src, mode){
+  const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+  const g = c.getContext('2d'); g.drawImage(src, 0, 0);
+  const d = g.getImageData(0, 0, c.width, c.height), p = d.data, n = p.length / 4, gray = new Uint8ClampedArray(n);
+  for(let i = 0; i < n; i++) gray[i] = 0.299 * p[i * 4] + 0.587 * p[i * 4 + 1] + 0.114 * p[i * 4 + 2];
+  let out = gray;
+  if(mode === 'otsu' || mode === 'otsu+'){
+    const h = new Array(256).fill(0); gray.forEach(v => h[v]++);
+    let sum = 0; for(let t = 0; t < 256; t++) sum += t * h[t];
+    let sB = 0, wB = 0, best = 0, th = 128;
+    for(let t = 0; t < 256; t++){ wB += h[t]; if(!wB) continue; const wF = n - wB; if(!wF) break; sB += t * h[t]; const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) * (mB - mF); if(v > best){ best = v; th = t; } }
+    if(mode === 'otsu+') th = Math.min(255, th + 12);
+    out = gray.map(v => v > th ? 255 : 0);
+  } else if(mode === 'adapt'){
+    // lokale Schwelle (Bradley) gegen ungleichmäßige Beleuchtung / Hologramm
+    const W = c.width, H = c.height, S = Math.max(8, Math.round(W / 24)), I = new Float64Array((W + 1) * (H + 1));
+    for(let y = 0; y < H; y++){ let r = 0; for(let x = 0; x < W; x++){ r += gray[y * W + x]; I[(y + 1) * (W + 1) + x + 1] = I[y * (W + 1) + x + 1] + r; } }
+    out = new Uint8ClampedArray(n);
+    for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
+      const x1 = Math.max(0, x - S), x2 = Math.min(W - 1, x + S), y1 = Math.max(0, y - S), y2 = Math.min(H - 1, y + S);
+      const cnt = (x2 - x1 + 1) * (y2 - y1 + 1), sm = I[(y2 + 1) * (W + 1) + x2 + 1] - I[y1 * (W + 1) + x2 + 1] - I[(y2 + 1) * (W + 1) + x1] + I[y1 * (W + 1) + x1];
+      out[y * W + x] = gray[y * W + x] * cnt <= sm * 0.85 ? 0 : 255;
+    }
+  } else if(mode === 'contrast'){
+    let lo = 255, hi = 0; const sorted = Array.from(gray).sort((a, b) => a - b); lo = sorted[Math.floor(n * 0.02)]; hi = sorted[Math.floor(n * 0.98)];
+    out = gray.map(v => Math.max(0, Math.min(255, (v - lo) * 255 / Math.max(1, hi - lo))));
+  }
+  for(let i = 0; i < n; i++){ p[i * 4] = p[i * 4 + 1] = p[i * 4 + 2] = out[i]; p[i * 4 + 3] = 255; }
+  g.putImageData(d, 0, 0); return c;
+}
+
+/* --- Dokument geraderücken und MRZ-Block per Bildanalyse finden (ohne Texterkennung) --- */
+function docAnalyze(img){
+  const IW = img.naturalWidth || img.width, IH = img.naturalHeight || img.height;
+  const sw = 700, ss = sw / IW, sh = Math.round(IH * ss);
+  const sm = document.createElement('canvas'); sm.width = sw; sm.height = sh; sm.getContext('2d').drawImage(img, 0, 0, sw, sh);
+  const px = sm.getContext('2d').getImageData(0, 0, sw, sh).data, G = new Float32Array(sw * sh);
+  for(let i = 0; i < sw * sh; i++) G[i] = 0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2];
+  // adaptive Schwelle → dunkle Schriftpixel
+  const S = 10, W1 = sw + 1, I = new Float64Array(W1 * (sh + 1));
+  for(let y = 0; y < sh; y++){ let r = 0; for(let x = 0; x < sw; x++){ r += G[y * sw + x]; I[(y + 1) * W1 + x + 1] = I[y * W1 + x + 1] + r; } }
+  const pts = [];
+  for(let y = 1; y < sh - 1; y++) for(let x = 1; x < sw - 1; x++){
+    const x1 = Math.max(0, x - S), x2 = Math.min(sw - 1, x + S), y1 = Math.max(0, y - S), y2 = Math.min(sh - 1, y + S);
+    const cnt = (x2 - x1 + 1) * (y2 - y1 + 1), m = (I[(y2 + 1) * W1 + x2 + 1] - I[y1 * W1 + x2 + 1] - I[(y2 + 1) * W1 + x1] + I[y1 * W1 + x1]) / cnt;
+    if(G[y * sw + x] < m * 0.78 && G[y * sw + x] < 150) pts.push(x, y);
+  }
+  // Winkel mit der schärfsten Zeilenstruktur suchen
+  const score = a => { const c = Math.cos(a), s = Math.sin(a), h = new Float32Array(Math.ceil(sw + sh) * 2 + 10), off = sw + sh; for(let i = 0; i < pts.length; i += 6){ const yy = Math.round(-pts[i] * s + pts[i + 1] * c) + off; h[yy]++; } let t = 0; for(const v of h) t += v * v; return t; };
+  let best = 0, bs = -1;
+  for(let d = -20; d <= 20; d += 1){ const v = score(d * Math.PI / 180); if(v > bs){ bs = v; best = d; } }
+  let fine = best; for(let d = best - 1; d <= best + 1; d += 0.25){ const v = score(d * Math.PI / 180); if(v > bs){ bs = v; fine = d; } }
+  const ang = fine * Math.PI / 180;
+  // gedrehtes Bild in hoher Auflösung
+  const maxW = 3200, rs = Math.min(1, maxW / Math.max(IW, IH));
+  const c = Math.abs(Math.cos(ang)), s = Math.abs(Math.sin(ang));
+  const RW = Math.round((IW * c + IH * s) * rs), RH = Math.round((IW * s + IH * c) * rs);
+  const rot = document.createElement('canvas'); rot.width = RW; rot.height = RH;
+  const g = rot.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, RW, RH); g.translate(RW / 2, RH / 2); g.rotate(-ang); g.scale(rs, rs); g.drawImage(img, -IW / 2, -IH / 2);
+  // MRZ-Zeilen: im gedrehten Kleinbild Zeilen mit vielen Hell-Dunkel-Wechseln suchen
+  const k = sw / RW, qw = sw, qh = Math.round(RH * k), q = document.createElement('canvas'); q.width = qw; q.height = qh; q.getContext('2d').drawImage(rot, 0, 0, qw, qh);
+  const qp = q.getContext('2d').getImageData(0, 0, qw, qh).data, QG = new Float32Array(qw * qh);
+  for(let i = 0; i < qw * qh; i++) QG[i] = 0.299 * qp[i * 4] + 0.587 * qp[i * 4 + 1] + 0.114 * qp[i * 4 + 2];
+  const rowT = new Float32Array(qh), rowX0 = new Int32Array(qh), rowX1 = new Int32Array(qh);
+  for(let y = 1; y < qh - 1; y++){
+    let t = 0, x0 = -1, x1 = -1; let prev = false;
+    // lokaler Mittelwert der Zeile in Fenstern
+    for(let x = 2; x < qw - 2; x++){
+      let m = 0; for(let dx = -6; dx <= 6; dx++){ const xx = Math.min(qw - 1, Math.max(0, x + dx)); m += QG[y * qw + xx] + QG[(y - 1) * qw + xx] + QG[(y + 1) * qw + xx]; } m /= 39;
+      const dark = QG[y * qw + x] < m * 0.8 && QG[y * qw + x] < 140;
+      if(dark && !prev){ t++; if(x0 < 0) x0 = x; x1 = x; } else if(dark) x1 = x;
+      prev = dark;
+    }
+    rowT[y] = t; rowX0[y] = x0; rowX1[y] = x1;
+  }
+  const thr = 22, bands = []; let y0 = -1;
+  for(let y = 0; y < qh; y++){ const on = rowT[y] >= thr; if(on && y0 < 0) y0 = y; if(!on && y0 >= 0){ if(y - y0 >= 3) bands.push([y0, y]); y0 = -1; } }
+  // von unten: 2–3 ähnlich hohe, gleichmäßig verteilte Textzeilen
+  let mrz = null;
+  for(let i = bands.length - 1; i >= 1 && !mrz; i--){
+    for(const n of [3, 2]){
+      if(i - n + 1 < 0) continue;
+      const bs2 = bands.slice(i - n + 1, i + 1), hs = bs2.map(b => b[1] - b[0]), hm = hs.reduce((a, b) => a + b, 0) / n;
+      if(hs.some(h => Math.abs(h - hm) > hm * 0.6)) continue;
+      const gaps = bs2.slice(1).map((b, j) => b[0] - bs2[j][1]); if(gaps.some(gp => gp > hm * 2.2 || gp < 0)) continue;
+      const ex0 = Math.min(...bs2.map(b => { let m = qw; for(let y = b[0]; y < b[1]; y++) if(rowX0[y] >= 0) m = Math.min(m, rowX0[y]); return m; }));
+      const ex1 = Math.max(...bs2.map(b => { let m = 0; for(let y = b[0]; y < b[1]; y++) m = Math.max(m, rowX1[y]); return m; }));
+      if(ex1 - ex0 < qw * 0.3) continue;
+      const pad = hm * 1.0;
+      mrz = {x:(ex0 - pad * 2) / k, y:(bs2[0][0] - pad) / k, w:(ex1 - ex0 + pad * 4) / k, h:(bs2[n - 1][1] - bs2[0][0] + pad * 2) / k, n};
+      break;
+    }
+  }
+  return {angle:ang, rot, mrz};
+}
+/* --- MRZ strukturiert lesen, Prüfziffern nutzen, Lesefehler korrigieren --- */
+const MRZ_TO_DIG = {O:'0', Q:'0', D:'0', U:'0', I:'1', L:'1', T:'1', J:'1', Z:'2', S:'5', G:'6', B:'8', A:'4', E:'8'};
+const MRZ_TO_LET = {'0':'O', '1':'I', '2':'Z', '4':'A', '5':'S', '6':'G', '8':'B'};
+const mrzDig = s => s.replace(/[A-Z]/g, c => MRZ_TO_DIG[c] || c);
+const mrzFix = (field, chk, numeric) => {
+  // Feld + Prüfziffer: zuerst direkt, dann alternative Lesungen mehrdeutiger Zeichen probieren
+  const c = mrzDig(chk); if(!/^\d$/.test(c)) return null;
+  if(numeric) field = mrzDig(field);
+  if(numeric && !/^\d+$/.test(field)) return null;
+  if(mrzCheck(field, c)) return field;
+  const alt = numeric ? {'0':'86', '8':'036', '6':'85', '5':'6', '3':'8', '1':'7', '7':'1', '9':'0'} : {'0':'OD', O:'0D', D:'0O', '1':'I', I:'1', '5':'S', S:'5', '8':'B', B:'8', '2':'Z', Z:'2', '6':'G', G:'6'};
+  const pos = [...field].map((ch, i) => alt[ch] ? i : -1).filter(i => i >= 0).slice(0, 9);
+  // nur EIN Zeichen ändern (sonst zu viele falsche Treffer)
+  for(const p of pos) for(const r of alt[field[p]]){ const a = field.slice(0, p) + r + field.slice(p + 1); if(mrzCheck(a, c)) return a; }
+  return null;
+};
+const mrzNames = raw => {
+  let t = raw.replace(/[0-9]/g, d => MRZ_TO_LET[d] || '<');
+  t = t.replace(/<+$/, '');
+  // als K/C/L gelesene Füllzeichen am Ende entfernen
+  t = t.replace(/(?:<+[KCL]{1,3})+$/, '').replace(/<+[KCL]{3,}$/, '').replace(/<+$/, '');
+  const i = t.indexOf('<<'); if(i < 1) return null;
+  const sn = t.slice(0, i).replace(/<+/g, ' ').trim(), gn = t.slice(i + 2).replace(/<+/g, ' ').replace(/\s[KCLE]{1,2}$/, '').trim();
+  return {sn, gn};
+};
+const mrzDateOk = d => /^\d{6}$/.test(d) && +d.slice(2, 4) >= 1 && +d.slice(2, 4) <= 12 && +d.slice(4, 6) >= 1 && +d.slice(4, 6) <= 31;
+const mrzDate = d => { const yy = +d.slice(0, 2), cy = new Date().getFullYear() % 100; return `${d.slice(4, 6)}.${d.slice(2, 4)}.${(yy > cy ? 1900 : 2000) + yy}`; };
+function mrzParse(text){
+  const L = String(text || '').split('\n').map(l => l.toUpperCase().replace(/[«‹(\[{]/g, '<').replace(/\s/g, '').replace(/[^A-Z0-9<]/g, '')).filter(l => l.length >= 24);
+  const fit = (l, n) => l.length >= n ? l.slice(0, n) : l + '<'.repeat(n - l.length);
+  let best = {score:-1};
+  // TD1: 3 × 30 (Personalausweis)
+  for(let i = 0; i + 2 < L.length; i++){
+    const [a, b, c] = [fit(L[i], 30), fit(L[i + 1], 30), fit(L[i + 2], 30)];
+    if(!/^[IAC]/.test(a) && !/\d{4}/.test(mrzDig(b.slice(0, 7)))) continue;
+    const r = {fmt:'TD1', score:0};
+    const doc = mrzFix(a.slice(5, 14), a[14]); if(doc){ r.score++; r.doc = doc; }
+    const bd = mrzFix(b.slice(0, 6), b[6], true); if(bd && mrzDateOk(bd)){ r.score += 2; r.gebdat = mrzDate(bd); r._gebOk = true; }
+    const ex = mrzFix(b.slice(8, 14), b[14], true); if(ex && mrzDateOk(ex)){ r.score++; }
+    const nm = mrzNames(c); if(nm && nameOk(nm.sn)){ r.score++; r.name = nm.sn; if(nm.gn && nameOk(nm.gn)) r.vorname = nm.gn; }
+    if(r.score > best.score) best = r;
+  }
+  // TD3: 2 × 44 (Reisepass)
+  for(let i = 0; i + 1 < L.length; i++){
+    if(!/^P/.test(L[i])) continue;
+    const [a, b] = [fit(L[i], 44), fit(L[i + 1], 44)];
+    const r = {fmt:'TD3', score:0};
+    const nm = mrzNames(a.slice(5)); if(nm && nameOk(nm.sn)){ r.score++; r.name = nm.sn; if(nm.gn && nameOk(nm.gn)) r.vorname = nm.gn; }
+    const doc = mrzFix(b.slice(0, 9), b[9]); if(doc) r.score++;
+    const bd = mrzFix(b.slice(13, 19), b[19], true); if(bd && mrzDateOk(bd)){ r.score += 2; r.gebdat = mrzDate(bd); r._gebOk = true; }
+    const ex = mrzFix(b.slice(21, 27), b[27], true); if(ex && mrzDateOk(ex)) r.score++;
+    if(r.score > best.score) best = r;
+  }
+  return best.score > 0 ? best : {};
+}
+// MRZ-Bereich über die erste Texterkennung finden (Zeilen mit <<<)
+function mrzLocate(canvas, data){
+  const ls = ocrLines(data).filter(l => /<{2,}|[A-Z0-9]{5,}<|<[A-Z0-9]{5,}/.test(l.text.replace(/\s/g, '')) || (l.text.replace(/\s/g, '').length >= 25 && /^[A-Z0-9<«KC]+$/.test(l.text.replace(/\s/g, ''))));
+  if(!ls.length) return null;
+  const x0 = Math.min(...ls.map(l => l.b.x0)), x1 = Math.max(...ls.map(l => l.b.x1)), y0 = Math.min(...ls.map(l => l.b.y0)), y1 = Math.max(...ls.map(l => l.b.y1));
+  const lh = Math.max(...ls.map(l => l.b.y1 - l.b.y0));
+  // Neigung aus den Grundlinien
+  const ang = ls.map(l => l.baseline && l.baseline.x1 > l.baseline.x0 ? Math.atan2(l.baseline.y1 - l.baseline.y0, l.baseline.x1 - l.baseline.x0) : null).filter(v => v !== null);
+  return {x:x0 - lh * 1.2, y:y0 - lh * 1.2, w:(x1 - x0) + lh * 2.4, h:(y1 - y0) + lh * 2.4, angle:ang.length ? ang.reduce((a, b) => a + b, 0) / ang.length : 0};
+}
+async function mrzRead(canvas, info, n, data, an0){
+  const img = canvas._img || canvas, sc = canvas._sc || 1;
+  const w = await Tesseract.createWorker('mrz', 1, {langPath:MRZ_LANG});
   try {
     await w.setParameters({tessedit_pageseg_mode:'6', tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<'});
-    const H = canvas.height, tries = [[0.5, 0.5], [0.3, 0.7], [0, 1]].slice(0, n || 3);
-    for(const [t, h] of tries){
-      const r = await w.recognize(canvas, {rectangle:{left:0, top:Math.round(H * t), width:canvas.width, height:Math.round(H * h)}});
-      const res = mrzParse(r.data.text); res._raw = r.data.text;
-      if(res.name || res._gebOk) return res;
+    let IW = img.naturalWidth || img.width, IH = img.naturalHeight || img.height;
+    const regions = [];
+    let src = img;
+    try {
+      const an = an0 || docAnalyze(img);
+      if(an.mrz){ regions.push({x:an.mrz.x, y:an.mrz.y, w:an.mrz.w, h:an.mrz.h, angle:0, src:an.rot}); }
+      regions.push({x:0, y:an.rot.height * 0.45, w:an.rot.width, h:an.rot.height * 0.55, angle:0, src:an.rot});
+    } catch(e){}
+    const loc = data ? mrzLocate(canvas, data) : null;
+    if(loc) regions.push({x:loc.x / sc, y:loc.y / sc, w:loc.w / sc, h:loc.h / sc, angle:loc.angle});
+    regions.push({x:0, y:IH * 0.5, w:IW, h:IH * 0.5, angle:0});
+    if(n > 1) regions.push({x:0, y:IH * 0.3, w:IW, h:IH * 0.7, angle:0});
+    if(n === 1) regions.splice(1);
+    const modes = ['adapt', 'contrast', 'otsu', 'otsu+'];
+    let best = {score:-1}, votes = {}, k = 0; const total = regions.length * modes.length;
+    for(const R of regions){
+      const SRC = R.src || img, SW = SRC.naturalWidth || SRC.width, SH = SRC.naturalHeight || SRC.height;
+      const x = Math.max(0, R.x), y = Math.max(0, R.y), ww = Math.min(SW - x, R.w), hh = Math.min(SH - y, R.h);
+      if(ww < 20 || hh < 20) continue;
+      const base = imgCrop(SRC, x, y, ww, hh, 1500, R.angle);
+      for(const m of modes){
+        k++; if(info) info.textContent = `Lese maschinenlesbare Zone … (${k}/${total})`;
+        const r = await w.recognize(imgVariant(base, m));
+        const p = mrzParse(r.data.text); p._raw = r.data.text;
+        if(p.name){ const key = p.name + '|' + (p.vorname || ''); votes[key] = (votes[key] || 0) + 1 + (p.score || 0) / 10; }
+        if((p.score || 0) > (best.score ?? -1) && p.score) best = p;
+        if((best.fmt === 'TD1' && best.score >= 5) || (best.fmt === 'TD3' && best.score >= 5)) break;
+      }
+      if(best.score >= 5) break;
     }
-    return {};
+    // Namen per Mehrheitsentscheid über alle Varianten
+    const top = Object.entries(votes).sort((a, b) => b[1] - a[1])[0];
+    if(top){ const [sn, gn] = top[0].split('|'); best.name = sn; best.vorname = gn || best.vorname; }
+    return (best.score || 0) >= 3 ? best : {};
   } finally { await w.terminate(); }
 }
 async function abOcr(file, side){
@@ -1800,17 +1978,30 @@ async function abOcr(file, side){
   try {
     info.textContent = 'Texterkennung wird geladen … (beim ersten Mal Internet nötig)';
     if(!window.Tesseract) await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
-    const canvas = await abPrep(file);
+    let canvas = await abPrep(file), an = null;
+    // Foto geraderücken (schräg gehaltener Ausweis) und MRZ-Bereich suchen
+    try {
+      info.textContent = 'Richte Foto aus …'; await new Promise(r => setTimeout(r, 30));
+      an = docAnalyze(canvas._img);
+      const sc2 = Math.min(1, 2000 / Math.max(an.rot.width, an.rot.height)), c1 = document.createElement('canvas');
+      c1.width = Math.round(an.rot.width * sc2); c1.height = Math.round(an.rot.height * sc2);
+      c1.getContext('2d').drawImage(an.rot, 0, 0, c1.width, c1.height);
+      const c2 = imgVariant(c1, 'contrast'); c2._img = an.rot; c2._sc = sc2; c2._c1 = c1; canvas = c2;
+    } catch(e){ an = null; }
     const w = await Tesseract.createWorker('deu', 1, { logger: m => { if(m.status === 'recognizing text') info.textContent = `Lese Ausweis … ${Math.round(m.progress * 100)} %`; } });
     const { data } = await w.recognize(canvas, {}, {text:true, blocks:true});
-    const res = parseAusweis(data.text, side), cur = abRec().f;
+    // unsichere Wörter (Muster, Finger, Hologramm) vor der Auswertung entfernen
+    const confText = d => { const out = []; (d.blocks || []).forEach(bl => (bl.paragraphs || []).forEach(p => (p.lines || []).forEach(l => { const ws = (l.words || []).filter(x => x.confidence >= 55).map(x => x.text); if(ws.length) out.push(ws.join(' ')); }))); return out.length ? out.join('\n') : d.text; };
+    const res = parseAusweis(confText(data), side), cur = abRec().f;
+    // Rückseite: Anschrift notfalls mit lokaler Schwelle (ungleichmäßiges Licht) erneut lesen
+    if(side === 'back' && !res.anschrift && canvas._c1){ try { const r2 = await w.recognize(imgVariant(canvas._c1, 'adapt'), {}, {text:true, blocks:true}); const a2 = parseAusweis(confText(r2.data), 'back'); if(a2.anschrift) res.anschrift = a2.anschrift; } catch(e){} }
     // Zweiter, gezielter Lesedurchgang unter den Beschriftungen (nur Großbuchstaben)
     if(side === 'front'){ try { info.textContent = 'Lese Namen genauer …'; const z = await idZoneRead(w, canvas, data); if(z.name) res.name = z.name; if(z.vorname) res.vorname = z.vorname; } catch(e){} }
     await w.terminate();
     if(side === 'back'){ ['name', 'vorname'].forEach(k => { if(cur[k]) delete res[k]; }); if(cur.gebdat && !res._gebOk) delete res.gebdat; }
     // Maschinenlesbare Zone mit eigenem Modell (Rückseite Personalausweis, Reisepass): Namen und Geburtsdatum mit Prüfziffer
     let mz = {};
-    try { mz = await mrzRead(canvas, info, side === 'back' ? 3 : 1); } catch(e){}
+    try { mz = await mrzRead(canvas, info, side === 'back' ? 3 : 1, data, an); } catch(e){}
     if(mz.name){
       const plainN = res.name || cur.name || '', plainV = res.vorname || cur.vorname || '';
       res.name = mrzTrans(plainN).replace(/ /g, '') === mz.name.replace(/ /g, '') ? plainN.toUpperCase() : mrzUmlaut(mz.name, plainN);
@@ -1964,7 +2155,7 @@ function parseAusweis(text, side){
     if(lab.name) out.name = lab.name;
     if(lab.vorname) out.vorname = lab.vorname;
     if(di >= 0){
-      const m = lines[di].match(dateRe); if(m && yearOk(+m[3])) out.gebdat = `${m[1]}.${m[2]}.${m[3]}`;
+      const m = lines[di].match(dateRe); if(m && yearOk(+m[3]) && +m[1] >= 1 && +m[1] <= 31 && +m[2] >= 1 && +m[2] <= 12) out.gebdat = `${m[1]}.${m[2]}.${m[3]}`;
       const ort = caps.find(x => x.i > di && !/DEUTSCH/.test(x.w)); if(ort) out.gebort = capW(ort.w);
     }
     // MRZ nur ergänzen (Vorderseite hat Umlaute)
@@ -1981,7 +2172,7 @@ function parseAusweis(text, side){
       const pool = lines.slice(Math.max(0, pi - 1), pi + 4).map(l => l.replace(/\b\d{2,3}\s?cm\b/i, ' ').replace(/^\S*\s*\d{5}.*$/, ''));
       let st = null;
       for(const l of pool){ const m = l.match(streetRe); if(m && !/Address|Anschrift|Adresse|Größe|Height|Taille/i.test(m[1])){ if(!st || /STR|WEG|PLATZ|ALLEE|GASSE|RING|DAMM|UFER|STEIG|HOF|BERG|STAFFEL|MARKT|PFAD/i.test(m[1])) st = m; if(/STR|WEG|PLATZ|ALLEE|GASSE|RING|DAMM|UFER|STEIG|STAFFEL|MARKT|PFAD/i.test(m[1])) break; } }
-      out.anschrift = [st ? capW(st[1].replace(/[\-\.]+$/, '')).replace(/strasse\b/gi, 'straße').replace(/Str\b/g, 'Str.') + ' ' + st[2].replace(/\s/g, '') : '', cm ? `${cm[1]} ${capW(cm[2].trim())}` : ''].filter(Boolean).join(', ');
+      out.anschrift = [st ? capW(st[1].replace(/[\-\.]+$/, '')).replace(/strasse\b/gi, 'straße').replace(/Str\b/g, 'Str.') + ' ' + st[2].replace(/\s/g, '') : '', cm ? `${cm[1]} ${capW(cm[2].trim().replace(/(\s+\S{1,2})+$/, ''))}` : ''].filter(Boolean).join(', ');
     }
   }
   ['name', 'vorname', 'gebort'].forEach(k => { if(out[k] && !nameOk(out[k])) delete out[k]; });

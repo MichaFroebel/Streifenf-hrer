@@ -1541,7 +1541,7 @@ function viewBericht(r){
     <div class="abrow"><div>${abIn('Geburtsdatum', 'gebdat', f.gebdat, 'TTMMJJJJ oder TT.MM.JJJJ').replace('<input ', '<input inputmode="numeric" data-datum="1" ')}</div><div>${abIn('Geburtsort', 'gebort', f.gebort, '')}</div></div>
     ${abTa('Wohnort / Anschrift', 'anschrift', f.anschrift, 'Straße Hausnummer, PLZ Ort', 2)}
     ${abIn('oder Firma', 'firma', f.firma, 'nur bei Firmen')}
-    <p class="small">Tipp: erst Vorderseite (Name, Geburtsort), dann Rückseite (Anschrift; die Zeilen mit „&lt;&lt;&lt;“ prüfen das Geburtsdatum per Prüfziffer). Ausweis flach, hell, ohne Spiegelung, formatfüllend.<br>⚠ Erkannte Daten immer mit dem Ausweis vergleichen.</p>
+    <p class="small">Tipp: erst Vorderseite (Name, Geburtsort), dann Rückseite (Anschrift; die Zeilen mit „&lt;&lt;&lt;“ prüfen das Geburtsdatum per Prüfziffer). Ausweis flach hinlegen oder nur am Rand halten (Finger nicht über Name und Daten), hell, ohne Spiegelung, formatfüllend.<br>⚠ Erkannte Daten immer mit dem Ausweis vergleichen.</p>
    </div></div>
 
    <div class="detail"><div class="body"><h4>Verstoß</h4><div class="abgrid">${abChecks(AB_VERSTOSS, f)}</div>
@@ -1716,6 +1716,38 @@ function abPrep(file){
     im.onerror = rej; im.src = url;
   });
 }
+
+/* Zeilen mit Position aus dem Tesseract-Ergebnis */
+function ocrLines(data){
+  if(data.lines && data.lines.length) return data.lines.map(l => ({text:l.text.trim(), b:l.bbox}));
+  const out = []; (data.blocks || []).forEach(bl => (bl.paragraphs || []).forEach(p => (p.lines || []).forEach(l => out.push({text:l.text.trim(), b:l.bbox}))));
+  return out;
+}
+async function idZoneRead(w, canvas, data){
+  const L = ocrLines(data).filter(l => l.text);
+  const T = L.map(l => idLabelType(l.text));
+  const out = {};
+  const zone = async (i, stop) => {
+    // Beschriftungsblock (z. B. [a] Name + [b] Geburtsname) überspringen
+    let j = i; while(j + 1 < L.length && T[j + 1] && !stop.includes(T[j + 1]) && L[j + 1].b.y0 - L[j].b.y1 < (L[j].b.y1 - L[j].b.y0) * 1.5) j++;
+    const lh = Math.max(12, L[i].b.y1 - L[i].b.y0);
+    let end = L.findIndex((l, k) => k > j && T[k] && l.b.y0 > L[j].b.y1);
+    const top = L[j].b.y1 + 2, bottom = Math.min(canvas.height, end > 0 ? L[end].b.y0 - 2 : top + lh * 3.5);
+    if(bottom - top < lh) return '';
+    const left = Math.max(0, L[i].b.x0 - lh), width = Math.min(canvas.width - left, Math.max(L[i].b.x1 - L[i].b.x0, canvas.width * 0.55));
+    await w.setParameters({tessedit_pageseg_mode:'6', tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜẞÉÈÁÀÓÒÍÚÇŠŽČĆŁŃŚŹŻĘĄŞĞİ-' ."});
+    const r = await w.recognize(canvas, {rectangle:{left:Math.round(left), top:Math.round(top), width:Math.round(width), height:Math.round(bottom - top)}});
+    let lines = (r.data.lines && r.data.lines.length) ? r.data.lines.map(l => ({t:l.text.trim(), c:l.confidence})) : [];
+    if(!lines.length){ const cs = []; (r.data.blocks || []).forEach(bl => (bl.paragraphs || []).forEach(p => (p.lines || []).forEach(l => cs.push({t:l.text.trim(), c:l.confidence})))); lines = cs; }
+    if(!lines.length) lines = r.data.text.split('\n').map(x => ({t:x.trim(), c:r.data.confidence}));
+    for(const ln of lines){ if(!ln.t || /^GEB\b|^\[?B\]/.test(ln.t)) continue; const v = idCapsValue(ln.t); if(v && nameOk(v) && (ln.c == null || ln.c >= 75)) return v; }
+    return '';
+  };
+  const si = T.indexOf('sn'), gi = T.indexOf('gn');
+  if(si >= 0){ const v = await zone(si, ['gn', 'other']); if(v) out.name = v; }
+  if(gi >= 0){ const v = await zone(gi, ['sn', 'other']); if(v) out.vorname = capW(v); }
+  return out;
+}
 async function abOcr(file, side){
   const info = document.getElementById('ocrInfo');
   try {
@@ -1723,8 +1755,11 @@ async function abOcr(file, side){
     if(!window.Tesseract) await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
     const canvas = await abPrep(file);
     const w = await Tesseract.createWorker('deu', 1, { logger: m => { if(m.status === 'recognizing text') info.textContent = `Lese Ausweis … ${Math.round(m.progress * 100)} %`; } });
-    const { data } = await w.recognize(canvas); await w.terminate();
+    const { data } = await w.recognize(canvas, {}, {text:true, blocks:true});
     const res = parseAusweis(data.text, side), cur = abRec().f;
+    // Zweiter, gezielter Lesedurchgang unter den Beschriftungen (nur Großbuchstaben)
+    if(side === 'front'){ try { info.textContent = 'Lese Namen genauer …'; const z = await idZoneRead(w, canvas, data); if(z.name) res.name = z.name; if(z.vorname) res.vorname = z.vorname; } catch(e){} }
+    await w.terminate();
     if(side === 'back'){ ['name', 'vorname'].forEach(k => { if(cur[k]) delete res[k]; }); if(cur.gebdat && !res._gebOk) delete res.gebdat; }
     delete res._gebOk;
     const got = Object.keys(res);
@@ -1738,9 +1773,23 @@ async function abOcr(file, side){
 const MRZ_DIG = s => s.replace(/[OQD]/g, '0').replace(/[IL|]/g, '1').replace(/Z/g, '2').replace(/S/g, '5').replace(/B/g, '8').replace(/G/g, '6');
 function mrzCheck(digits, check){ const w = [7, 3, 1]; let sum = 0; for(let i = 0; i < digits.length; i++){ const c = digits[i]; const v = /\d/.test(c) ? +c : c === '<' ? 0 : c.charCodeAt(0) - 55; sum += v * w[i % 3]; } return sum % 10 === +check; }
 const capW = s => s.toLowerCase().replace(/(^|[\s\-'’])(\p{Ll})/gu, (m, a, b) => a + b.toUpperCase());
-const STOPW = /BUNDES|PUBLIK|UTSCHLAND|DEUTSCH|PERSON|RSONAL|AUSW|IDENTI|CARTE|PASS|SPECIMEN|MUSTERAUSWEIS|GERMANY|NATIONAL/;
+const STOPW = /BUNDES|PUBLIK|UTSCHLAND|DEUTSCH|PERSON|RSONAL|AUSW|IDENTI|CARTE|CARD|PASS|SPECIMEN|MUSTERAUSWEIS|GERMANY|NATIONAL|REPUBLIC|FEDERAL/;
 const capsWord = l => { const ws = (l.match(/[A-ZÄÖÜ][A-ZÄÖÜ\-]{2,}/g) || []).filter(w => !STOPW.test(w)); return ws.sort((a, b) => b.length - a.length)[0] || ''; };
 const yearOk = y => y >= 1900 && y <= new Date().getFullYear();
+/* Plausibilitätsprüfung für erkannte Namen (filtert Muster/Hologramm-„Text“ wie EEESEEEETTT…) */
+function nameOk(v){
+  const ws = String(v || '').trim().split(/[\s\-]+/).filter(Boolean);
+  if(!ws.length || ws.length > 5) return false;
+  return ws.every(w => {
+    const u = w.toUpperCase().replace(/['’.]/g, '');
+    if(!/^\p{L}+$/u.test(u) || u.length < 2 || u.length > 24) return false;
+    if(/(\p{L})\1\1/u.test(u)) return false;                                  // 3x gleicher Buchstabe
+    if(!/[AEIOUYÄÖÜÀ-ÆÈ-ÏÒ-ÖÙ-ÜĄĘĖĮŲŌŪ]/u.test(u) && u.length > 2) return false; // kein Vokal
+    if(/[^AEIOUYÄÖÜÀ-ÆÈ-ÏÒ-ÖÙ-ÜĄĘĖĮŲŌŪ]{6,}/u.test(u)) return false;            // 6+ Konsonanten am Stück
+    if(u.length >= 6 && new Set(u).size / u.length < 0.4) return false;        // zu wenig verschiedene Buchstaben
+    return true;
+  });
+}
 function parseMRZ(lines){
   const out = {};
   const L = lines.map(l => l.replace(/\s/g, '').replace(/[«‹]/g, '<').toUpperCase()).filter(l => /<</.test(l) || /<{3,}/.test(l));
@@ -1758,7 +1807,8 @@ function parseMRZ(lines){
       if(!/^[A-Z]+(<[A-Z]+)*$/.test(sn) || sn.length < 2 || /^(IDD?|I|P|A|C)$/.test(sn) || !/^[A-Z]{2,}/.test(gn)) continue;
       let g = gn.split('<').filter(x => x.length >= 2).join(' ').replace(/\d.*$/, '');
       const tail = g.match(/[SCKLEZ]{4,}$/); if(tail) g = g.slice(0, -tail[0].length);
-      cand.push({sn:sn.replace(/</g, ' '), gn:g.trim()});
+      if(!nameOk(sn.replace(/</g, ' '))) continue;
+      cand.push({sn:sn.replace(/</g, ' '), gn:nameOk(g.trim()) ? g.trim() : ''});
       break;
     }
   }
@@ -1774,6 +1824,7 @@ function parseMRZ(lines){
 const ID_LBL = {
   sn:['surname','nachname','familienname','name','nom','cognome','apellido','apellidos','nazwisko','prijmeni','priezvisko','prezime','vezeteknev','nume','soyadi','soyad','efternamn','etternavn','efternavn','sukunimi','pavarde','uzvards','perekonnanimi','priimek','achternaam','naam','apelido','apelidos','familyname','eponymo','epwnymo','prezyme'],
   gn:['vorname','vornamen','given','givennames','prenom','prenoms','nome','nomi','nombre','nombres','voornaam','voornamen','imiona','imie','jmeno','jmena','meno','ime','utonev','utonevek','prenume','adi','fornamn','fornavn','etunimet','etunimi','vardas','vards','eesnimi','eesnimed','nomes','prenome','onoma'],
+  other:['nationality','nationalitat','nationalite','nationalita','staatsangehorigkeit','geburtsdatum','geburtstag','geburtsort','date','datum','place','lieu','expiry','gultig','gultigbis','sex','geschlecht','height','grosse','address','anschrift','adresse','authority','behorde','signature','unterschrift','augenfarbe','eyes'],
   birth:['geburtsname','geboren','geb','birth','naissance','nascita','nacimiento','rodowe','rodne','rodene','geboorte','szuletesi','dogum','nascimento']
 };
 const ID_STRONG_SN = new Set(ID_LBL.sn.filter(w => !['name','naam'].includes(w)));
@@ -1791,7 +1842,9 @@ function idLabelType(line){
   if(exBirth && !exGn) return 'birth';
   if(exSn) return 'sn';
   if(exGn) return 'gn';
+  if(ws.some(w => ID_LBL.other.includes(w))) return 'other';
   if(has(ID_LBL.birth)) return 'birth';
+  if(has(ID_LBL.other)) return 'other';
   if(ws.some(w => idWordIs(w, [...ID_STRONG_SN]))) return 'sn';
   if(has(ID_LBL.gn)) return 'gn';
   if(ws.some(w => w === 'name' || w === 'naam')) return 'sn';
@@ -1812,20 +1865,22 @@ function idByLabels(lines){
     for(let k = i + 1; k < Math.min(lines.length, i + 4); k++){
       if(types[k] && stopTypes.includes(types[k])) return '';
       if(types[k]) continue;
+      if(/\bgeb\b\.?/i.test(lines[k]) || /^\s*\[?b\]/i.test(lines[k])) continue;
       if(/\d{2}\s*[.:,]\s*\d{2}/.test(lines[k])) return '';
-      const v = idCapsValue(lines[k]); if(v) return v;
+      const v = idCapsValue(lines[k]); if(v && nameOk(v)) return v;
       // gemischt geschriebene Werte (z. B. „Camille, Marie“)
       const mx = lines[k].replace(/[^\p{L}\s'’\-,]/gu, ' ').replace(/\s+/g, ' ').trim();
-      if(mx.replace(/[^\p{L}]/gu, '').length >= 3 && /^\p{Lu}/u.test(mx) && mx.split(' ').length <= 4) return mx.replace(/\s*,\s*/g, ' ');
+      if(mx.replace(/[^\p{L}]/gu, '').length >= 3 && /^\p{Lu}/u.test(mx) && mx.split(' ').length <= 4 && nameOk(mx.replace(/,/g, ' '))) return mx.replace(/\s*,\s*/g, ' ');
     }
     return '';
   };
   const si = types.indexOf('sn'), gi = types.indexOf('gn');
-  if(si >= 0){ let v = valAfter(si, ['gn', 'birth']);
+  out._sn = si >= 0; out._gn = gi >= 0;
+  if(si >= 0){ let v = valAfter(si, ['gn', 'other']);
     // Spanien: zwei Nachnamen in zwei Zeilen
     if(v && /apellidos/.test(idNorm(lines[si]))){ const k = lines.findIndex((l, j) => j > si && idCapsValue(l) === v); if(k > 0 && lines[k + 1] && !types[k + 1]){ const v2 = idCapsValue(lines[k + 1]); if(v2) v += ' ' + v2; } }
     if(v) out.name = v; }
-  if(gi >= 0){ const v = valAfter(gi, ['sn', 'birth']); if(v) out.vorname = capW(v); }
+  if(gi >= 0){ const v = valAfter(gi, ['sn', 'birth', 'other']); if(v) out.vorname = capW(v); }
   return out;
 }
 function parseAusweis(text, side){
@@ -1845,6 +1900,9 @@ function parseAusweis(text, side){
     if(vi >= 0){ const v = caps.find(x => x.i > vi && (di < 0 || x.i < di)); if(v) out.vorname = capW(v.w); }
     // Beschriftungen (Name/Surname/Nom, Cognome, Apellidos, Nazwisko … / Vornamen, Prénoms, Nome, Imiona …) haben Vorrang
     const lab = idByLabels(lines);
+    // Beschriftung gefunden, aber Wert unlesbar (z. B. verdeckt) → nicht raten
+    if(lab._sn && !lab.name) delete out.name;
+    if(lab._gn && !lab.vorname) delete out.vorname;
     if(lab.name) out.name = lab.name;
     if(lab.vorname) out.vorname = lab.vorname;
     if(di >= 0){
@@ -1868,6 +1926,7 @@ function parseAusweis(text, side){
       out.anschrift = [st ? capW(st[1].replace(/[\-\.]+$/, '')).replace(/strasse\b/gi, 'straße').replace(/Str\b/g, 'Str.') + ' ' + st[2].replace(/\s/g, '') : '', cm ? `${cm[1]} ${capW(cm[2].trim())}` : ''].filter(Boolean).join(', ');
     }
   }
+  ['name', 'vorname', 'gebort'].forEach(k => { if(out[k] && !nameOk(out[k])) delete out[k]; });
   Object.keys(out).forEach(k => { if(!out[k] && out[k] !== false) delete out[k]; });
   return out;
 }

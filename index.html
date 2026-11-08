@@ -4007,13 +4007,24 @@ function dolVoice(code){
   const c = code.toLowerCase(), base = c.slice(0, 2);
   return vs.find(v => v.lang.toLowerCase().replace('_', '-') === c) || vs.find(v => v.lang.toLowerCase().startsWith(base)) || null;
 }
+const DOL_SILENT = 'data:audio/wav;base64,UklGRoQJAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YWAJAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA=';
+let dolAudio = null, dolU = null;
+// iPhone: Stummschalter/Audiositzung „freischalten“, indem einmal ein stummes Audio abgespielt wird
+function dolUnlock(){
+  try { if(!dolAudio){ dolAudio = new Audio(DOL_SILENT); dolAudio.setAttribute('playsinline', ''); dolAudio.volume = 0.01; } dolAudio.currentTime = 0; const p = dolAudio.play(); if(p && p.catch) p.catch(() => {}); } catch(e){}
+}
 function dolSpeak(text, code, rate){
-  if(!('speechSynthesis' in window)){ toast('Vorlesen wird von diesem Browser nicht unterstützt', true); return; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text); u.lang = code; u.rate = rate || dolRate;
+  if(!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined'){ toast('Vorlesen wird von diesem Browser nicht unterstützt – Text bitte zeigen', true); return; }
+  dolUnlock();
+  const ss = window.speechSynthesis;
+  if(ss.speaking || ss.pending) ss.cancel();
+  const u = new SpeechSynthesisUtterance(text); u.lang = code; u.rate = rate || dolRate; u.volume = 1; u.pitch = 1;
   const v = dolVoice(code); if(v) u.voice = v;
-  else if((speechSynthesis.getVoices() || []).length) toast('Keine Stimme für diese Sprache installiert – Text bitte zeigen', true);
-  speechSynthesis.speak(u);
+  u.onerror = e => { if(e.error !== 'interrupted' && e.error !== 'canceled') toast('Sprachausgabe nicht möglich (' + (e.error || 'Fehler') + ') – Text bitte zeigen', true); };
+  dolU = u;                       // Referenz halten (Safari verliert sonst die Ausgabe)
+  ss.speak(u);
+  try { ss.resume(); } catch(e){}
+  if(!v && (ss.getVoices() || []).length) setTimeout(() => { if(!ss.speaking) toast('Für diese Sprache ist keine Stimme installiert – Text bitte zeigen', true); }, 1200);
 }
 if('speechSynthesis' in window){ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {}; }
 function viewDolmetscher(){
@@ -4028,6 +4039,7 @@ function viewDolmetscher(){
   return `<div class="detail"><div class="dhd">${ico('i_dolm', '#dbe7fb')}<div class="dt"><h2>Dolmetscher</h2><span>Satz antippen → wird groß angezeigt und vorgelesen</span></div></div><div class="body">
     <div class="dollangs">${DOL_LANGS.map(l => `<button class="chip${l[0] === dolLang ? ' on' : ''}" data-dollang="${l[0]}"><b>${esc(l[1])}</b><small>${l[2]}</small></button>`).join('')}</div>
     <div class="row" style="gap:8px;margin-top:8px"><input class="inp" id="dolQ" placeholder="Satz suchen …" value="${esc(dolQ)}" style="flex:1;margin:0"><button class="btn" data-dolrate="1" style="margin:0">${dolRate < 0.8 ? '🐢 langsam' : '▶ normal'}</button></div>
+    <div class="small" style="margin-top:6px">Kein Ton? Stummschalter am iPhone aus, Lautstärke hoch, ggf. Stimme laden. <button class="btn" data-doltest="1" style="margin:0 0 0 4px;padding:2px 10px;min-height:30px">🔊 Ton testen</button></div>
     <div class="dolyn"><button class="btn big" data-dolyn="0">${esc(yn[0])}</button><button class="btn big" data-dolyn="1">${esc(yn[1])}</button></div>
    </div></div>
    ${sec || '<p class="small" style="margin:10px">Kein Satz gefunden.</p>'}
@@ -4057,6 +4069,7 @@ document.addEventListener('click', e => {
   if(r){ const [ci, pi] = r.dataset.dol.split(':').map(Number), li = dolIdx(), p = DOL[ci].p[pi]; dolShow(p[li + 1], p[0], DOL_LANGS[li]); return; }
   const yn = e.target.closest('[data-dolyn]');
   if(yn){ const L = DOL_LANGS[dolIdx()]; const y = DOL_YN[L[0]]; dolShow(`${y[0]}  /  ${y[1]}`, 'Ja / Nein – bitte zeigen Sie auf Ihre Antwort', L); return; }
+  if(e.target.closest('[data-doltest]')){ const L = DOL_LANGS[dolIdx()]; const v = dolVoice(L[3]), n = ('speechSynthesis' in window) ? speechSynthesis.getVoices().length : 0; dolSpeak(DOL[0].p[0][dolIdx() + 1], L[3]); toast(n ? (v ? `Stimme: ${v.name}` : `Keine ${L[2]}-Stimme gefunden (${n} Stimmen installiert)`) : 'Stimmen werden geladen …'); return; }
   if(e.target.closest('[data-dolrate]')){ dolRate = dolRate < 0.8 ? 0.9 : 0.7; render(false); return; }
   if(e.target.closest('[data-dolfree]')){ const t = (document.getElementById('dolFree') || {}).value || ''; if(!t.trim()) return; window.open(`https://translate.google.com/?sl=de&tl=${dolLang}&text=${encodeURIComponent(t)}&op=translate`, '_blank', 'noopener'); }
 });

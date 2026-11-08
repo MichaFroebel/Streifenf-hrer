@@ -598,7 +598,7 @@ function viewStart(){
      tile('#berichte','i_sign','#e5dcf3','Berichte', 'Antreffbericht · Word'),
      tile('#zeichen','zeichen',null,'Verkehrs&shy;zeichen', VZ.length + ' Zeichen'),
      tile('#kennzeichen','i_plate','#dbe7fb','Kennzeichen-Auskunft', 'Kürzel, Sonderkennzeichen'),
-     tile('#bubatz','i_leaf','#dcefdc','Cannabis-Karte', 'Bubatzkarte Stuttgart'),
+     tile('#bubatz','i_leaf','#dcefdc','Cannabis-Karte', 'Bubatzkarte mit Standort'),
      tile('#telefon','telefon',null,'Telefonliste', TEL.reduce((n,g) => n + telCount(g), 0) + ' Nummern'),
      tile('#notfall','notfall',null,'Notfall & Funk','Notruf, ABC')])
   + disclaimer() + edEntry();
@@ -3466,15 +3466,30 @@ function bzLocate(){
     bzMap.setView([la, lo], 17); setTimeout(() => bzLoad().then(() => bzCheck(la, lo, `Mein Standort (± ${Math.round(ac)} m)`)), 300);
   }, err => bzStatus(err.code === 1 ? 'Standortzugriff verweigert.' : 'Standort nicht gefunden.', 'warn'), {enableHighAccuracy:true, timeout:20000, maximumAge:15000});
 }
+const BZ_URL = (lat, lng, z) => `https://map.bubatzkarte.app/map?lat=${(+lat).toFixed(6)}&lng=${(+lng).toFixed(6)}&z=${z}`;
+let bzPos = null;
 function viewBubatz(){
-  const url = 'https://www.verbotszonen.de/bubatzkarte/stuttgart';
-  return `<div class="detail"><div class="dhd">${ico('i_leaf', '#dcefdc')}<div class="dt"><h2>Cannabis-Karte Stuttgart</h2><span>Konsumverbotszonen nach § 5 KCanG · verbotszonen.de</span></div></div><div class="body">
-    <div class="row" style="gap:8px;margin:0 0 8px"><a class="btn primary big" href="${url}" target="_blank" rel="noopener" style="flex:1;margin:0;text-align:center">📍 Karte mit Standort öffnen</a></div>
-    <p class="small" style="margin:0">In der Karte unten den Standort-Knopf antippen. Falls die Karte hier nicht erscheint oder der Standort nicht freigegeben wird: oben „Karte mit Standort öffnen“ – sie öffnet sich dann im Browser.</p>
+  const u = bzPos ? BZ_URL(bzPos[0], bzPos[1], 17) : BZ_URL(48.77781, 9.179137, 13.3);
+  setTimeout(() => { if(!bzPos) bzGoto(true); }, 50);
+  return `<div class="detail"><div class="dhd">${ico('i_leaf', '#dcefdc')}<div class="dt"><h2>Cannabis-Karte Stuttgart</h2><span>Konsumverbotszonen nach § 5 KCanG · bubatzkarte.app</span></div></div><div class="body">
+    <div class="row" style="gap:8px;margin:0 0 8px"><button class="btn primary big" data-bz="here" style="flex:1;margin:0">📍 Zu meinem Standort</button><a class="btn" id="bzOpen" href="${u}" target="_blank" rel="noopener" style="margin:0;display:flex;align-items:center">↗ Browser</a></div>
+    <div id="bzInfo" class="small">Karte zeigt Stuttgart. Standort wird ermittelt …</div>
    </div></div>
-   <div class="bzmapwrap"><iframe id="bzFrame" src="${url}" title="Bubatzkarte Stuttgart" allow="geolocation *; fullscreen" referrerpolicy="no-referrer" loading="lazy" style="width:100%;height:72vh;min-height:420px;border:0;display:block;background:#fff"></iframe></div>
-   <p class="small" style="margin:10px 4px">Karte: verbotszonen.de (Data JT UG), Daten © OpenStreetMap-Mitwirkende. Laut Anbieter keine rechtsverbindliche Auskunft – maßgeblich ist die Lage vor Ort (Sichtweite zum Eingangsbereich, höchstens 100 m; Fußgängerzonen 7–20 Uhr; nie in Gegenwart von unter 18-Jährigen). Verstoß: OWi nach § 36 KCanG.</p>`;
+   <div class="bzmapwrap"><iframe id="bzFrame" src="${u}" title="Bubatzkarte" allow="geolocation *; fullscreen" loading="eager" style="width:100%;height:72vh;min-height:420px;border:0;display:block;background:#fff"></iframe></div>
+   <p class="small" style="margin:10px 4px">Karte: bubatzkarte.app (LEA SYSTEMS GmbH &amp; Co. KG). Keine rechtsverbindliche Auskunft – maßgeblich ist die Lage vor Ort (Sichtweite zum Eingangsbereich, höchstens 100 m; Fußgängerzonen 7–20 Uhr; nie in Gegenwart von unter 18-Jährigen). Verstoß: OWi nach § 36 KCanG. Falls die Karte hier leer bleibt: „↗ Browser“.</p>`;
 }
+function bzGoto(silent){
+  const info = document.getElementById('bzInfo');
+  if(!navigator.geolocation){ if(info) info.textContent = 'Standort wird von diesem Gerät nicht unterstützt.'; return; }
+  if(info && !silent) info.textContent = 'Standort wird ermittelt …';
+  navigator.geolocation.getCurrentPosition(p => {
+    bzPos = [p.coords.latitude, p.coords.longitude];
+    const u = BZ_URL(bzPos[0], bzPos[1], 17), f = document.getElementById('bzFrame'), o = document.getElementById('bzOpen'), i = document.getElementById('bzInfo');
+    if(f) f.src = u; if(o) o.href = u;
+    if(i) i.textContent = `Karte auf deinen Standort gesetzt (± ${Math.round(p.coords.accuracy)} m).`;
+  }, err => { const i = document.getElementById('bzInfo'); if(i) i.textContent = err.code === 1 ? 'Standortzugriff verweigert – Karte zeigt Stuttgart.' : 'Standort nicht gefunden – Karte zeigt Stuttgart.'; }, {enableHighAccuracy:true, timeout:15000, maximumAge:30000});
+}
+document.addEventListener('click', e => { if(e.target.closest('[data-bz="here"]')) bzGoto(false); });
 async function bzInit(){
   const box = document.getElementById('bzMap'); if(!box) return;
   try { await loadLeaflet(); } catch(e){ bzStatus('Karte nicht verfügbar – keine Internetverbindung?', 'warn'); return; }

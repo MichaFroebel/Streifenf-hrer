@@ -4283,8 +4283,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
    DIGITALE VISITENKARTE: vCard als QR-Code (offline erzeugt)
    ========================================================= */
 ICONS.i_card = '<rect x="2.5" y="5" width="19" height="14" rx="2"/><circle cx="8" cy="11" r="2.2"/><path d="M4.8 16.2c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14 10h5M14 13h4"/>';
-const VC_DEF = {vorname:'', nachname:'', titel:'Städtischer Vollzugsdienst', org:'Landeshauptstadt Stuttgart', abt:'Amt für öffentliche Ordnung', tel:'', mobil:'', mail:'', str:'', plz:'', ort:'Stuttgart', web:'https://www.stuttgart.de', notiz:''};
-const vcGet = () => Object.assign({}, VC_DEF, store.get('vcard', {}));
+const VC_DEF = {vorname:'', nachname:'', titel:'GVB', org:'Landeshauptstadt Stuttgart', abt:'Amt für öffentliche Ordnung', tel:'', mobil:'', mail:'', str:'', plz:'', ort:'Stuttgart', notiz:''};
+const vcGet = () => { const v = Object.assign({}, VC_DEF, {titel: (typeof abProfile === 'function' && abProfile().funktion) || 'GVB'}, store.get('vcard', {})); if(v.titel === 'Städtischer Vollzugsdienst') v.titel = 'GVB'; return v; };
 const vcEsc = s => String(s || '').trim().replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1');
 function vcText(v){
   const L = ['BEGIN:VCARD', 'VERSION:3.0'];
@@ -4296,7 +4296,6 @@ function vcText(v){
   if(v.mobil) L.push(`TEL;TYPE=WORK,CELL:${v.mobil.trim()}`);
   if(v.mail) L.push(`EMAIL;TYPE=WORK:${v.mail.trim()}`);
   if(v.str || v.plz || v.ort) L.push(`ADR;TYPE=WORK:;;${vcEsc(v.str)};${vcEsc(v.ort)};;${vcEsc(v.plz)};Deutschland`);
-  if(v.web) L.push(`URL:${v.web.trim()}`);
   if(v.notiz) L.push(`NOTE:${vcEsc(v.notiz)}`);
   L.push('END:VCARD');
   return L.join('\r\n');
@@ -4331,7 +4330,7 @@ function viewVisitenkarte(){
     <div class="note" style="margin-top:10px">Nur <b>dienstliche</b> Kontaktdaten eintragen – keine privaten Nummern. Die Daten bleiben nur auf diesem Gerät; der QR-Code wird ohne Internet erzeugt.</div>
     <div class="abform" style="margin-top:6px">
      <div class="row2"><div>${F('Vorname', 'vorname')}</div><div>${F('Nachname', 'nachname')}</div></div>
-     ${F('Funktion / Titel', 'titel', 'z. B. Städtischer Vollzugsdienst, Praxisanleiter')}
+     ${F('Funktion / Titel', 'titel', 'GVB')}
      ${F('Organisation', 'org')}
      ${F('Abteilung', 'abt')}
      ${F('Telefon (dienstlich)', 'tel', '+49 711 …', 'tel', 'tel')}
@@ -4339,7 +4338,6 @@ function viewVisitenkarte(){
      ${F('E-Mail (dienstlich)', 'mail', 'vorname.nachname@stuttgart.de', 'email', 'email')}
      ${F('Straße und Hausnummer', 'str')}
      <div class="row2"><div style="flex:.6">${F('PLZ', 'plz', '', '', 'numeric')}</div><div>${F('Ort', 'ort')}</div></div>
-     ${F('Webseite', 'web', '', 'url', 'url')}
      ${F('Notiz (optional)', 'notiz', 'z. B. Erreichbarkeit, Aktenzeichen')}
      <p class="small">Wird automatisch gespeichert.</p>
     </div>

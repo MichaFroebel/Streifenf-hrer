@@ -1598,10 +1598,11 @@ const AB_MASSN = [
 const abList = () => store.get('berichte', []);
 const abSave = list => { if(!store.set('berichte', list)) toast('Speicher voll – bitte alte Berichte löschen', true); };
 const abGet = id => abList().find(r => r.id === id);
-const abProfile = () => { const v = (typeof vcGet === 'function') ? vcGet() : {}, o = store.get('abprofil', {}); return {name:v.nachname || o.name || '', funktion:v.titel || o.funktion || 'GVB', ek:v.ek != null ? v.ek : (o.ek || ''), nebenstelle:v.nebenstelle != null ? v.nebenstelle : (o.nebenstelle || ''), sig:v.sig || ''}; };
+const abProfile = () => { const v = (typeof vcGet === 'function') ? vcGet() : {}, o = store.get('abprofil', {}); return {name:v.nachname || o.name || '', funktion:v.titel || o.funktion || 'GVB', ek:v.ek != null ? v.ek : (o.ek || ''), nebenstelle:v.nebenstelle != null ? v.nebenstelle : (o.nebenstelle || ''), dg:v.dg || '', sig:v.sig || ''}; };
 function abNew(typ){
   const p = abProfile(), d = new Date(), pad = n => String(n).padStart(2, '0');
-  if(typ === 'akp'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, bis:'', sb:'', sigOn:!!p.sig } }; const l = abList(); l.unshift(r); abSave(l); return r; }
+  if(typ === 'akp'){ const h = d.getHours() * 60 + d.getMinutes(), sp = h >= 17 * 60 + 45 ? ['18:30', '20:30'] : ['15:30', '17:30'];
+    const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:sp[0], bis:sp[1], sb:p.name || '', dg:String(p.dg || '').replace(/^\s*(DG|Dienstgruppe)\s*/i, ''), sigOn:!!p.sig } }; const l = abList(); l.unshift(r); abSave(l); return r; }
   if(typ === 'sonder'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:'', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'Bußgeldstelle', zk:'32-21.1', sTyp:'', photos:[] } }; const l = abList(); l.unshift(r); abSave(l); return r; }
   if(typ === 'vers'){ const v = kzVersFarbe(); const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:'', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'Polizeirevier', zk:'32-21.1', fzArt:'E-Scooter (Elektrokleinstfahrzeug)', vsFarbe:v.farbe, photos:[] } }; const l = abList(); l.unshift(r); abSave(l); return r; }
   if(typ === 'streife'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:'', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'32-21.1', zk:'L-Einsatz' } }; const l = abList(); l.unshift(r); abSave(l); return r; }
@@ -1620,8 +1621,8 @@ const abTitle = f => [f.name ? f.name.toUpperCase() : (f.firma || ''), f.vorname
 function viewBerichte(){
   const weg = abPurge(); if(weg) setTimeout(() => toast(`${weg} ${weg === 1 ? 'Bericht' : 'Berichte'} älter als 30 Tage automatisch gelöscht`), 50);
   const list = abList();
-  return `<div class="thead">${ico('i_sign', '#e5dcf3')}<p>Berichte direkt auf dem Handy ausfüllen und als <b>Word-Datei</b> exportieren. Die Tagebuchnummer kann leer bleiben und auf der Wache ergänzt werden.</p></div>`
-   + grid([tile('#bericht/neu', 'i_sign', '#e5dcf3', 'Neuer Antreffbericht', 'Vorlage 32-21.1'), tile('#bericht/neu-abschlepp', 'i_tow', '#e5dcf3', 'Neue Abschleppmaßnahme', 'Vorlage 32-32.3'), tile('#bericht/neu-klein', 'i_warn', '#e5dcf3', 'Neue Standardanzeige', 'Müll, Schrottrad, Mängel …'), tile('#bericht/neu-tnd', 'i_paw', '#e5dcf3', 'Neuer TND-Bericht', 'Tiernotdienst'), tile('#bericht/neu-streife', 'i_route', '#e5dcf3', 'Neuer Streifenbericht', 'an 32-21.1, z. K. L-Einsatz'), tile('#bericht/neu-sonder', 'i_music', '#e5dcf3', 'Sondernutzungs&shy;anzeige', 'Straßenmusik, Betteln'), tile('#bericht/neu-vers', 'i_scooter', '#e5dcf3', 'Verstoß Pflicht&shy;versicherung', 'E-Scooter, Versicherungskennzeichen'), tile('#bericht/neu-akp', 'i_route', '#e5dcf3', 'AKP-Bericht', 'Sondereinsatz AKP und Umfeld'), tile('#visitenkarte', 'i_person', '#e5dcf3', 'Meine Angaben', 'Visitenkarte, Signatur')])
+  return `<div class="thead">${ico('i_sign', '#e5dcf3')}<p>Berichte direkt auf dem Handy ausfüllen und als <b>Word-Datei</b> exportieren. Die Tagebuchnummer kann leer bleiben und auf der Wache ergänzt werden. Name, Funktion, Dienstgruppe, Nebenstelle und Signatur kommen aus der <a href="#visitenkarte">Visitenkarte</a>.</p></div>`
+   + grid([tile('#bericht/neu', 'i_sign', '#e5dcf3', 'Neuer Antreffbericht', 'Vorlage 32-21.1'), tile('#bericht/neu-abschlepp', 'i_tow', '#e5dcf3', 'Neue Abschleppmaßnahme', 'Vorlage 32-32.3'), tile('#bericht/neu-klein', 'i_warn', '#e5dcf3', 'Neue Standardanzeige', 'Müll, Schrottrad, Mängel …'), tile('#bericht/neu-tnd', 'i_paw', '#e5dcf3', 'Neuer TND-Bericht', 'Tiernotdienst'), tile('#bericht/neu-streife', 'i_route', '#e5dcf3', 'Neuer Streifenbericht', 'an 32-21.1, z. K. L-Einsatz'), tile('#bericht/neu-sonder', 'i_music', '#e5dcf3', 'Sondernutzungs&shy;anzeige', 'Straßenmusik, Betteln'), tile('#bericht/neu-vers', 'i_scooter', '#e5dcf3', 'Verstoß Pflicht&shy;versicherung', 'E-Scooter, Versicherungskennzeichen'), tile('#bericht/neu-akp', 'i_route', '#e5dcf3', 'AKP-Bericht', 'Sondereinsatz AKP und Umfeld')])
    + (list.length ? `<div class="sec">Gespeicherte Berichte (${list.length})</div><p class="small" style="margin:-4px 0 8px">Nach links wischen: <b>Duplizieren</b> oder <b>Löschen</b>. Berichte werden 30 Tage nach der letzten Änderung automatisch gelöscht.</p>` + list.map(r => swWrap(r, r.typ === 'akp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · AKP-Bericht</span><br><b>${esc([r.f.von, r.f.bis].filter(Boolean).join('–') || 'Sondereinsatz AKP')}${r.f.dg ? ' · DG ' + esc(r.f.dg) : ''}</b><br><small class="small">${esc(r.f.staerke || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'sonder' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sondernutzung</span><br><b>${esc((SN_TYP[r.f.sTyp] || {t:'Art noch nicht gewählt'}).t)}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || r.f.spielort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'vers' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Pflichtversicherung</span><br><b>${esc(((r.f.vsNum || '') + ' ' + (r.f.vsBuch || '')).trim() || 'ohne Kennzeichen')}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'streife' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Streifenbericht</span><br><b>${esc(r.f.gebiet || stRows(r.f).map(x => x.ort).filter(Boolean).slice(0, 2).join(', ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ek || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'tnd' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · TND-Bericht</span><br><b>${esc([r.f.vorgang, r.f.tierart].filter(Boolean).join(' · ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'klein' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Standardanzeige</span><br><b>${esc((kaType(r.f) || {}).t || 'Art noch nicht gewählt')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'abschlepp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Abschleppmaßnahme</span><br><b>${esc(r.f.kennz || 'ohne Kennzeichen')}</b><br><small class="small">${esc(r.f.ortAnkunft || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Antreffbericht · ${esc(r.f.art === 'Eigener Zusatz' ? (r.f.artFrei || '') : (r.f.art || 'ohne Art'))}</span><br><b>${esc(abTitle(r.f))}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>`)).join('') : '')
    + `<div class="note" style="margin-top:14px"><b>Datenschutz:</b> Berichte liegen nur auf diesem Gerät. Ausweisfotos werden nicht gespeichert, nur der erkannte Text. Nach dem Export und der Abgabe auf der Wache den Bericht hier löschen. Möglichst nur auf dem Diensthandy nutzen.</div>` + disclaimer();
 }
@@ -4463,7 +4464,8 @@ function vcText(v){
   L.push(`N:${vcEsc(v.nachname)};${vcEsc(v.vorname)};;;`);
   L.push(`FN:${vcEsc([v.vorname, v.nachname].filter(Boolean).join(' ') || v.org)}`);
   if(v.org || v.abt) L.push(`ORG:${vcEsc(v.org)}${v.abt ? ';' + vcEsc(v.abt) : ''}`);
-  if(v.titel) L.push(`TITLE:${vcEsc(v.titel)}`);
+  const tt = [v.titel, v.dg ? 'Dienstgruppe ' + String(v.dg).replace(/^\s*(DG|Dienstgruppe)\s*/i, '') : ''].filter(Boolean).join(' · ');
+  if(tt) L.push(`TITLE:${vcEsc(tt)}`);
   if(v.tel) L.push(`TEL;TYPE=WORK,VOICE:${v.tel.trim()}`);
   if(v.mobil) L.push(`TEL;TYPE=WORK,CELL:${v.mobil.trim()}`);
   if(v.mail) L.push(`EMAIL;TYPE=WORK:${v.mail.trim()}`);
@@ -4487,7 +4489,7 @@ function vcPreview(v){
   const hasData = name || v.tel || v.mobil || v.mail;
   return `<div class="vccard">
     <div class="vcinfo"><b class="vcname">${esc(name || 'Name eintragen')}</b>
-     ${v.titel ? `<span>${esc(v.titel)}</span>` : ''}
+     ${v.titel || v.dg ? `<span>${esc([v.titel, v.dg ? 'Dienstgruppe ' + String(v.dg).replace(/^\s*(DG|Dienstgruppe)\s*/i, '') : ''].filter(Boolean).join(' · '))}</span>` : ''}
      <span class="vcorg">${esc([v.org, v.abt].filter(Boolean).join(' · '))}</span>
      <div class="vcdet">${v.tel ? `☎ ${esc(v.tel)}<br>` : ''}${v.mobil ? `📱 ${esc(v.mobil)}<br>` : ''}${v.mail ? `✉ ${esc(v.mail)}<br>` : ''}${v.str || v.plz ? `📍 ${esc([v.str, [v.plz, v.ort].filter(Boolean).join(' ')].filter(Boolean).join(', '))}` : ''}</div></div>
     <div class="vcqrwrap">${hasData ? vcQrSvg(vcText(v), 150) : '<div class="vcqrempty">QR-Code erscheint, sobald Name oder Kontakt eingetragen ist</div>'}</div>
@@ -4502,7 +4504,7 @@ function viewVisitenkarte(){
     <div class="note" style="margin-top:10px">Nur <b>dienstliche</b> Kontaktdaten eintragen – keine privaten Nummern. Die Daten bleiben nur auf diesem Gerät; der QR-Code wird ohne Internet erzeugt.</div>
     <div class="abform" style="margin-top:6px">
      <div class="row2"><div>${F('Vorname', 'vorname')}</div><div>${F('Nachname', 'nachname')}</div></div>
-     ${F('Funktion / Titel', 'titel', 'GVB')}
+     <div class="row2"><div>${F('Funktion / Titel', 'titel', 'GVB')}</div><div style="flex:.7">${F('Dienstgruppe', 'dg', 'z. B. 3', '', 'numeric')}</div></div>
      ${F('Organisation', 'org')}
      ${F('Abteilung', 'abt')}
      ${F('Telefon (dienstlich)', 'tel', '+49 711 …', 'tel', 'tel')}
@@ -4512,7 +4514,7 @@ function viewVisitenkarte(){
      <div class="row2"><div style="flex:.6">${F('PLZ', 'plz', '', '', 'numeric')}</div><div>${F('Ort', 'ort')}</div></div>
      ${F('Notiz (optional)', 'notiz', 'z. B. Erreichbarkeit, Aktenzeichen')}
      <h4 style="margin-top:18px">Angaben für Berichte</h4>
-     <p class="small" style="margin-top:-4px">Nachname und Funktion von oben werden als Unterschrift und SB in neue Berichte übernommen. Die folgenden Angaben stehen <b>nicht</b> auf der Visitenkarte und nicht im QR-Code.</p>
+     <p class="small" style="margin-top:-4px">Nachname, Funktion und Dienstgruppe von oben werden in neue Berichte übernommen. Die folgenden Angaben stehen <b>nicht</b> auf der Visitenkarte und nicht im QR-Code.</p>
      ${F('Einsatzkräfte (Standard)', 'ek')}
      ${F('Nebenstelle', 'nebenstelle', 'Telefon-Nebenstelle', '', 'tel')}
      <label class="lbl">Digitale Signatur (für Standardanzeigen)</label>
@@ -4830,6 +4832,8 @@ function viewAkp(r){
    </div></div>
    <div class="detail"><div class="body"><h4>Einsatz</h4>
     ${abIn('Datum', 'datum', f.datum, '', 'f', 'date')}
+    <label class="lbl">Streifenzeit</label>
+    <div class="seg akpseg">${[['15:30', '17:30'], ['18:30', '20:30']].map(([a, b]) => `<button type="button" class="${f.von === a && f.bis === b ? 'on' : ''}" data-akpzeit="${a}|${b}">${a}–${b}</button>`).join('')}</div>
     ${asTime('Streife von', 'von', f.von)}${asTime('Streife bis', 'bis', f.bis)}
     <div class="abrow"><div>${abIn('Dienstgruppe', 'dg', f.dg, '')}</div><div>${abIn('Einsatzstärke', 'staerke', f.staerke, '')}</div></div>
    </div></div>
@@ -4853,6 +4857,10 @@ function viewAkp(r){
   </div>`;
 }
 document.addEventListener('click', e => {
+  const z = e.target.closest('[data-akpzeit]');
+  if(z){ e.preventDefault(); const r = abRec(); if(!r) return; const [a, b] = z.dataset.akpzeit.split('|'); r.f.von = a; r.f.bis = b; r.upd = Date.now(); abFlush();
+    const vi = app.querySelector('[data-f="von"]'), bi = app.querySelector('[data-f="bis"]'); if(vi) vi.value = a; if(bi) bi.value = b;
+    z.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === z)); return; }
   const b = e.target.closest('[data-akp]'); if(!b) return; e.preventDefault();
   const r = abRec(); if(!r) return;
   const k = b.dataset.akp, n = Math.max(0, (parseInt(r.f[k], 10) || 0) + (+b.dataset.d));
@@ -4906,6 +4914,11 @@ function akpBuildDocx(f){
   const enc = new TextEncoder();
   return zipStore([{name:'[Content_Types].xml', data:enc.encode(ct)}, {name:'_rels/.rels', data:enc.encode(rels)}, {name:'word/document.xml', data:enc.encode(doc)}, {name:'word/styles.xml', data:enc.encode(styles)}, {name:'word/_rels/document.xml.rels', data:enc.encode(drels)}, ...(sz ? [{name:'word/media/signatur.png', data:b64u8(sigUrl.split(',')[1])}] : [])]);
 }
+
+// Zeit von Hand geändert: Vorauswahl-Markierung anpassen
+document.addEventListener('input', e => { const t = e.target; if(!t.dataset || !/^(von|bis)$/.test(t.dataset.f || '')) return; const seg = document.querySelector('.akpseg'); if(!seg) return;
+  const v = (app.querySelector('[data-f="von"]') || {}).value, bi = (app.querySelector('[data-f="bis"]') || {}).value;
+  seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.akpzeit === v + '|' + bi)); });
 
 </script>
 <script data-app>if("serviceWorker" in navigator && location.protocol==="https:" && !/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("sw.js").catch(()=>{});}</script>

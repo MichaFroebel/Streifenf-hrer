@@ -420,6 +420,14 @@ body.noscroll{overflow:hidden}
 #camOv .camShot:active{transform:scale(.92)}
 #camOv.flash::after{content:'';position:absolute;inset:0;background:#fff;opacity:.7}
 body.camOpen #sosFloat{display:none}
+.vcsig{display:block;width:100%;height:130px;background:#fff;border:1.5px dashed #8a97ab;border-radius:12px;touch-action:none;margin:4px 0 8px;box-sizing:border-box}
+div.vcsig{display:flex;align-items:center;justify-content:center;padding:10px;border-style:solid}div.vcsig img{max-width:100%;max-height:100%}
+.akprow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(128,128,128,.18)}
+.akprow>span{flex:1;min-width:0;font-size:15px}.akprow>span small{display:block;opacity:.7;font-size:12px}
+.akpst{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+.akpst button{width:40px;height:40px;border-radius:10px;border:0;font-size:22px;font-weight:700;background:rgba(128,128,128,.22);color:inherit;cursor:pointer}
+.akpst button[data-d="1"]{background:var(--accent);color:#000}
+.akpst input{width:52px;text-align:center;padding:8px 2px;margin:0}
 </style>
 </head>
 <body>
@@ -602,6 +610,8 @@ function route(){
   else if(h.startsWith('m/') && MASS.find(m => m.id === h.slice(2))){ view = 'mass'; massId = h.slice(2); }
   else if(['start','massnahmen','lernen','zeichen','notfall','telefon','berichte','kennzeichen','bubatz','azubi','dolmetscher','visitenkarte'].includes(h)){ view = h; telPath = []; }
   else if(h === 'bericht/neu'){ const r = abNew(); location.replace('#bericht/' + r.id); return; }
+  else if(h === 'bericht/neu-akp'){ const r = abNew('akp'); location.replace('#bericht/' + r.id); return; }
+  else if(h === 'bericht/profil'){ location.replace('#visitenkarte'); return; }
   else if(h === 'bericht/neu-sonder'){ const r = abNew('sonder'); location.replace('#bericht/' + r.id); return; }
   else if(h === 'bericht/neu-vers'){ const r = abNew('vers'); location.replace('#bericht/' + r.id); return; }
   else if(h === 'bericht/neu-streife'){ const r = abNew('streife'); location.replace('#bericht/' + r.id); return; }
@@ -628,11 +638,11 @@ function render(top){
   else if(view === 'mass'){ const m = MASS.find(x => x.id === massId); setHeader('Maßnahmen', 'Checkliste'); html = viewMassDetail(m); }
   else if(view === 'dolmetscher'){ setHeader('Dolmetscher', 'Standardsätze anzeigen und vorlesen'); html = viewDolmetscher(); }
   else if(view === 'kennzeichen'){ setHeader('Kennzeichen-Auskunft', 'Zulassungsbezirk und Sonderkennzeichen'); html = viewKennzeichen(); }
-  else if(view === 'visitenkarte'){ setHeader('Visitenkarte', 'QR-Code zum Scannen'); html = viewVisitenkarte(); }
+  else if(view === 'visitenkarte'){ setHeader('Meine Angaben', 'Visitenkarte · Berichte · Signatur'); html = viewVisitenkarte(); }
   else if(view === 'bubatz'){ setHeader('Cannabis-Karte', 'Konsumverbotszonen § 5 KCanG'); html = viewBubatz(); }
   else if(view === 'berichte'){ setHeader('Berichte', 'Ausfüllen und als Word exportieren'); html = viewBerichte(); }
   else if(view === 'abprofil'){ setHeader('Meine Angaben', 'Berichte'); html = viewProfil(); }
-  else if(view === 'bericht'){ setHeader(abRec() && abRec().typ === 'abschlepp' ? 'Abschleppmaßnahme' : abRec() && abRec().typ === 'klein' ? 'Standardanzeige' : abRec() && abRec().typ === 'tnd' ? 'TND-Bericht' : abRec() && abRec().typ === 'streife' ? 'Streifenbericht' : abRec() && abRec().typ === 'vers' ? 'Pflichtversicherung' : abRec() && abRec().typ === 'sonder' ? 'Sondernutzung' : 'Antreffbericht', 'Berichte'); html = viewBericht(abRec()); }
+  else if(view === 'bericht'){ setHeader(abRec() && abRec().typ === 'akp' ? 'AKP-Bericht' : abRec() && abRec().typ === 'abschlepp' ? 'Abschleppmaßnahme' : abRec() && abRec().typ === 'klein' ? 'Standardanzeige' : abRec() && abRec().typ === 'tnd' ? 'TND-Bericht' : abRec() && abRec().typ === 'streife' ? 'Streifenbericht' : abRec() && abRec().typ === 'vers' ? 'Pflichtversicherung' : abRec() && abRec().typ === 'sonder' ? 'Sondernutzung' : 'Antreffbericht', 'Berichte'); html = viewBericht(abRec()); }
   else if(view === 'massnahmen'){ setHeader('Maßnahmen','Checklisten zum Abhaken'); html = viewMass(); }
   else if(view === 'lernen'){ setHeader('Lernen & Prüfen','Fragen ankreuzen, Lernstand sehen'); html = viewQuiz(); }
   else if(view === 'zeichen'){ setHeader('Verkehrszeichen','Katalog mit Bild und Nummer'); html = viewZeichen(); }
@@ -1588,18 +1598,19 @@ const AB_MASSN = [
 const abList = () => store.get('berichte', []);
 const abSave = list => { if(!store.set('berichte', list)) toast('Speicher voll – bitte alte Berichte löschen', true); };
 const abGet = id => abList().find(r => r.id === id);
-const abProfile = () => store.get('abprofil', {});
+const abProfile = () => { const v = (typeof vcGet === 'function') ? vcGet() : {}, o = store.get('abprofil', {}); return {name:v.nachname || o.name || '', funktion:v.titel || o.funktion || 'GVB', ek:v.ek != null ? v.ek : (o.ek || ''), nebenstelle:v.nebenstelle != null ? v.nebenstelle : (o.nebenstelle || ''), sig:v.sig || ''}; };
 function abNew(typ){
   const p = abProfile(), d = new Date(), pad = n => String(n).padStart(2, '0');
-  if(typ === 'sonder'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:p.name || '', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'Bußgeldstelle', zk:'32-21.1', sTyp:'', photos:[] } }; const l = abList(); l.unshift(r); abSave(l); return r; }
-  if(typ === 'vers'){ const v = kzVersFarbe(); const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:p.name || '', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'Polizeirevier', zk:'32-21.1', fzArt:'E-Scooter (Elektrokleinstfahrzeug)', vsFarbe:v.farbe, photos:[] } }; const l = abList(); l.unshift(r); abSave(l); return r; }
-  if(typ === 'streife'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:p.name || '', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'32-21.1', zk:'L-Einsatz' } }; const l = abList(); l.unshift(r); abSave(l); return r; }
-  if(typ === 'tnd'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:p.name || '', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'L-Einsatz', zk:U_ZK, finder:'-unbekannt-', eigentuemer:'-unbekannt-', anlage:'-', tierheim:'S-Botnang', klinik:'Tierklinik Plieningen', anWen:'Eigentümer', rasse:'-' } }; const l = abList(); l.unshift(r); abSave(l); return r; }
-  if(typ === 'klein'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:p.name || '', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', kaTyp:'', photos:[] } }; const l = abList(); l.unshift(r); abSave(l); return r; }
-  if(typ === 'abschlepp'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ an:'32-32.3', zk:'32-21.1', funktion:p.funktion || 'GVB', datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, nebenstelle:p.nebenstelle || '', sb:p.name || '', unterschrift:p.name || '', zeitAuftrag:`${pad(d.getHours())}:${pad(d.getMinutes())}` } }; const l = abList(); l.unshift(r); abSave(l); return r; }
+  if(typ === 'akp'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, bis:'', sb:'', sigOn:!!p.sig } }; const l = abList(); l.unshift(r); abSave(l); return r; }
+  if(typ === 'sonder'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:'', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'Bußgeldstelle', zk:'32-21.1', sTyp:'', photos:[] } }; const l = abList(); l.unshift(r); abSave(l); return r; }
+  if(typ === 'vers'){ const v = kzVersFarbe(); const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:'', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'Polizeirevier', zk:'32-21.1', fzArt:'E-Scooter (Elektrokleinstfahrzeug)', vsFarbe:v.farbe, photos:[] } }; const l = abList(); l.unshift(r); abSave(l); return r; }
+  if(typ === 'streife'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:'', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'32-21.1', zk:'L-Einsatz' } }; const l = abList(); l.unshift(r); abSave(l); return r; }
+  if(typ === 'tnd'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:'', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'L-Einsatz', zk:U_ZK, finder:'-unbekannt-', eigentuemer:'-unbekannt-', anlage:'-', tierheim:'S-Botnang', klinik:'Tierklinik Plieningen', anWen:'Eigentümer', rasse:'-' } }; const l = abList(); l.unshift(r); abSave(l); return r; }
+  if(typ === 'klein'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:'', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', kaTyp:'', photos:[] } }; const l = abList(); l.unshift(r); abSave(l); return r; }
+  if(typ === 'abschlepp'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ an:'32-32.3', zk:'32-21.1', funktion:p.funktion || 'GVB', datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, nebenstelle:p.nebenstelle || '', sb:'', unterschrift:p.name || '', zeitAuftrag:`${pad(d.getHours())}:${pad(d.getMinutes())}` } }; const l = abList(); l.unshift(r); abSave(l); return r; }
   const r = { id:'b' + Date.now().toString(36), upd:Date.now(), f:{
     datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, bis:'',
-    nebenstelle:p.nebenstelle || '', sb:p.name || '', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', berichtArt:'Sachverhalt', art:'', an:'Funkleitstelle', zk:'32-21.1' } };
+    nebenstelle:p.nebenstelle || '', sb:'', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', berichtArt:'Sachverhalt', art:'', an:'Funkleitstelle', zk:'32-21.1' } };
   const l = abList(); l.unshift(r); abSave(l); return r;
 }
 const fmtD = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${m[3]}.${m[2]}.${m[1]}` : (iso || ''); };
@@ -1610,8 +1621,8 @@ function viewBerichte(){
   const weg = abPurge(); if(weg) setTimeout(() => toast(`${weg} ${weg === 1 ? 'Bericht' : 'Berichte'} älter als 30 Tage automatisch gelöscht`), 50);
   const list = abList();
   return `<div class="thead">${ico('i_sign', '#e5dcf3')}<p>Berichte direkt auf dem Handy ausfüllen und als <b>Word-Datei</b> exportieren. Die Tagebuchnummer kann leer bleiben und auf der Wache ergänzt werden.</p></div>`
-   + grid([tile('#bericht/neu', 'i_sign', '#e5dcf3', 'Neuer Antreffbericht', 'Vorlage 32-21.1'), tile('#bericht/neu-abschlepp', 'i_tow', '#e5dcf3', 'Neue Abschleppmaßnahme', 'Vorlage 32-32.3'), tile('#bericht/neu-klein', 'i_warn', '#e5dcf3', 'Neue Standardanzeige', 'Müll, Schrottrad, Mängel …'), tile('#bericht/neu-tnd', 'i_paw', '#e5dcf3', 'Neuer TND-Bericht', 'Tiernotdienst'), tile('#bericht/neu-streife', 'i_route', '#e5dcf3', 'Neuer Streifenbericht', 'an 32-21.1, z. K. L-Einsatz'), tile('#bericht/neu-sonder', 'i_music', '#e5dcf3', 'Sondernutzungs&shy;anzeige', 'Straßenmusik, Betteln'), tile('#bericht/neu-vers', 'i_scooter', '#e5dcf3', 'Verstoß Pflicht&shy;versicherung', 'E-Scooter, Versicherungskennzeichen'), tile('#bericht/profil', 'i_person', '#e5dcf3', 'Meine Angaben', 'Name, Nebenstelle')])
-   + (list.length ? `<div class="sec">Gespeicherte Berichte (${list.length})</div><p class="small" style="margin:-4px 0 8px">Nach links wischen: <b>Duplizieren</b> oder <b>Löschen</b>. Berichte werden 30 Tage nach der letzten Änderung automatisch gelöscht.</p>` + list.map(r => swWrap(r, r.typ === 'sonder' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sondernutzung</span><br><b>${esc((SN_TYP[r.f.sTyp] || {t:'Art noch nicht gewählt'}).t)}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || r.f.spielort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'vers' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Pflichtversicherung</span><br><b>${esc(((r.f.vsNum || '') + ' ' + (r.f.vsBuch || '')).trim() || 'ohne Kennzeichen')}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'streife' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Streifenbericht</span><br><b>${esc(r.f.gebiet || stRows(r.f).map(x => x.ort).filter(Boolean).slice(0, 2).join(', ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ek || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'tnd' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · TND-Bericht</span><br><b>${esc([r.f.vorgang, r.f.tierart].filter(Boolean).join(' · ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'klein' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Standardanzeige</span><br><b>${esc((kaType(r.f) || {}).t || 'Art noch nicht gewählt')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'abschlepp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Abschleppmaßnahme</span><br><b>${esc(r.f.kennz || 'ohne Kennzeichen')}</b><br><small class="small">${esc(r.f.ortAnkunft || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Antreffbericht · ${esc(r.f.art === 'Eigener Zusatz' ? (r.f.artFrei || '') : (r.f.art || 'ohne Art'))}</span><br><b>${esc(abTitle(r.f))}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>`)).join('') : '')
+   + grid([tile('#bericht/neu', 'i_sign', '#e5dcf3', 'Neuer Antreffbericht', 'Vorlage 32-21.1'), tile('#bericht/neu-abschlepp', 'i_tow', '#e5dcf3', 'Neue Abschleppmaßnahme', 'Vorlage 32-32.3'), tile('#bericht/neu-klein', 'i_warn', '#e5dcf3', 'Neue Standardanzeige', 'Müll, Schrottrad, Mängel …'), tile('#bericht/neu-tnd', 'i_paw', '#e5dcf3', 'Neuer TND-Bericht', 'Tiernotdienst'), tile('#bericht/neu-streife', 'i_route', '#e5dcf3', 'Neuer Streifenbericht', 'an 32-21.1, z. K. L-Einsatz'), tile('#bericht/neu-sonder', 'i_music', '#e5dcf3', 'Sondernutzungs&shy;anzeige', 'Straßenmusik, Betteln'), tile('#bericht/neu-vers', 'i_scooter', '#e5dcf3', 'Verstoß Pflicht&shy;versicherung', 'E-Scooter, Versicherungskennzeichen'), tile('#bericht/neu-akp', 'i_route', '#e5dcf3', 'AKP-Bericht', 'Sondereinsatz AKP und Umfeld'), tile('#visitenkarte', 'i_person', '#e5dcf3', 'Meine Angaben', 'Visitenkarte, Signatur')])
+   + (list.length ? `<div class="sec">Gespeicherte Berichte (${list.length})</div><p class="small" style="margin:-4px 0 8px">Nach links wischen: <b>Duplizieren</b> oder <b>Löschen</b>. Berichte werden 30 Tage nach der letzten Änderung automatisch gelöscht.</p>` + list.map(r => swWrap(r, r.typ === 'akp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · AKP-Bericht</span><br><b>${esc([r.f.von, r.f.bis].filter(Boolean).join('–') || 'Sondereinsatz AKP')}${r.f.dg ? ' · DG ' + esc(r.f.dg) : ''}</b><br><small class="small">${esc(r.f.staerke || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'sonder' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sondernutzung</span><br><b>${esc((SN_TYP[r.f.sTyp] || {t:'Art noch nicht gewählt'}).t)}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || r.f.spielort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'vers' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Pflichtversicherung</span><br><b>${esc(((r.f.vsNum || '') + ' ' + (r.f.vsBuch || '')).trim() || 'ohne Kennzeichen')}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'streife' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Streifenbericht</span><br><b>${esc(r.f.gebiet || stRows(r.f).map(x => x.ort).filter(Boolean).slice(0, 2).join(', ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ek || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'tnd' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · TND-Bericht</span><br><b>${esc([r.f.vorgang, r.f.tierart].filter(Boolean).join(' · ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'klein' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Standardanzeige</span><br><b>${esc((kaType(r.f) || {}).t || 'Art noch nicht gewählt')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'abschlepp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Abschleppmaßnahme</span><br><b>${esc(r.f.kennz || 'ohne Kennzeichen')}</b><br><small class="small">${esc(r.f.ortAnkunft || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Antreffbericht · ${esc(r.f.art === 'Eigener Zusatz' ? (r.f.artFrei || '') : (r.f.art || 'ohne Art'))}</span><br><b>${esc(abTitle(r.f))}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>`)).join('') : '')
    + `<div class="note" style="margin-top:14px"><b>Datenschutz:</b> Berichte liegen nur auf diesem Gerät. Ausweisfotos werden nicht gespeichert, nur der erkannte Text. Nach dem Export und der Abgabe auf der Wache den Bericht hier löschen. Möglichst nur auf dem Diensthandy nutzen.</div>` + disclaimer();
 }
 function viewProfil(){
@@ -1623,7 +1634,7 @@ function viewProfil(){
    ${abIn('Nebenstelle', 'nebenstelle', p.nebenstelle, 'Telefon-Nebenstelle', 'p')}
    <p class="small">Wird automatisch gespeichert.</p></div></div>`;
 }
-const abIn = (label, k, v, ph, scope, type) => `<label class="lbl">${label}</label><input class="inp" data-${scope || 'f'}="${k}" value="${esc(v || '')}" placeholder="${ph || ''}"${type ? ` type="${type}"` : ''}>`;
+const abIn = (label, k, v, ph, scope, type) => `<label class="lbl">${label}</label><input class="inp" data-${scope || 'f'}="${k}" value="${esc(v || '')}" placeholder="${ph || ''}"${type ? ` type="${type}"` : ''} autocomplete="off" autocorrect="off" spellcheck="false">`;
 const abTa = (label, k, v, ph, rows) => `<label class="lbl">${label}</label><textarea class="inp" data-f="${k}" rows="${rows || 3}" placeholder="${ph || ''}">${esc(v || '')}</textarea>`;
 const abSel = (label, k, v, opts, scope) => `<label class="lbl">${label}</label><select class="inp" data-${scope || 'f'}="${k}"><option value=""${v ? '' : ' selected'}>– bitte wählen –</option>${opts.map(o => `<option${o === v ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
 function abChecks(groups, f){
@@ -1659,9 +1670,11 @@ const uFotos = f => { const photos = f.photos || []; return `<div class="detail"
 function uAbschluss(r, extra){
   const f = r.f;
   return `<div class="detail"><div class="body"><h4>Unterschrift</h4>
-    <div class="abrow"><div>${abSel('Funktion', 'funktion', f.funktion, ['GVB','GVBe','DGL'])}</div><div>${abIn('Name (Unterschrift)', 'unterschrift', f.unterschrift, '')}</div></div>
+    <div class="abrow"><div>${abSel('Funktion', 'funktion', f.funktion, [...new Set(['GVB','GVBe','DGL', f.funktion].filter(Boolean))])}</div><div>${abIn('Name (Unterschrift)', 'unterschrift', f.unterschrift, '')}</div></div>
     <div class="abrow"><div>${abIn('Nebenstelle', 'nebenstelle', f.nebenstelle, '')}</div><div>${abIn('Sachbearbeiter (SB)', 'sb', f.sb, '')}</div></div>
     ${extra || ''}
+    ${r.typ === 'klein' || r.typ === 'streife' ? `<p class="small">${abProfile().sig ? 'Die digitale Signatur wird beim Export automatisch über der Unterschriftslinie eingefügt.' : 'Keine Signatur hinterlegt – unter <a href="#visitenkarte">Meine Angaben</a> unterschreiben, dann erscheint sie im Export.'}</p>`
+      : `<label class="abck" style="margin-top:8px"><input type="checkbox" data-f="sigOn"${f.sigOn ? ' checked' : ''}><span>Digitale Signatur einfügen</span></label>${abProfile().sig ? '' : '<p class="small">Noch keine Signatur hinterlegt – unter <a href="#visitenkarte">Meine Angaben</a> unterschreiben.</p>'}`}
    </div></div>
    <button class="btn primary big" data-ab="export">⬇ Als Word-Datei exportieren</button>
    <button class="btn big" data-ab="delete" style="margin-top:10px">Bericht löschen</button>
@@ -1674,6 +1687,7 @@ function viewBericht(r){
   if(r.typ === 'tnd') return viewTnd(r);
   if(r.typ === 'streife') return viewStreife(r);
   if(r.typ === 'vers') return viewVers(r);
+  if(r.typ === 'akp') return viewAkp(r);
   if(r.typ === 'sonder') return viewSonder(r);
   const f = r.f;
   if(f.an === undefined){ f.an = U_DEF.antreff[0]; f.zk = U_DEF.antreff[1]; }
@@ -2588,6 +2602,28 @@ const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main', W14
 const b64u8 = b => { const s = atob(b), u = new Uint8Array(s.length); for(let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
 let CRC_T = null;
 function crc32(u){ if(!CRC_T){ CRC_T = new Uint32Array(256); for(let n = 0; n < 256; n++){ let c = n; for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; CRC_T[n] = c >>> 0; } } let c = 0xFFFFFFFF; for(let i = 0; i < u.length; i++) c = CRC_T[(c ^ u[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function sigInject(files, f){
+  const url = f.sigOn ? (abProfile().sig || '') : '', sz = url && pngSize(url), nm = String(f.unterschrift || '').trim();
+  if(!sz || !nm) return files;
+  const enc = new TextEncoder(), dec = new TextDecoder(), get = n => files.find(x => x.name === n);
+  const d = get('word/document.xml'), rl = get('word/_rels/document.xml.rels'), ct = get('[Content_Types].xml'); if(!d || !rl || !ct) return files;
+  let doc = dec.decode(d.data);
+  const key = xe(nm), re = /<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>/g; let m, at = -1;
+  while((m = re.exec(doc))) if(m[1].trim() === key || m[1].trim().endsWith(' ' + key)) at = m.index;      // letzte Fundstelle = Unterschriftsfeld
+  if(at < 0) return files;
+  let ps = Math.max(doc.lastIndexOf('<w:p>', at), doc.lastIndexOf('<w:p ', at)); if(ps < 0) return files;
+  // steht die Unterschriftslinie („_ _ _“) als eigener Absatz direkt darüber, kommt die Signatur über die Linie
+  { const pv = Math.max(doc.lastIndexOf('<w:p>', ps - 1), doc.lastIndexOf('<w:p ', ps - 1)); if(pv >= 0 && /_\s?_\s?_/.test(doc.slice(pv, ps).replace(/<[^>]+>/g, ''))){ at = pv + 1; ps = pv; } }
+  const tagEnd = doc.indexOf('>', ps) + 1, pe = doc.indexOf('</w:p>', ps), ppr = doc.indexOf('</w:pPr>', ps);
+  const ins = ppr > 0 && ppr < pe ? ppr + 8 : tagEnd;
+  const h = 396000, w = Math.min(2160000, Math.round(h * sz[0] / sz[1])), hh = Math.round(w * sz[1] / sz[0]);
+  const run = `<w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${w}" cy="${hh}"/><wp:docPr id="9901" name="Signatur"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="9901" name="Signatur"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rIdSigX"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${w}" cy="${hh}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r><w:r><w:br/></w:r>`;
+  d.data = enc.encode(doc.slice(0, ins) + run + doc.slice(ins));
+  rl.data = enc.encode(dec.decode(rl.data).replace('</Relationships>', '<Relationship Id="rIdSigX" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/signaturx.png"/></Relationships>'));
+  let c = dec.decode(ct.data); if(!/Extension="png"/i.test(c)) c = c.replace(/(<Types[^>]*>)/, '$1<Default Extension="png" ContentType="image/png"/>'); ct.data = enc.encode(c);
+  files.push({name:'word/media/signaturx.png', data:b64u8(url.split(',')[1])});
+  return files;
+}
 function zipStore(files){
   const enc = new TextEncoder(), parts = [], central = []; let off = 0;
   const d = new Date(), dt = ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)), dd = (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate());
@@ -2689,13 +2725,13 @@ function abBuildDocx(f){
     if(name === '[Content_Types].xml') data = enc.encode(dec.decode(data).replace('wordprocessingml.template.main+xml', 'wordprocessingml.document.main+xml'));
     return {name, data};
   });
-  return zipStore(files);
+  return zipStore(sigInject(files, f));
 }
 async function abExport(){
   abFlush(); const r = abRec(); if(!r) return;
   try {
-    const u8 = r.typ === 'sonder' ? snBuildDocx(r.f) : r.typ === 'vers' ? vsBuildDocx(r.f) : r.typ === 'streife' ? stBuildDocx(r.f) : r.typ === 'tnd' ? tndBuildDocx(r.f) : r.typ === 'klein' ? kaBuildDocx(r.f) : r.typ === 'abschlepp' ? await asBuildDocx(r.f) : abBuildDocx(r.f);
-    const nm = r.typ === 'sonder' ? `Sondernutzung_${(SN_TYP[r.f.sTyp] || {}).t || 'Anzeige'}_${r.f.name || 'ohne-Name'}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'vers' ? `Pflichtversicherung_${(r.f.vsNum || '') + (r.f.vsBuch || '') || 'ohne-Kennzeichen'}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'streife' ? `Streifenbericht_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'tnd' ? `TND_Bericht_${r.f.tgb ? r.f.tgb + '-' + (r.f.datum || '').slice(2, 4) + '_' : ''}${(r.f.vorgang || '') + (r.f.tierart ? '_' + r.f.tierart : '')}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'klein' ? `Standardanzeige_${(kaType(r.f) || {}).file || 'Standardanzeige'}_${r.f.datum || ''}.docx` : r.typ === 'abschlepp' ? `Abschleppmassnahme_${r.f.datum || ''}_${(r.f.kennz || 'ohne-Kennzeichen').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, '_')}.docx` : `Antreffbericht_${r.f.datum || ''}_${(r.f.name || r.f.firma || 'ohne-Name').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, '_')}.docx`;
+    const u8 = r.typ === 'akp' ? akpBuildDocx(r.f) : r.typ === 'sonder' ? snBuildDocx(r.f) : r.typ === 'vers' ? vsBuildDocx(r.f) : r.typ === 'streife' ? stBuildDocx(r.f) : r.typ === 'tnd' ? tndBuildDocx(r.f) : r.typ === 'klein' ? kaBuildDocx(r.f, {sig:true}) : r.typ === 'abschlepp' ? await asBuildDocx(r.f) : abBuildDocx(r.f);
+    const nm = r.typ === 'akp' ? `AKP-Bericht_${r.f.tgb ? r.f.tgb + '-' + (r.f.datum || '').slice(2, 4) + '_' : ''}${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'sonder' ? `Sondernutzung_${(SN_TYP[r.f.sTyp] || {}).t || 'Anzeige'}_${r.f.name || 'ohne-Name'}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'vers' ? `Pflichtversicherung_${(r.f.vsNum || '') + (r.f.vsBuch || '') || 'ohne-Kennzeichen'}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'streife' ? `Streifenbericht_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'tnd' ? `TND_Bericht_${r.f.tgb ? r.f.tgb + '-' + (r.f.datum || '').slice(2, 4) + '_' : ''}${(r.f.vorgang || '') + (r.f.tierart ? '_' + r.f.tierart : '')}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'klein' ? `Standardanzeige_${(kaType(r.f) || {}).file || 'Standardanzeige'}_${r.f.datum || ''}.docx` : r.typ === 'abschlepp' ? `Abschleppmassnahme_${r.f.datum || ''}_${(r.f.kennz || 'ohne-Kennzeichen').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, '_')}.docx` : `Antreffbericht_${r.f.datum || ''}_${(r.f.name || r.f.firma || 'ohne-Name').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, '_')}.docx`;
     const ok = await abDownload(u8, nm);
     if(ok){ r.exp = Date.now(); abFlush(); toast('Word-Datei erstellt'); }
   } catch(err){ console.error(err); toast('Export fehlgeschlagen: ' + err.message, true); }
@@ -2856,7 +2892,7 @@ async function asBuildDocx(f){
     if(m && f.dmg && f.dmg[m[1]] && f.dmg[m[1]].length) data = await dmgRender(b64, f.dmg[m[1]]);
     files.push({name, data});
   }
-  return zipStore(files);
+  return zipStore(sigInject(files, f));
 }
 /* ---------- Schäden einzeichnen ---------- */
 const AS_IMGS = [['image2', '5-Türer'], ['image3', '3-Türer'], ['image1', 'Lieferwagen']];
@@ -3148,31 +3184,37 @@ function kaBuildDocx(f, o){
   if(fs.length){ body += P(R(o.fsTitel || 'Feststellung', {b:true}), {before:280, after:80, keep:true}); body += TBL([3000, W - 3000], fs.map(([a, b]) => [P(R(a + ':')), P(R(b))])); }
   (o.abschnitte || [['Sachverhalt', f.bericht]]).forEach(([h, t]) => { if(!t) return; body += P(R(h, {b:true}), {before:280, after:80, keep:true}); String(t).split(/\n/).forEach(l => body += P(R(l), {after:80})); });
   // Unterschrift
-  body += P('', {before:600}) + P(R('______________________________')) + P(R(`${f.funktion || 'GVB'} ${f.unterschrift || ''}`));
+  const sigUrl = (o.sig || f.sigOn) ? (abProfile().sig || '') : '', sig = sigUrl ? pngSize(sigUrl) : null;
+  if(sig){
+    const sh = 504000, swd = Math.min(2520000, Math.round(sh * sig[0] / sig[1])), shh = Math.round(swd * sig[1] / sig[0]);
+    body += `<w:p><w:pPr><w:keepNext/><w:spacing w:before="360" w:after="0"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${swd}" cy="${shh}"/><wp:docPr id="900" name="Signatur"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="900" name="Signatur"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdSig"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${swd}" cy="${shh}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+    body += P(R('______________________________'), {keep:true}) + P(R(`${f.funktion || 'GVB'} ${f.unterschrift || ''}`));
+  } else body += P('', {before:600}) + P(R('______________________________'), {keep:true}) + P(R(`${f.funktion || 'GVB'} ${f.unterschrift || ''}`));
   // Lichtbilder
   const imgs = (f.photos || []).map((d, i) => ({d, i, rid:'rIdImg' + (i + 1), name:`media/bild${i + 1}.jpeg`}));
   if(imgs.length){
-    body += `<w:p><w:r><w:br w:type="page"/></w:r></w:p>` + P(R('Lichtbilder', {b:true, sz:24}), {after:160});
+    body += P(R('Lichtbilder', {b:true, sz:24}), {before:360, after:160, keep:true});
     const cw = Math.floor(W / 2), maxW = 2970000; // ca. 8,25 cm
     const pic = im => { const w = maxW, h = Math.round(maxW * (im.h / im.w)); return `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="60"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${w}" cy="${h}"/><wp:docPr id="${im.i + 1}" name="Bild ${im.i + 1}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${im.i + 1}" name="Bild ${im.i + 1}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${im.rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${w}" cy="${h}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>` + P(R('Bild ' + (im.i + 1), {sz:18}), {jc:'center', after:200}); };
     imgs.forEach(im => { const s = kaImgSize(im.d); im.w = s[0]; im.h = s[1]; });
     const rows = []; for(let i = 0; i < imgs.length; i += 2) rows.push([pic(imgs[i]), imgs[i + 1] ? pic(imgs[i + 1]) : '']);
-    body += TBL([cw, W - cw], rows);
+    body += TBL([cw, W - cw], rows).replace(/<w:tr>/g, '<w:tr><w:trPr><w:cantSplit/></w:trPr>');
   }
   const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
   const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="de-DE"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="252" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Standard"><w:name w:val="Normal"/></w:style></w:styles>`;
   const ct = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`;
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`;
   const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
   const drels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${imgs.map(im => `<Relationship Id="${im.rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="${im.name}"/>`).join('')}</Relationships>`;
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${imgs.map(im => `<Relationship Id="${im.rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="${im.name}"/>`).join('')}${sig ? '<Relationship Id="rIdSig" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/signatur.png"/>' : ''}</Relationships>`;
   const enc = new TextEncoder();
   return zipStore([{name:'[Content_Types].xml', data:enc.encode(ct)}, {name:'_rels/.rels', data:enc.encode(rels)}, {name:'word/document.xml', data:enc.encode(doc)}, {name:'word/styles.xml', data:enc.encode(styles)}, {name:'word/_rels/document.xml.rels', data:enc.encode(drels)},
-    ...imgs.map(im => ({name:'word/' + im.name, data:b64u8(im.d.split(',')[1])}))]);
+    ...imgs.map(im => ({name:'word/' + im.name, data:b64u8(im.d.split(',')[1])})), ...(sig ? [{name:'word/media/signatur.png', data:b64u8(sigUrl.split(',')[1])}] : [])]);
 }
+function pngSize(dataUrl){ try { const u = b64u8(dataUrl.split(',')[1]); if(u[0] !== 0x89 || u[1] !== 0x50) return null; const w = (u[16] << 24) | (u[17] << 16) | (u[18] << 8) | u[19], h = (u[20] << 24) | (u[21] << 16) | (u[22] << 8) | u[23]; return w > 0 && h > 0 ? [w, h] : null; } catch(e){ return null; } }
 function kaImgSize(dataUrl){
   // Breite/Höhe direkt aus dem JPEG lesen (SOF-Marker)
   const u = b64u8(dataUrl.split(',')[1]);
@@ -3291,7 +3333,7 @@ function tndFillDoc(xml, f){
 }
 function tndBuildDocx(f){
   const enc = new TextEncoder(), dec = new TextDecoder();
-  return zipStore(TND_TPL.map(([name, b64]) => { let data = b64u8(b64); if(name === 'word/document.xml') data = enc.encode(tndFillDoc(dec.decode(data), f)); return {name, data}; }));
+  return zipStore(sigInject(TND_TPL.map(([name, b64]) => { let data = b64u8(b64); if(name === 'word/document.xml') data = enc.encode(tndFillDoc(dec.decode(data), f)); return {name, data}; }), f));
 }
 
 /* =========================================================
@@ -3376,7 +3418,7 @@ function stBuildDocx(f){
   const fs = [];
   const sp = stSchwer(f); if(sp.length) fs.push(['Schwerpunkte', sp.join(', ')]);
   ST_ZAHLEN.forEach(([k, l]) => fs.push([l, String(+f[k] > 0 ? f[k] : 0)]));
-  return kaBuildDocx(f, {kopf:'Streifenbericht', title:'', fsTitel:'Bilanz',
+  return kaBuildDocx(f, {sig:true, kopf:'Streifenbericht', title:'', fsTitel:'Bilanz',
     kopfZeilen:[['Datum/Zeitraum:', zeit], ['Streifengebiet:', f.gebiet || ''], ['Einsatzkräfte:', f.ek || ''], ['Funkrufname:', f.funk || ''], ['Fahrzeug / km:', f.fzg || '']].filter(([a, b], i) => b || i <= 2),
     tabelle:{titel:'Örtlichkeiten', cols:[['Nr.', 600], ['Uhrzeit', 1100], ['Örtlichkeit', 3500], ['Feststellung / Maßnahme', 9638 - 5200]], rows:stRows(f).filter(x => x.ort || x.txt).map((x, i) => [String(i + 1), x.zeit ? x.zeit + ' Uhr' : '', x.ort, x.txt])},
     fs, abschnitte:[['Verlauf / Feststellungen', f.bericht], ['Besondere Vorkommnisse', f.vorkommnis || 'keine'], ['Offene Punkte / Übergabe', f.offen]]});
@@ -3384,7 +3426,7 @@ function stBuildDocx(f){
 
 /* ---------- Gespeicherte Berichte: nach links wischen zum Löschen ---------- */
 const AB_TTL = 30 * 864e5;   // Autolöschen nach 30 Tagen ohne Änderung
-const abTypName = r => ({tnd:'TND-Bericht', streife:'Streifenbericht', klein:'Standardanzeige', abschlepp:'Abschleppmaßnahme', vers:'Pflichtversicherung', sonder:'Sondernutzung'})[r.typ] || 'Antreffbericht';
+const abTypName = r => ({akp:'AKP-Bericht', tnd:'TND-Bericht', streife:'Streifenbericht', klein:'Standardanzeige', abschlepp:'Abschleppmaßnahme', vers:'Pflichtversicherung', sonder:'Sondernutzung'})[r.typ] || 'Antreffbericht';
 const abDelDate = r => new Date((r.upd || Date.now()) + AB_TTL);
 function abPurge(){
   const l = abList(); if(!l.length) return 0; const now = Date.now();
@@ -4414,7 +4456,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
    ========================================================= */
 ICONS.i_card = '<rect x="2.5" y="5" width="19" height="14" rx="2"/><circle cx="8" cy="11" r="2.2"/><path d="M4.8 16.2c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14 10h5M14 13h4"/>';
 const VC_DEF = {vorname:'', nachname:'', titel:'GVB', org:'Landeshauptstadt Stuttgart', abt:'Amt für öffentliche Ordnung', tel:'', mobil:'', mail:'', str:'', plz:'', ort:'Stuttgart', notiz:''};
-const vcGet = () => { const v = Object.assign({}, VC_DEF, {titel: (typeof abProfile === 'function' && abProfile().funktion) || 'GVB'}, store.get('vcard', {})); if(v.titel === 'Städtischer Vollzugsdienst') v.titel = 'GVB'; return v; };
+const vcGet = () => { const o = store.get('abprofil', {}), v = Object.assign({}, VC_DEF, {nachname:o.name || '', titel:o.funktion || 'GVB', ek:o.ek || '', nebenstelle:o.nebenstelle || ''}, store.get('vcard', {})); if(v.titel === 'Städtischer Vollzugsdienst') v.titel = 'GVB'; return v; };
 const vcEsc = s => String(s || '').trim().replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1');
 function vcText(v){
   const L = ['BEGIN:VCARD', 'VERSION:3.0'];
@@ -4469,10 +4511,45 @@ function viewVisitenkarte(){
      ${F('Straße und Hausnummer', 'str')}
      <div class="row2"><div style="flex:.6">${F('PLZ', 'plz', '', '', 'numeric')}</div><div>${F('Ort', 'ort')}</div></div>
      ${F('Notiz (optional)', 'notiz', 'z. B. Erreichbarkeit, Aktenzeichen')}
+     <h4 style="margin-top:18px">Angaben für Berichte</h4>
+     <p class="small" style="margin-top:-4px">Nachname und Funktion von oben werden als Unterschrift und SB in neue Berichte übernommen. Die folgenden Angaben stehen <b>nicht</b> auf der Visitenkarte und nicht im QR-Code.</p>
+     ${F('Einsatzkräfte (Standard)', 'ek')}
+     ${F('Nebenstelle', 'nebenstelle', 'Telefon-Nebenstelle', '', 'tel')}
+     <label class="lbl">Digitale Signatur (für Standardanzeigen)</label>
+     <div id="vcSigBox">${vcSigHTML(v)}</div>
+     <p class="small">Die Signatur bleibt nur auf diesem Gerät und wird <b>nicht</b> mit der Visitenkarte geteilt. Sie erscheint im Word-Export der Standardanzeige über der Unterschriftslinie.</p>
      <p class="small">Wird automatisch gespeichert.</p>
     </div>
    </div></div>`;
 }
+function vcSigHTML(v){
+  return v.sig ? `<div class="vcsig"><img src="${v.sig}" alt="Signatur"></div><div class="row"><button class="btn" data-vcsig="new">Neu zeichnen</button><button class="btn" data-vcsig="del">Signatur löschen</button></div>`
+               : `<canvas class="vcsig" id="vcSigPad" width="900" height="300"></canvas><div class="row"><button class="btn primary" data-vcsig="save">Signatur speichern</button><button class="btn" data-vcsig="clear">Leeren</button></div><p class="small">Mit dem Finger im weißen Feld unterschreiben, dann speichern.</p>`;
+}
+function vcSigCrop(c){
+  const g = c.getContext('2d'), d = g.getImageData(0, 0, c.width, c.height).data; let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for(let y = 0; y < c.height; y++) for(let x = 0; x < c.width; x++) if(d[(y * c.width + x) * 4 + 3] > 20){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; }
+  if(x1 < 0 || (x1 - x0 < 12 && y1 - y0 < 12)) return null;
+  const pad = 8; x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(c.width - 1, x1 + pad); y1 = Math.min(c.height - 1, y1 + pad);
+  const o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1; o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+  return o.toDataURL('image/png');
+}
+(() => {
+  let pad = null, last = null;
+  const pos = e => { const r = pad.getBoundingClientRect(); return [(e.clientX - r.left) * pad.width / r.width, (e.clientY - r.top) * pad.height / r.height]; };
+  document.addEventListener('pointerdown', e => { if(e.target.id !== 'vcSigPad') return; pad = e.target; e.preventDefault(); try { pad.setPointerCapture(e.pointerId); } catch(err){} last = pos(e); const g = pad.getContext('2d'); g.fillStyle = '#000'; g.beginPath(); g.arc(last[0], last[1], 2.2, 0, 7); g.fill(); });
+  document.addEventListener('pointermove', e => { if(!last || !pad) return; e.preventDefault(); const p = pos(e), g = pad.getContext('2d'); g.strokeStyle = '#000'; g.lineWidth = 4.5; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); g.moveTo(last[0], last[1]); g.lineTo(p[0], p[1]); g.stroke(); last = p; });
+  ['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, () => { last = null; }));
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('[data-vcsig]'); if(!b) return; e.preventDefault();
+    const act = b.dataset.vcsig, v = store.get('vcard', {}), box = document.getElementById('vcSigBox'), c = document.getElementById('vcSigPad');
+    if(act === 'clear' && c){ c.getContext('2d').clearRect(0, 0, c.width, c.height); return; }
+    if(act === 'save'){ const url = c && vcSigCrop(c); if(!url){ toast('Bitte zuerst unterschreiben', true); return; } v.sig = url; if(!store.set('vcard', v)){ toast('Speicher voll – Signatur nicht gespeichert', true); return; } toast('Signatur gespeichert'); }
+    if(act === 'del'){ if(!(await askConfirm('Signatur wirklich löschen?', 'Löschen'))) return; delete v.sig; store.set('vcard', v); toast('Signatur gelöscht'); }
+    if(act === 'new'){ if(box) box.innerHTML = vcSigHTML({}); return; }
+    if(box) box.innerHTML = vcSigHTML(vcGet());
+  });
+})();
 function vcFull(){
   const v = vcGet(), name = [v.vorname, v.nachname].filter(Boolean).join(' ');
   const el = document.createElement('div'); el.id = 'vcFull';
@@ -4730,6 +4807,105 @@ const kzScanBtns = t => `<div class="abrow2" style="margin-top:8px"><button clas
     }
   }, true);
 })();
+
+/* =========================================================
+   AKP-BERICHT: Dokumentation Sondereinsatz AKP und Umfeld
+   (Aufbau wie der Word-Vordruck vom 24.04.2024)
+   ========================================================= */
+const AKP_ROWS = [
+  ['Abfall', [['abf_mv', 'mdl.V'], ['abf_owi', 'Owi'], ['abf_pv', 'PV']]],
+  ['aggressives Betteln', [['bet_mv', 'mdl.V'], ['bet_owi', 'Owi'], ['bet_pv', 'PV']]],
+  ['Aufenthaltsverbot, Verstoß', [['auf_mv', 'mdl.V'], ['auf_owi', 'Owi'], ['auf_pv', 'PV']]],
+  ['Rauchverbot', [['rau_mv', 'mdl.V'], ['rau_pv', 'PV']]],
+  ['Sondernutzung', [['son_mv', 'mdl.V'], ['son_owi', 'Owi'], ['son_pv', 'PV']]]
+];
+const akpStep = (k, f, label, sub) => `<div class="akprow"><span>${label}${sub ? `<small>${sub}</small>` : ''}</span><div class="akpst"><button type="button" data-akp="${k}" data-d="-1" aria-label="${label} minus">−</button><input class="inp" type="number" inputmode="numeric" min="0" data-f="${k}" value="${esc(f[k] || '')}" autocomplete="off"><button type="button" data-akp="${k}" data-d="1" aria-label="${label} plus">+</button></div></div>`;
+function viewAkp(r){
+  const f = r.f;
+  return `<div class="abform">
+   <div class="detail"><div class="dhd">${ico('i_route', '#e5dcf3')}<div class="dt"><h2>AKP-Bericht</h2><span>Dokumentation Sondereinsatz AKP und Umfeld</span></div></div><div class="body">
+    ${abIn('Tagebuch-Nr. (GZ 32-21.1/…/' + ((f.datum || '').slice(2, 4) || 'JJ') + ') – darf leer bleiben', 'tgb', f.tgb, 'wird sonst auf der Wache eingetragen')}
+    ${abIn('Sachbearbeiter (SB)', 'sb', f.sb, '')}
+    <label class="abck" style="margin-top:8px"><input type="checkbox" data-f="sigOn"${f.sigOn ? ' checked' : ''}><span>Digitale Signatur unter dem SB-Namen einfügen</span></label>${abProfile().sig ? '' : '<p class="small">Noch keine Signatur hinterlegt – unter <a href="#visitenkarte">Meine Angaben</a> unterschreiben.</p>'}
+   </div></div>
+   <div class="detail"><div class="body"><h4>Einsatz</h4>
+    ${abIn('Datum', 'datum', f.datum, '', 'f', 'date')}
+    ${asTime('Streife von', 'von', f.von)}${asTime('Streife bis', 'bis', f.bis)}
+    <div class="abrow"><div>${abIn('Dienstgruppe', 'dg', f.dg, '')}</div><div>${abIn('Einsatzstärke', 'staerke', f.staerke, '')}</div></div>
+   </div></div>
+   <div class="detail"><div class="body"><h4>Allgemein <span class="small">(leer = keine)</span></h4>
+    <label class="abck"><input type="checkbox" data-f="keine"${f.keine ? ' checked' : ''}><span>keine Vorkommnisse</span></label>
+    ${akpStep('ausk', f, 'Auskünfte')}${akpStep('fund', f, 'Fundsache')}${akpStep('eh', f, 'Erste Hilfe')}
+    ${akpStep('pk', f, 'Personenkontrollen')}
+   </div></div>
+   <div class="detail"><div class="body"><h4>Sistierungen und Festnahmen</h4>
+    ${akpStep('sistL', f, 'Sistierung LaPo')}${akpStep('sistB', f, 'Sistierung BuPol')}${akpStep('festL', f, 'Festnahme LaPo')}${akpStep('festB', f, 'Festnahme BuPol')}
+   </div></div>
+   ${AKP_ROWS.map(([t, cols]) => `<div class="detail"><div class="body"><h4>${t}</h4>${cols.map(([k, l]) => akpStep(k, f, l === 'mdl.V' ? 'mdl. Verwarnung' : l === 'Owi' ? 'OWi-Anzeige' : 'Platzverweis (PV)', l)).join('')}</div></div>`).join('')}
+   <div class="detail"><div class="body"><h4>Straftaten / Sonstige Verstöße</h4>
+    ${akpStep('ausl', f, 'ausländerrechtl. Verstoß')}${akpStep('btm', f, 'Btm')}${akpStep('dieb', f, 'Diebstahl')}${akpStep('kv', f, 'KV', 'Körperverletzung')}
+   </div></div>
+   <div class="detail"><div class="body"><h4>Sonstiges</h4>
+    <textarea class="inp" data-f="sonst" rows="5" autocomplete="off">${esc(f.sonst || '')}</textarea>
+   </div></div>
+   <button class="btn primary big" data-ab="export">⬇ Als Word-Datei exportieren</button>
+   <button class="btn big" data-ab="delete" style="margin-top:10px">Bericht löschen</button>
+  </div>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-akp]'); if(!b) return; e.preventDefault();
+  const r = abRec(); if(!r) return;
+  const k = b.dataset.akp, n = Math.max(0, (parseInt(r.f[k], 10) || 0) + (+b.dataset.d));
+  r.f[k] = n ? String(n) : ''; r.upd = Date.now(); abFlush();
+  const i = b.parentNode.querySelector('input'); if(i) i.value = r.f[k];
+  if(navigator.vibrate) try { navigator.vibrate(8); } catch(err){}
+});
+
+function akpBuildDocx(f){
+  const W = 9638, yy = (f.datum || '').slice(2, 4);
+  const bd = (t, l, b, r) => `<w:tcBorders>${[['top', t], ['left', l], ['bottom', b], ['right', r]].map(([n, on]) => `<w:${n} w:val="${on ? 'single' : 'nil'}"${on ? ' w:sz="6" w:space="0" w:color="000000"' : ''}/>`).join('')}</w:tcBorders>`;
+  const R = (t, o) => { o = o || {}; const rp = `<w:rPr>${o.b ? '<w:b/>' : ''}${o.sz ? `<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>` : ''}</w:rPr>`; return String(t == null ? '' : t).split('\n').map((l, i) => `${i ? '<w:r><w:br/></w:r>' : ''}<w:r>${rp}<w:t xml:space="preserve">${xe(l)}</w:t></w:r>`).join(''); };
+  const P = (inner, o) => { o = o || {}; return `<w:p><w:pPr>${o.jc ? `<w:jc w:val="${o.jc}"/>` : ''}<w:spacing w:before="${o.before || 0}" w:after="${o.after || 0}"/></w:pPr>${inner || ''}</w:p>`; };
+  // Zelle: [Breite, Inhalt, {box:false, span:n}]
+  const TBL = (widths, rows, minH) => `<w:tbl><w:tblPr><w:tblW w:w="${widths.reduce((a, b) => a + b, 0)}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="40" w:type="dxa"/><w:left w:w="90" w:type="dxa"/><w:bottom w:w="40" w:type="dxa"/><w:right w:w="90" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.map(row => { let gi = 0; return `<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="${minH || 400}" w:hRule="atLeast"/></w:trPr>${row.map(c => { const span = c.span || 1, w = widths.slice(gi, gi + span).reduce((a, b) => a + b, 0); gi += span; const box = c.box !== false; return `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${span > 1 ? `<w:gridSpan w:val="${span}"/>` : ''}${bd(box, box, box, box)}</w:tcPr>${c.x || '<w:p/>'}</w:tc>`; }).join('')}</w:tr>`; }).join('')}</w:tbl>`;
+  const L = t => ({x:P(R(t))}), V = v => ({x:P(R(v || '', {b:true}))}), GAP = {box:false}, SP = P('', {after:120});
+  const small = (lab, v) => ({x:P(R(lab, {sz:12})) + P(R(v || '', {b:true, sz:20}))});
+  const zeit = [f.von ? f.von.replace(':', '.') + ' Uhr' : '', f.bis ? f.bis.replace(':', '.') + ' Uhr' : ''].filter(Boolean).join(' – ');
+  const sigUrl = f.sigOn ? (abProfile().sig || '') : '', sz = sigUrl ? pngSize(sigUrl) : null;
+  let sigP = '';
+  if(sz){ const h = 432000, w = Math.min(2340000, Math.round(h * sz[0] / sz[1])), hh = Math.round(w * sz[1] / sz[0]);
+    sigP = `<w:p><w:pPr><w:jc w:val="right"/><w:spacing w:before="40" w:after="0"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${w}" cy="${hh}"/><wp:docPr id="900" name="Signatur"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="900" name="Signatur"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdSig"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${w}" cy="${hh}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`; }
+  let body = '';
+  body += `<w:tbl><w:tblPr><w:tblW w:w="${W}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="5200"/><w:gridCol w:w="${W - 5200}"/></w:tblGrid>`
+    + [['Amt für öffentliche Ordnung', 'Städtischer Vollzugsdienst'], ['GZ: 32-21.1/ ' + (f.tgb ? f.tgb + '/ ' + yy : ''), 'SB: ' + (f.sb || '')]].map(([a, b], i) => `<w:tr><w:tc><w:tcPr><w:tcW w:w="5200" w:type="dxa"/>${bd()}</w:tcPr>${P(R(a), {before:i ? 200 : 0})}</w:tc><w:tc><w:tcPr><w:tcW w:w="${W - 5200}" w:type="dxa"/>${bd()}</w:tcPr>${P(R(b), {before:i ? 200 : 0, jc:'right'})}${i ? sigP : ''}</w:tc></w:tr>`).join('') + '</w:tbl>';
+  body += P(R('Dokumentation Sondereinsatz AKP und Umfeld', {b:true, sz:32}), {before:300, after:220});
+  body += TBL([2150, 1700, 1900, W - 5750], [[L('Datum'), V(fmtD(f.datum)), L('Streife von - bis'), V(zeit)], [L('Dienstgruppe'), V(f.dg), L('Einsatzstärke'), V(f.staerke)]], 520) + SP;
+  body += TBL([2150, 800, 650, 1300, W - 4900], [
+    [L('keine Vorkommnisse'), V(f.keine ? 'X' : ''), GAP, L('Auskünfte'), V(f.ausk)],
+    [GAP, GAP, GAP, L('Fundsache'), V(f.fund)],
+    [GAP, GAP, GAP, L('Erste Hilfe'), V(f.eh)]]) + SP;
+  body += TBL([2150, W - 2150], [[L('Personenkontrollen'), V(f.pk)]]) + SP;
+  body += TBL([2150, 1500, 950, 2100, W - 6700], [
+    [L('Sistierung LaPo'), V(f.sistL), GAP, L('Festnahme LaPo'), V(f.festL)],
+    [L('Sistierung BuPol'), V(f.sistB), GAP, L('Festnahme BuPol'), V(f.festB)]]) + SP;
+  const cw = Math.floor((W - 2150) / 3);
+  body += TBL([2150, cw, cw, W - 2150 - 2 * cw], AKP_ROWS.map(([t, cols]) => [L(t), ...cols.map(([k, l], i) => Object.assign(small(l, f[k]), cols.length === 2 && i === 1 ? {span:2} : {}))]), 620) + SP;
+  body += TBL([1300, 800, 800, 1500, 1300, 1500, 700, W - 7900], [[L('ausländer-\nrechtl.\nVerstoß'), V(f.ausl), L('Btm'), V(f.btm), L('Diebstahl'), V(f.dieb), L('KV'), V(f.kv)]]) + SP;
+  body += TBL([W], [[{x:P(R('Sonstiges:')) + String(f.sonst || '').split(/\n/).map(l => P(R(l))).join('')}]], 1300);
+  body += P('', {before:480}) + P(R('_____________'));
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="de-DE"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Standard"><w:name w:val="Normal"/></w:style></w:styles>`;
+  const ct = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`;
+  const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+  const drels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${sz ? '<Relationship Id="rIdSig" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/signatur.png"/>' : ''}</Relationships>`;
+  const enc = new TextEncoder();
+  return zipStore([{name:'[Content_Types].xml', data:enc.encode(ct)}, {name:'_rels/.rels', data:enc.encode(rels)}, {name:'word/document.xml', data:enc.encode(doc)}, {name:'word/styles.xml', data:enc.encode(styles)}, {name:'word/_rels/document.xml.rels', data:enc.encode(drels)}, ...(sz ? [{name:'word/media/signatur.png', data:b64u8(sigUrl.split(',')[1])}] : [])]);
+}
 
 </script>
 <script data-app>if("serviceWorker" in navigator && location.protocol==="https:" && !/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("sw.js").catch(()=>{});}</script>

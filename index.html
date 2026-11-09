@@ -19,6 +19,9 @@
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
 a{color:inherit}
 header{position:sticky;top:0;z-index:5;background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px}
+/* iPhone (Homescreen-App, iOS 26): Unschärfe-Zone unter der Statusleiste – Titel etwas tiefer setzen */
+@supports (padding:max(0px)){@media (display-mode:standalone){header{padding-top:calc(env(safe-area-inset-top) + 22px)}}}
+#edgeHint{position:fixed;left:0;top:50%;width:6px;height:80px;margin-top:-40px;border-radius:0 6px 6px 0;background:var(--accent);opacity:0;transition:opacity .15s;z-index:60;pointer-events:none}
 .bar{display:flex;align-items:center;gap:10px;max-width:820px;margin:0 auto}
 .badge{width:34px;height:34px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
 .back{all:unset;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;border-radius:8px;background:#1d2b42;flex:none}
@@ -29,7 +32,7 @@ header{position:sticky;top:0;z-index:5;background:var(--navy);color:#fff;padding
 .search input{width:100%;border:0;border-radius:10px;padding:10px 12px 10px 36px;font-size:16px;background:#1d2b42;color:#fff;outline:none}
 .search input::placeholder{color:#8f9cb1}
 .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:.7}
-main{padding:12px 12px calc(env(safe-area-inset-bottom) + 92px);max-width:820px;margin:0 auto}
+main{padding:12px 12px calc(env(safe-area-inset-bottom) + 120px);max-width:820px;margin:0 auto}
 .sec{font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 4px 8px;font-weight:700}
 .intro{color:var(--muted);font-size:14.5px;margin:6px 4px 12px}
 .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
@@ -395,6 +398,28 @@ body.noscroll{overflow:hidden}
 .row2{display:flex;gap:8px}.row2>*{flex:1;min-width:0}.row2 .lbl{display:block}
 #vcFull{position:fixed;inset:0;z-index:300;background:#fff;display:flex;align-items:center;justify-content:center;padding:20px}
 .vcfbox{display:flex;flex-direction:column;align-items:center;gap:6px;color:#111;text-align:center}.vcfbox b{font-size:22px;margin-top:8px}.vcfbox span{font-size:15px;color:#444}.vcfbox small{color:#777;margin-top:10px}
+#camOv{position:fixed;inset:0;z-index:400;background:#000;overflow:hidden;touch-action:none}
+#camOv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#camOv .camFrame{position:absolute;border-radius:12px;box-shadow:0 0 0 200vmax rgba(0,0,0,.58);outline:2px solid rgba(255,255,255,.85)}
+#camOv .camFrame i{position:absolute;width:26px;height:26px;border:4px solid var(--accent)}
+#camOv .camFrame .tl{left:-4px;top:-4px;border-right:0;border-bottom:0;border-radius:12px 0 0 0}
+#camOv .camFrame .tr{right:-4px;top:-4px;border-left:0;border-bottom:0;border-radius:0 12px 0 0}
+#camOv .camFrame .bl{left:-4px;bottom:-4px;border-right:0;border-top:0;border-radius:0 0 0 12px}
+#camOv .camFrame .br{right:-4px;bottom:-4px;border-left:0;border-top:0;border-radius:0 0 12px 0}
+#camOv .camMrz{position:absolute;left:4%;right:4%;bottom:5%;height:30%;border:2px dashed var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center}
+#camOv .camMrz span{color:var(--accent);font:700 13px ui-monospace,monospace;opacity:.9;letter-spacing:2px}
+#camOv .camTop{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 16px) 18px 14px;color:#fff;text-align:center;display:flex;flex-direction:column;gap:4px}
+#camOv .camTop b{font-size:18px}#camOv .camTop span{font-size:14px;opacity:.9}
+#camOv .camMsg{position:absolute;left:20px;right:20px;top:40%;background:rgba(15,27,45,.95);color:#fff;padding:16px;border-radius:14px;text-align:center;display:flex;flex-direction:column;gap:10px}
+#camOv .camBar{position:absolute;left:0;right:0;bottom:0;padding:16px 28px calc(env(safe-area-inset-bottom) + 22px);display:flex;align-items:center;justify-content:space-between}
+#camOv .camBar button{border:0;cursor:pointer}
+#camOv .camX,#camOv .camTorch{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:20px}
+#camOv .camTorch.on{background:var(--accent);color:#000}
+#camOv .camTorch.off{visibility:hidden}
+#camOv .camShot{width:76px;height:76px;border-radius:50%;background:#fff;box-shadow:0 0 0 5px rgba(255,255,255,.35)}
+#camOv .camShot:active{transform:scale(.92)}
+#camOv.flash::after{content:'';position:absolute;inset:0;background:#fff;opacity:.7}
+body.camOpen #sosFloat{display:none}
 </style>
 </head>
 <body>
@@ -407,6 +432,7 @@ body.noscroll{overflow:hidden}
  <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Suchen: Hund, § 30, Abschleppen, 283 …" autocomplete="off"></div>
 </header>
 <main id="app"></main>
+<div id="edgeHint"></div>
 <nav id="nav">
  <a href="#start" data-v="start"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Start</a>
  <a href="#massnahmen" data-v="massnahmen"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>Maßnahmen</a>
@@ -619,7 +645,15 @@ function render(top){
   editDecorate();
   if(openCard){ const c = document.getElementById('card_'+openCard); if(c){ c.classList.add('open'); setTimeout(() => c.scrollIntoView({behavior:'smooth', block:'start'}), 60); } openCard = null; }
 }
-$('#back').addEventListener('click', () => { if(history.length > 1) history.back(); else location.hash = '#start'; });
+const goBack = () => { if(history.length > 1) history.back(); else location.hash = '#start'; };
+$('#back').addEventListener('click', goBack);
+/* Wischen vom linken Rand nach rechts = Zurück (wie in iOS-Apps) */
+(() => {
+  let sx = null, sy = 0, hint = document.getElementById('edgeHint');
+  addEventListener('touchstart', e => { const t = e.touches[0]; if(e.touches.length === 1 && t.clientX < 28 && view !== 'start'){ sx = t.clientX; sy = t.clientY; } else sx = null; }, {passive:true});
+  addEventListener('touchmove', e => { if(sx == null) return; const t = e.touches[0], dx = t.clientX - sx; if(Math.abs(t.clientY - sy) > 60){ sx = null; hint.style.opacity = 0; return; } hint.style.opacity = Math.min(1, dx / 90); }, {passive:true});
+  addEventListener('touchend', e => { if(sx == null) return; const t = e.changedTouches[0], dx = t.clientX - sx; hint.style.opacity = 0; sx = null; if(dx > 80 && Math.abs(t.clientY - sy) < 60) goBack(); }, {passive:true});
+})();
 window.addEventListener('hashchange', () => { if(!document.body.classList.contains('locked')) route(); });
 const go = h => { if(location.hash === h) route(); else location.hash = h; };
 
@@ -2814,7 +2848,7 @@ function plateHTML(f){
     <input class="pz pzB" data-f="kzB" value="${esc(f.kzB || '')}" maxlength="2" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="AB" aria-label="Buchstaben">
     <input class="pz pzC" data-f="kzC" value="${esc(f.kzC || '')}" maxlength="4" inputmode="numeric" autocomplete="off" placeholder="1234" aria-label="Zahl">
     <span class="pzS" id="kzSuffix">${f.kzE ? 'E' : f.kzH ? 'H' : ''}</span></div></div>
-    <div class="kzopt"><label class="abck"><input type="checkbox" data-f="kzE"${f.kzE ? ' checked' : ''}><span>E (Elektro)</span></label><label class="abck"><input type="checkbox" data-f="kzH"${f.kzH ? ' checked' : ''}><span>H (Oldtimer)</span></label></div></div>`;
+    <div class="kzopt"><label class="abck"><input type="checkbox" data-f="kzE"${f.kzE ? ' checked' : ''}><span>E (Elektro)</span></label><label class="abck"><input type="checkbox" data-f="kzH"${f.kzH ? ' checked' : ''}><span>H (Oldtimer)</span></label></div>${typeof kzScanBtns === 'function' ? kzScanBtns('as') : ''}</div>`;
 }
 function asCompose(f){
   if(f.kzAusl){ f.kennz = (f.kzFrei || '') + (f.kzLand ? ' (' + f.kzLand + ')' : ''); }
@@ -2927,7 +2961,7 @@ function viewKlein(r){
    ${uKopf(f, {ic:ICONS[T.ic] ? T.ic : 'i_warn', title:T.t, top:`<details class="kachange"><summary>Art ändern</summary>${typeGrid}</details>`})}
    ${uOrtZeit(f)}
    <div class="detail"><div class="body"><h4>Feststellung</h4>
-    ${T.felder.map(([k, l]) => abIn(l, k, f[k], '')).join('')}
+    ${T.felder.map(([k, l]) => abIn(l, k, f[k], '') + (k === 'fzgKz' && typeof kzScanBtns === 'function' ? kzScanBtns('fzg') : '')).join('')}
     <div class="abgrid" style="margin-top:10px">${T.opts.map(([g, items], gi) => `<div class="abgrp"><b>${g}</b>${items.map((o, oi) => `<label class="abck"><input type="checkbox" data-f="${kaOptKey(gi, oi)}"${f[kaOptKey(gi, oi)] ? ' checked' : ''}><span>${o}</span></label>`).join('')}</div>`).join('')}</div>
     <button class="btn" data-ka="text" style="margin-top:12px">✎ Text aus Auswahl erzeugen</button>
     ${abTa('Sachverhalt', 'bericht', f.bericht, 'Was wurde festgestellt? Ergänzende Angaben …', 6)}
@@ -3828,6 +3862,7 @@ function viewKennzeichen(){
   const v = kzVersFarbe();
   return `<div class="detail"><div class="dhd">${ico('i_plate', '#dbe7fb')}<div class="dt"><h2>Kennzeichen-Auskunft</h2><span>Kürzel, Ort oder ganzes Kennzeichen eingeben</span></div></div><div class="body">
      <input class="inp kzin" id="kzIn" value="${esc(kzQuery)}" placeholder="z. B. ES, LEO, S-AB 1234, Esslingen" autocomplete="off" autocapitalize="characters" spellcheck="false">
+     ${typeof kzScanBtns === 'function' ? kzScanBtns('auskunft') : ''}
      <div id="kzOut">${kzResultsHTML(kzQuery)}</div>
    </div></div>
    <div class="detail"><div class="body"><h4>Versicherungskennzeichen (Mofa, Roller, E-Scooter)</h4>
@@ -4372,6 +4407,234 @@ async function vcShare(){
     if(e.target.closest('[data-vcfull]')){ const v = vcGet(); if(!(v.vorname || v.nachname || v.tel || v.mobil || v.mail)){ toast('Bitte zuerst Name oder Kontakt eintragen', true); return; } vcFull(); }
     else if(e.target.closest('[data-vcshare]')) vcShare();
   });
+})();
+
+/* =========================================================
+   KAMERA-SCANNER MIT SUCHRAHMEN
+   Live-Kamerabild im Browser (getUserMedia), Suchrahmen für
+   Ausweis, Kfz-Kennzeichen und Versicherungskennzeichen.
+   Beim Auslösen wird nur der Bereich im Rahmen (plus Rand)
+   ausgeschnitten und an die vorhandene Texterkennung übergeben.
+   ========================================================= */
+const CAM_MODES = {
+  front: {title:'Ausweis – Vorderseite', hint:'Ausweis flach in den Rahmen legen, Lichtbild links. Keine Spiegelung.', ar:85.6 / 54, w:.9, pad:.07},
+  back:  {title:'Ausweis – Rückseite', hint:'Rückseite in den Rahmen – die Zeilen mit „<<<“ unten in den gestrichelten Bereich.', ar:85.6 / 54, w:.9, pad:.07, mrz:true},
+  kfz:   {title:'Kfz-Kennzeichen', hint:'Kennzeichen gerade von vorn, formatfüllend in den Rahmen.', ar:520 / 110, w:.92, pad:.12},
+  vs:    {title:'Versicherungskennzeichen', hint:'Schild gerade von vorn in den Rahmen.', ar:1.3, w:.7, pad:.15}
+};
+const camCanUse = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext !== false;
+
+function camOpen(mode){
+  const M = CAM_MODES[mode] || CAM_MODES.front;
+  return new Promise(async resolve => {
+    let stream = null, track = null, torchOn = false, done = false;
+    const ov = document.createElement('div'); ov.id = 'camOv';
+    ov.innerHTML = `<video playsinline muted autoplay></video>
+      <div class="camFrame"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>${M.mrz ? '<div class="camMrz"><span>&lt;&lt;&lt; &lt;&lt;&lt;</span></div>' : ''}</div>
+      <div class="camTop"><b>${M.title}</b><span>${M.hint}</span></div>
+      <div class="camMsg" hidden></div>
+      <div class="camBar"><button class="camX" aria-label="Abbrechen">✕</button><button class="camShot" aria-label="Auslösen"></button><button class="camTorch off" aria-label="Licht">🔦</button></div>`;
+    document.body.appendChild(ov); document.body.classList.add('camOpen');
+    const video = ov.querySelector('video'), frame = ov.querySelector('.camFrame'), msg = ov.querySelector('.camMsg');
+    const close = file => { if(done) return; done = true; try { stream && stream.getTracks().forEach(t => t.stop()); } catch(e){} ov.remove(); document.body.classList.remove('camOpen'); removeEventListener('resize', layout); resolve(file || null); };
+    const layout = () => {
+      const W = ov.clientWidth, H = ov.clientHeight;
+      let fw = W * M.w, fh = fw / M.ar;
+      const maxH = H * .55; if(fh > maxH){ fh = maxH; fw = fh * M.ar; }
+      frame.style.width = fw + 'px'; frame.style.height = fh + 'px';
+      frame.style.left = (W - fw) / 2 + 'px'; frame.style.top = (H - fh) / 2 - H * .03 + 'px';
+    };
+    layout(); addEventListener('resize', layout);
+    ov.querySelector('.camX').onclick = () => close(null);
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:{ideal:'environment'}, width:{ideal:3840}, height:{ideal:2160}}});
+    } catch(err){
+      msg.hidden = false; msg.innerHTML = 'Kamera nicht verfügbar oder Zugriff verweigert.<br><button class="btn primary" data-camfb>Stattdessen Foto aufnehmen</button>';
+      msg.querySelector('[data-camfb]').onclick = () => close('fallback');
+      return;
+    }
+    video.srcObject = stream; track = stream.getVideoTracks()[0];
+    try { await video.play(); } catch(e){}
+    try {
+      const cap = track.getCapabilities ? track.getCapabilities() : {};
+      if(cap.focusMode && cap.focusMode.includes('continuous')) track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(() => {});
+      if(cap.torch){ const tb = ov.querySelector('.camTorch'); tb.classList.remove('off'); tb.onclick = () => { torchOn = !torchOn; track.applyConstraints({advanced:[{torch:torchOn}]}).catch(() => {}); tb.classList.toggle('on', torchOn); }; }
+    } catch(e){}
+    ov.querySelector('.camShot').onclick = () => {
+      const vw = video.videoWidth, vh = video.videoHeight; if(!vw || !vh) return;
+      // Bildschirm-Rahmen in Videokoordinaten umrechnen (Video füllt die Fläche wie object-fit: cover)
+      const W = ov.clientWidth, H = ov.clientHeight, s = Math.max(W / vw, H / vh), ox = (W - vw * s) / 2, oy = (H - vh * s) / 2;
+      const r = frame.getBoundingClientRect(), o = ov.getBoundingClientRect();
+      let x = (r.left - o.left - ox) / s, y = (r.top - o.top - oy) / s, w = r.width / s, h = r.height / s;
+      const px = w * M.pad, py = h * M.pad * 1.4;
+      x = Math.max(0, x - px); y = Math.max(0, y - py); w = Math.min(vw - x, w + 2 * px); h = Math.min(vh - y, h + 2 * py);
+      const c = document.createElement('canvas'), k = Math.min(1, 2400 / w); c.width = Math.round(w * k); c.height = Math.round(h * k);
+      c.getContext('2d').drawImage(video, x, y, w, h, 0, 0, c.width, c.height);
+      ov.classList.add('flash');
+      c.toBlob(b => close(b ? new File([b], 'scan.jpg', {type:'image/jpeg'}) : null), 'image/jpeg', .95);
+    };
+  });
+}
+
+/* ---------- Kfz-Kennzeichen lesen ---------- */
+const KZ_LET = {'0':'O', '1':'I', '2':'Z', '5':'S', '8':'B', '6':'G', '4':'A', '7':'T'};
+const KZ_DIG = {'O':'0', 'Q':'0', 'D':'0', 'I':'1', 'L':'1', 'T':'7', 'Z':'2', 'S':'5', 'B':'8', 'G':'6', 'A':'4'};
+function kzKnown(a){
+  if(!a) return null; if(KZ_DATA[a]) return a;
+  // Umlaute: die Texterkennung liest Ä/Ö/Ü meist als A/O/U
+  const alts = [a];
+  for(let i = 0; i < a.length; i++){ const u = {A:'Ä', O:'Ö', U:'Ü'}[a[i]]; if(u) alts.slice().forEach(s => alts.push(s.slice(0, i) + u + s.slice(i + 1))); }
+  return alts.find(s => KZ_DATA[s]) || null;
+}
+function kfzParse(txt){
+  const out = [];
+  const lines = String(txt || '').toUpperCase().split(/\n/).concat([String(txt || '').toUpperCase().replace(/\n/g, ' ')]);
+  for(let line of lines){
+    line = line.replace(/[^A-Z0-9ÄÖÜ\- ]/g, ' ').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+    if(line.length < 3) continue;
+    // Variante 1: mit Lücken  „S AB 1234“ (Euro-Feld „D“ und Plakettenreste davor/dazwischen werden übersprungen)
+    const tk = line.split(' ');
+    for(let i = 0; i < tk.length; i++){
+      const A = tk[i].replace(/[0-9]/g, c => KZ_LET[c] || c), am = kzKnown(A);
+      if(!am) continue;
+      for(const j of [i + 1, i + 2]){
+        if(j >= tk.length) continue;
+        let B = tk[j].replace(/[0-9]/g, c => KZ_LET[c] || c), tail = tk.slice(j + 1).join('');
+        const glued = /^([A-Z]{1,2})([0-9][0-9A-Z]*)$/.exec(tk[j]);          // „K777E“: Buchstaben und Zahl ohne Lücke
+        if(glued){ B = glued[1]; tail = glued[2] + tail; }
+        if(!/^[A-Z]{1,2}$/.test(B)) continue;
+        const m = /^([0-9A-Z]{1,4}?)([EH])?$/.exec(tail);
+        if(!m) continue;
+        const digits = m[1].replace(/[A-Z]/g, c => KZ_DIG[c] || c);
+        if(/^[1-9]\d{0,3}$/.test(digits)) out.push({a:am, b:B, c:digits, s:m[2] || '', q:j === i + 1 ? 3 : 2});
+      }
+    }
+    // Variante 2: ohne Lücken  „SAB1234“ – alle Aufteilungen prüfen
+    const comp = line.replace(/ /g, '');
+    const m2 = /^([A-Z0-9ÄÖÜ]{2,5}?)([0-9OQDILZSBG]{1,4})([EH])?$/.exec(comp);
+    if(m2){
+      const L = m2[1].replace(/[0-9]/g, c => KZ_LET[c] || c), digits = m2[2].replace(/[A-Z]/g, c => KZ_DIG[c] || c);
+      if(/^[1-9]\d{0,3}$/.test(digits)) for(let a = 3; a >= 1; a--){ const b = L.length - a; if(b < 1 || b > 2) continue; const am = kzKnown(L.slice(0, a)); if(am && /^[A-Z]{1,2}$/.test(L.slice(a))) out.push({a:am, b:L.slice(a), c:digits, s:m2[3] || '', q:1}); }
+    }
+  }
+  out.sort((x, y) => y.q - x.q);
+  return out[0] || null;
+}
+/* Farbige Flächen (Euro-Feld, Prüfplaketten) weiß machen – sonst liest die Erkennung sie als „S“, „3“ oder „D“ */
+function kzDecolor(src){
+  const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+  const g = c.getContext('2d'); g.drawImage(src, 0, 0);
+  const d = g.getImageData(0, 0, c.width, c.height), p = d.data;
+  for(let i = 0; i < p.length; i += 4){ const mx = Math.max(p[i], p[i + 1], p[i + 2]), mn = Math.min(p[i], p[i + 1], p[i + 2]); if(mx - mn > 45 && mx > 70){ p[i] = p[i + 1] = p[i + 2] = 255; } }
+  g.putImageData(d, 0, 0); return c;
+}
+/* Helles, ungesättigtes Rechteck im Seitenverhältnis eines Kfz-Kennzeichens suchen */
+function kfzFind(img){
+  const IW = img.naturalWidth || img.width, IH = img.naturalHeight || img.height, sw = 360, k = sw / IW, sh = Math.round(IH * k);
+  const c = document.createElement('canvas'); c.width = sw; c.height = sh; const g = c.getContext('2d'); g.drawImage(img, 0, 0, sw, sh);
+  const d = g.getImageData(0, 0, sw, sh).data, N = sw * sh, L = new Float32Array(N);
+  for(let i = 0; i < N; i++) L[i] = d[i * 4] + d[i * 4 + 1] + d[i * 4 + 2];
+  const sorted = Array.from(L).sort((a, b) => a - b);
+  let best = null;
+  for(const q of [.5, .6, .7, .8]){
+    const thr = Math.max(420, sorted[Math.floor(N * q)]), M = new Uint8Array(N), seen = new Uint8Array(N);
+    for(let i = 0; i < N; i++){ const mx = Math.max(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]), mn = Math.min(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); M[i] = L[i] >= thr && mx - mn < 60 ? 1 : 0; }
+    // kleine Lücken (Schrift) schließen: horizontal dilatieren
+    const M2 = new Uint8Array(N); for(let y = 0; y < sh; y++) for(let x = 0; x < sw; x++){ let v = 0; for(let dx = -3; dx <= 3 && !v; dx++){ const xx = x + dx; if(xx >= 0 && xx < sw && M[y * sw + xx]) v = 1; } M2[y * sw + x] = v; }
+    for(let i = 0; i < N; i++){
+      if(!M2[i] || seen[i]) continue;
+      const st = [i]; seen[i] = 1; let n = 0, x0 = sw, y0 = sh, x1 = 0, y1 = 0;
+      while(st.length){ const p = st.pop(), x = p % sw, y = (p / sw) | 0; n++; if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y;
+        for(const qq of [p - 1, p + 1, p - sw, p + sw]) if(qq >= 0 && qq < N && M2[qq] && !seen[qq] && Math.abs((qq % sw) - x) <= 1){ seen[qq] = 1; st.push(qq); } }
+      const w = x1 - x0 + 1, h = y1 - y0 + 1, ar = w / h, fill = n / (w * h);
+      if(w < sw * .25 || ar < 2.6 || ar > 6.5 || fill < .55) continue;
+      const sc = w * fill; if(!best || sc > best.sc) best = {sc, x:x0 / k, y:y0 / k, w:w / k, h:h / k};
+    }
+    if(best) break;
+  }
+  return best;
+}
+async function kfzOcr(file, info){
+  if(!window.Tesseract) await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+  const canvas = await abPrep(file), img = canvas._img, W = img.naturalWidth, H = img.naturalHeight;
+  const w = await Tesseract.createWorker('eng', 1);
+  const crops = [], pl = kfzFind(img);
+  if(pl) crops.push([imgCrop(img, pl.x + pl.w * .01, pl.y + pl.h * .04, pl.w * .98, pl.h * .92, 1000, 0), ['7', '6']]);
+  crops.push([imgCrop(img, 0, 0, W, H, Math.min(1200, W), 0), ['7', '6', '11']]);
+  let best = null;
+  try {
+    for(const [ci, [base, psms]] of crops.entries()){
+      const clean = kzDecolor(base);
+      for(const psm of psms) for(const m of ['contrast', 'otsu']){
+        if(info) info(`Lese Kennzeichen … (${ci + 1}/${crops.length})`);
+        await w.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- ', tessedit_pageseg_mode:psm});
+        const r = await w.recognize(imgVariant(clean, m));
+        const p = kfzParse(r.data.text);
+        if(p && (!best || p.q > best.q)){ best = Object.assign(p, {raw:r.data.text}); }
+        if(best && best.q >= 3) break;
+      }
+      if(best && best.q >= 3) break;
+    }
+  } finally { await w.terminate(); }
+  return best;
+}
+const kfzText = p => `${p.a}-${p.b} ${p.c}${p.s}`;
+async function kfzScan(file, target){
+  toast('Kennzeichen wird gelesen …');
+  let p = null;
+  try { p = await kfzOcr(file, t => { const i = document.getElementById('kzScanInfo'); if(i) i.textContent = t; }); }
+  catch(e){ toast('Texterkennung nicht verfügbar (Internet beim ersten Laden nötig)', true); return; }
+  const info = document.getElementById('kzScanInfo');
+  if(!p){ if(info) info.innerHTML = 'Kennzeichen nicht sicher erkannt – näher heran, gerade von vorn, ohne Spiegelung, oder von Hand eintragen.'; toast('Nicht erkannt – bitte von Hand eintragen', true); return; }
+  const txt = kfzText(p), ort = KZ_DATA[p.a] ? KZ_DATA[p.a][0] : '';
+  if(target === 'as'){
+    const r = abRec(); if(!r) return;
+    Object.assign(r.f, {kzAusl:false, kzA:p.a, kzB:p.b, kzC:p.c, kzE:p.s === 'E', kzH:p.s === 'H'});
+    asCompose(r.f); abFlush();
+    const box = document.getElementById('kzBox'); if(box) box.innerHTML = plateHTML(r.f);
+    app.querySelectorAll('[data-kzmode]').forEach(x => x.classList.toggle('on', x.dataset.kzmode === 'de'));
+  } else if(target === 'fzg'){
+    abSetMany({fzgKz:txt});
+  } else if(target === 'auskunft'){
+    const i = document.getElementById('kzIn'); if(i){ i.value = txt; i.dispatchEvent(new Event('input', {bubbles:true})); }
+  }
+  const msg = `✓ Erkannt: <b>${esc(txt)}</b>${ort ? ` (${esc(ort)})` : ''}${p.q < 3 ? ' – <b>Aufteilung unsicher</b>' : ''}. Bitte mit dem Schild vergleichen.`;
+  const i2 = document.getElementById('kzScanInfo'); if(i2) i2.innerHTML = msg;
+  toast('Erkannt: ' + txt);
+}
+const kzScanBtns = t => `<div class="abrow2" style="margin-top:8px"><button class="btn primary" data-kzscan="${t}" data-src="cam">📷 Kennzeichen scannen</button><button class="btn" data-kzscan="${t}" data-src="gal">🖼 Galerie</button></div><div id="kzScanInfo" class="small"></div>`;
+
+/* ---------- Klicks abfangen: Kamera-Knöpfe öffnen den Scanner mit Suchrahmen ---------- */
+(() => {
+  let kzTarget = 'as';
+  const gal = document.createElement('input'); gal.type = 'file'; gal.accept = 'image/*'; gal.hidden = true; document.body.appendChild(gal);
+  const camIn = document.createElement('input'); camIn.type = 'file'; camIn.accept = 'image/*'; camIn.setAttribute('capture', 'environment'); camIn.hidden = true; document.body.appendChild(camIn);
+  [gal, camIn].forEach(el => el.addEventListener('change', () => { const f = el.files[0]; el.value = ''; if(f) kfzScan(f, kzTarget); }));
+  document.addEventListener('click', async e => {
+    const ab = e.target.closest('[data-ab="ocr"][data-src="cam"]'), vs = e.target.closest('[data-vs="scan"][data-src="cam"]'), kz = e.target.closest('[data-kzscan]');
+    if(!ab && !vs && !kz) return;
+    if(kz){
+      e.preventDefault(); e.stopPropagation(); kzTarget = kz.dataset.kzscan;
+      if(kz.dataset.src === 'gal'){ gal.click(); return; }
+      if(!camCanUse()){ camIn.click(); return; }
+      const f = await camOpen('kfz');
+      if(f === 'fallback'){ camIn.click(); return; }
+      if(f) kfzScan(f, kzTarget);
+      return;
+    }
+    if(!camCanUse()) return;                      // ohne Live-Kamera: normale Foto-Aufnahme wie bisher
+    e.preventDefault(); e.stopPropagation();
+    if(ab){
+      const side = ab.dataset.side || 'front'; abOcrSide = side;
+      const f = await camOpen(side === 'back' ? 'back' : 'front');
+      if(f === 'fallback'){ const c = document.getElementById('abcam'); if(c){ c.value = ''; c.click(); } return; }
+      if(f) abOcr(f, side);
+    } else {
+      const f = await camOpen('vs');
+      if(f === 'fallback'){ const c = document.getElementById('vscam'); if(c){ c.value = ''; c.click(); } return; }
+      if(f) vsScan(f);
+    }
+  }, true);
 })();
 
 </script>

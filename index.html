@@ -1910,7 +1910,7 @@ function mrzUmlaut(mrzName, plain){
   const U = {AE:'Ä', OE:'Ö', UE:'Ü'};
   while(i < m.length){
     const pair = m.slice(i, i + 2);
-    if(U[pair] && /[ÄÖÜ]/.test(p[j] || '')){ out += U[pair]; i += 2; j += 1; continue; }
+    if(U[pair] && (/[ÄÖÜ]/.test(p[j] || '') || (p[j] === pair[0] && p[j + 1] !== pair[1] && p.length && p.length < m.length))){ out += U[pair]; i += 2; j += 1; continue; }
     if(pair === 'SS' && /ẞ|ß/.test(p[j] || '')){ out += 'ß'; i += 2; j += 1; continue; }
     out += m[i]; i++; j++;
   }
@@ -2120,7 +2120,10 @@ async function mrzRead(canvas, info, n, data, an0){
       if(best.score >= 5) break;
     }
     // Namen per Mehrheitsentscheid über alle Varianten
-    const top = Object.entries(votes).sort((a, b) => b[1] - a[1])[0];
+    const ranked = Object.entries(votes).sort((a, b) => b[1] - a[1]);
+    let top = ranked[0];
+    // Störzeichen vom Kartenrand vor dem Namen („BFROEBEL“): kürzere Variante bevorzugen, wenn sie das Ende der längeren ist
+    if(top){ const [sn0, gn0] = top[0].split('|'); const alt = ranked.find(([k]) => { const [sn, gn] = k.split('|'); return sn !== sn0 && sn0.endsWith(sn) && sn0.length - sn.length <= 2 && sn.length >= 2 && (gn || '') === (gn0 || ''); }); if(alt) top = alt; }
     if(top){ const [sn, gn] = top[0].split('|'); best.name = sn; best.vorname = gn || best.vorname; }
     return (best.score || 0) >= 3 ? best : {};
   } finally { await w.terminate(); }
@@ -2181,6 +2184,78 @@ function parseAddrText(text){
 const isAddrLabel = t => idNorm(t).split(/[^a-z]+/).some(w => w && (idWordIs(w, ['anschrift', 'address', 'adresse']) || /^(anschr|addre|adres)/.test(w)));
 
 /* PLZ online gegen Ortsnamen prüfen (OpenPLZ API) und einzelne Lesefehler korrigieren */
+/* ---------- Vorderseite: Werte unter den Beschriftungen robust auslesen ---------- */
+function idCapsRun(line, keep2){
+  // längste Folge aus Großbuchstaben-Wörtern; kurze Störwörter am Anfang weglassen
+  const runs = String(line || '').match(/[A-ZÄÖÜẞ][A-ZÄÖÜẞ'\-]+(?:\s+[A-ZÄÖÜẞ][A-ZÄÖÜẞ'\-]+)*/g) || [];
+  let best = runs.sort((a, b) => b.length - a.length)[0] || '';
+  let tk = best.split(/\s+/);
+  while(tk.length > 1 && tk[0].length <= (keep2 ? 1 : 2)) tk.shift();
+  return tk.join(' ');
+}
+function idLabelPass(text){
+  const L = String(text || '').split(/\n/), out = {};
+  const after = (re, skip) => { for(let i = 0; i < L.length; i++){ if(re.test(L[i]) && !(skip && skip.test(L[i]))){ for(let k = 1; k <= 4 && i + k < L.length; k++){ if(/[a-z]{3,}\s*\/\s*[A-Za-z]/.test(L[i + k]) && !/[A-ZÄÖÜ]{4,}/.test(L[i + k].replace(/\b[A-Z][a-z]+\b/g, ''))) continue; const v = idCapsRun(L[i + k]); if(v.length >= 3 && !/NAME|DATE|PLACE|NOM\b|GEBURT/i.test(v)) return v; } } } return ''; };
+  const nm = after(/Surname|Name\s*\/|Nom\b/i, /Geburtsname|at birth|Vorname|Given/i);
+  const vn = after(/Vornamen|Given names|Pr[ée]noms/i);
+  let go = '';
+  for(let i = 0; i < L.length && !go; i++) if(/Geburtsort|Place of birth|Lieu de/i.test(L[i])) for(let k = 1; k <= 3 && i + k < L.length && !go; k++){ const v = idCapsRun(L[i + k], true); if(v.length >= 3 && !/DATE|PLACE|GEBURT|EXPIR/i.test(v)) go = v; }
+  // „PF ORZHEIM“: kurzes Stück vorn ist entweder Störung oder abgetrennter Anfang – beide Varianten merken
+  if(go){ const t = go.split(' '); if(t.length > 1 && t[0].length === 2){ out._gebAlt = capW(t[0] + t[1] + (t.length > 2 ? ' ' + t.slice(2).join(' ') : '')); go = t.slice(1).join(' '); } }
+  if(nm) out.name = nm.replace(/\s+/g, ' ');
+  if(vn) out.vorname = capW(vn);
+  if(go) out.gebort = capW(go);
+  const yNow = new Date().getFullYear(), dates = [...String(text || '').matchAll(/\b(\d{2})\.\s?(\d{2})\.\s?(\d{4})\b/g)].map(m => m.slice(1).map(Number)).filter(([d, mo, y]) => d >= 1 && d <= 31 && mo >= 1 && mo <= 12 && y > 1900 && y <= yNow - 5);
+  if(dates.length){ const [d, mo, y] = dates[0]; out.gebdat = `${String(d).padStart(2, '0')}.${String(mo).padStart(2, '0')}.${y}`; }
+  return out;
+}
+function idMerge(res, lp){
+  ['gebdat', 'gebort'].forEach(k => { if(!res[k] && lp[k]) res[k] = lp[k]; });
+  if(lp.vorname && (!res.vorname || (lp.vorname.split(' ').length > res.vorname.split(' ').length && idNorm(lp.vorname).includes(idNorm(res.vorname))))) res.vorname = lp.vorname;
+  if(lp.name){ if(!res.name) res.name = lp.name; else if(res.name.length > lp.name.length && res.name.length - lp.name.length <= 2 && res.name.endsWith(lp.name)) res.name = lp.name; }
+}
+async function ortVerify(cands){
+  for(const c of cands){
+    const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
+    try { const r = await fetch(`https://openplzapi.org/de/Localities?name=${encodeURIComponent(c)}&page=1&pageSize=5`, {signal:ac.signal, headers:{Accept:'application/json'}}); if(r.ok){ ortVerify.answered = true; const j = await r.json(); if(Array.isArray(j) && j.some(x => x && x.name && idNorm(x.name.split(/[\s,(]/)[0]) === idNorm(c.split(' ')[0]))) return c; } }
+    catch(e){} finally { clearTimeout(t); }
+  }
+  return null;
+}
+/* ---------- Rückseite: Straße mit dem Straßenverzeichnis der Postleitzahl abgleichen (OpenPLZ) ---------- */
+const STREET_CACHE = {};
+const stNorm = s => String(s || '').toUpperCase().replace(/ẞ|ß/g, 'SS').replace(/Ä/g, 'AE').replace(/Ö/g, 'OE').replace(/Ü/g, 'UE').replace(/[^A-Z]/g, '');
+function levFull(a, b){ const m = a.length, n = b.length; if(!m) return n; if(!n) return m; let prev = Array.from({length:n + 1}, (_, j) => j); for(let i = 1; i <= m; i++){ const cur = [i]; for(let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[n]; }
+async function streetsForPlz(plz){
+  if(STREET_CACHE[plz]) return STREET_CACHE[plz];
+  const all = [];
+  for(let page = 1; page <= 12; page++){
+    const ac = new AbortController(), t = setTimeout(() => ac.abort(), 5000);
+    try { const r = await fetch(`https://openplzapi.org/de/Streets?postalCode=${plz}&page=${page}&pageSize=50`, {signal:ac.signal, headers:{Accept:'application/json'}}); if(!r.ok) break; const j = await r.json(); if(!Array.isArray(j) || !j.length) break; j.forEach(x => x && x.name && all.push(x.name)); if(j.length < 50) break; }
+    catch(e){ break; } finally { clearTimeout(t); }
+  }
+  return (STREET_CACHE[plz] = [...new Set(all)]);
+}
+async function streetVerify(anschrift, rawText){
+  const m = /^(.*?)[,\s]+(\d{5})\s+(.+)$/.exec(String(anschrift || '').trim()); if(!m) return null;
+  const [, streetPart, plz, ort] = m, list = await streetsForPlz(plz); if(!list.length) return null;
+  const lines = String(rawText || '').split(/\n/).concat([streetPart]).map(l => ({l, n:stNorm(l)})).filter(x => x.n.length >= 4);
+  let best = null;
+  for(const name of list){
+    const sn = stNorm(name); if(sn.length < 4) continue;
+    for(const {l, n} of lines){
+      for(let len = Math.max(4, sn.length - 2); len <= sn.length + 2; len++){
+        for(let i = 0; i + len <= n.length; i++){
+          const d = levFull(sn, n.slice(i, i + len)), sim = 1 - d / sn.length;
+          if(!best || sim > best.sim) best = {sim, name, line:l};
+        }
+      }
+    }
+  }
+  if(!best || best.sim < 0.72) return null;
+  const hn = (/(\d{1,4}\s?[a-zA-Z]?)\s*$/.exec(best.line.replace(/\s+\d{5}.*$/, '')) || /(\d{1,4}\s?[a-zA-Z]?)\b/.exec(streetPart) || [])[1] || (/(\d{1,4}\s?[a-zA-Z]?)\s*$/.exec(streetPart) || [])[1] || '';
+  return `${best.name}${hn ? ' ' + hn.replace(/\s+/g, '').toLowerCase() : ''}, ${plz} ${ort}`;
+}
 async function plzVerify(plzOrt){
   const m = /^(\d{5}) (.+)$/.exec(plzOrt || ''); if(!m) return plzOrt;
   const [, plz, ort] = m, base = ort.split(/[\s,(-]/)[0];
@@ -2312,17 +2387,36 @@ async function abOcr(file, side){
     let mz = {};
     try { mz = await mrzRead(canvas, info, side === 'back' ? 3 : 1, data, an); } catch(e){}
     if(mz.name){
-      const plainN = res.name || cur.name || '', plainV = res.vorname || cur.vorname || '';
+      let plainN = res.name || cur.name || '', plainV = res.vorname || cur.vorname || '';
+      { const tN = mrzTrans(plainN).replace(/ /g, ''), mN = mz.name.replace(/ /g, ''), cut = tN.length - mN.length;
+        if(cut > 0 && cut <= 3 && tN.endsWith(mN)) plainN = plainN.slice(cut);
+        // Klarschrift ohne Umlautpunkte (FROBEL) oder mit Störzeichen: Abstand zur MRZ prüfen
+        else if(cut > 0 && cut <= 3 && idLev(tN.slice(cut), mN) <= 1) plainN = plainN.slice(cut);
+        // umgekehrt: Störzeichen vor dem Namen in der MRZ (Rand des Ausweises)
+        else if(cut < 0 && cut >= -3 && !/ /.test(mz.name) && plainN && (mN.endsWith(tN) || idLev(mN.slice(-cut), tN) <= 1)) mz.name = mz.name.slice(-cut); }
       res.name = mrzTrans(plainN).replace(/ /g, '') === mz.name.replace(/ /g, '') ? plainN.toUpperCase() : mrzUmlaut(mz.name, plainN);
       if(mz.vorname) res.vorname = capW(mrzTrans(plainV).replace(/ /g, '') === mz.vorname.replace(/ /g, '') ? plainV : mrzUmlaut(mz.vorname, plainV.toUpperCase()));
     }
     if(mz._gebOk){ res.gebdat = mz.gebdat; res._gebOk = true; }
     const mrzOk = !!(mz.name || mz._gebOk);
     const umlHint = mz.name && /AE|OE|UE/.test((res.name || '') + ' ' + (res.vorname || '').toUpperCase()) ? ' <br>⚠ In der maschinenlesbaren Zone stehen Umlaute als AE/OE/UE – bitte prüfen (z. B. FROEBEL = Fröbel). Tipp: zuerst die Vorderseite scannen, dann wird automatisch korrigiert.' : '';
+    let gebWarn = false;
+    if(side === 'front'){ try {
+      const lp = idLabelPass(data.text); idMerge(res, lp);
+      if(res.gebort){
+        // Geburtsort gegen das Ortsverzeichnis prüfen; abgeschnittene Anfänge („ORZHEIM“ → „PFORZHEIM“) aus dem Rohtext ergänzen
+        const G = res.gebort.toUpperCase(), toks = (String(data.text).toUpperCase().match(/[A-ZÄÖÜ]{3,}/g) || []).filter(t => t !== G && t.endsWith(G) && t.length - G.length <= 3);
+        const cands = [...new Set([res.gebort, lp._gebAlt, lp.gebort, ...toks.map(capW)].filter(Boolean))];
+        info.textContent = 'Prüfe Geburtsort …'; ortVerify.answered = false; const g = await ortVerify(cands);
+        if(g) res.gebort = g; else if(ortVerify.answered && /^[A-Za-zÄÖÜäöüß \-]+$/.test(res.gebort)) gebWarn = true;
+      }
+    } catch(e){} }
+    if(side === 'back' && res.anschrift){ try { info.textContent = 'Prüfe Straße …'; const fx = await streetVerify(res.anschrift, data.text); if(fx) res.anschrift = fx; } catch(e){} }
     delete res._gebOk;
     const got = Object.keys(res);
     if(got.length){ abSetMany(res); info.innerHTML = `✓ Erkannt: ${got.map(k => ({name:'Name', vorname:'Vorname', gebdat:'Geburtsdatum', gebort:'Geburtsort', anschrift:'Anschrift'})[k]).join(', ')}${mrzOk ? ' (maschinenlesbare Zone geprüft ✓)' : ''}. <b>Bitte mit dem Ausweis vergleichen.</b>${umlHint}`; }
     else info.innerHTML = 'Nichts sicher erkannt. Tipp: Ausweis flach, gut beleuchtet, ohne Spiegelung, formatfüllend fotografieren – oder von Hand eintragen.';
+    if(gebWarn) info.insertAdjacentHTML('beforeend', `<br>⚠ Geburtsort „${esc(res.gebort)}“ nicht im Ortsverzeichnis gefunden – evtl. nur teilweise gelesen (oder Ort im Ausland). Bitte prüfen.`);
     info.insertAdjacentHTML('beforeend', `<details><summary>Erkannter Rohtext</summary><pre class="ocrraw">${esc(data.text)}${mz._raw ? '\n--- MRZ ---\n' + esc(mz._raw) : ''}</pre></details>`);
   } catch(err){
     info.textContent = 'Texterkennung nicht verfügbar (keine Internetverbindung beim ersten Laden?). Bitte von Hand eintragen.';

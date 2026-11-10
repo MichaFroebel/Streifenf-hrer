@@ -3149,10 +3149,21 @@ async function abExport(){
   try {
     const u8 = r.typ === 'akp' ? akpBuildDocx(r.f) : r.typ === 'sonder' ? snBuildDocx(r.f) : r.typ === 'vers' ? vsBuildDocx(r.f) : r.typ === 'streife' ? stBuildDocx(r.f) : r.typ === 'tnd' ? tndBuildDocx(r.f) : r.typ === 'klein' ? kaBuildDocx(r.f, {sig:true}) : r.typ === 'abschlepp' ? await asBuildDocx(r.f) : abBuildDocx(r.f);
     const nm = r.typ === 'akp' ? `AKP-Bericht_${r.f.tgb ? r.f.tgb + '-' + (r.f.datum || '').slice(2, 4) + '_' : ''}${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'sonder' ? `Sondernutzung_${(SN_TYP[r.f.sTyp] || {}).t || 'Anzeige'}_${r.f.name || 'ohne-Name'}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'vers' ? `Pflichtversicherung_${(r.f.vsNum || '') + (r.f.vsBuch || '') || 'ohne-Kennzeichen'}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'streife' ? `Streifenbericht_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'tnd' ? `TND_Bericht_${r.f.tgb ? r.f.tgb + '-' + (r.f.datum || '').slice(2, 4) + '_' : ''}${(r.f.vorgang || '') + (r.f.tierart ? '_' + r.f.tierart : '')}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'klein' ? `Standardanzeige_${(kaType(r.f) || {}).file || 'Standardanzeige'}_${r.f.datum || ''}.docx` : r.typ === 'abschlepp' ? `Abschleppmassnahme_${r.f.datum || ''}_${(r.f.kennz || 'ohne-Kennzeichen').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, '_')}.docx` : `Antreffbericht_${r.f.datum || ''}_${(r.f.name || r.f.firma || 'ohne-Name').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, '_')}.docx`;
-    const asPdf = expFmt() === 'pdf';
-    const ok = asPdf ? await abDownload(docxToPdf(zipStore.last), nm.replace(/\.docx$/, '.pdf')) : await abDownload(u8, nm);
-    if(ok){ r.exp = Date.now(); abFlush(); toast(asPdf ? 'PDF-Datei erstellt' : 'Word-Datei erstellt'); }
+    const fmt = expFmt(), files = [];
+    if(fmt !== 'pdf') files.push([u8, nm]);
+    if(fmt !== 'docx') files.push([docxToPdf(zipStore.last), nm.replace(/\.docx$/, '.pdf')]);
+    const ok = files.length > 1 ? await abDownloadMany(files) : await abDownload(files[0][0], files[0][1]);
+    if(ok){ r.exp = Date.now(); abFlush(); toast(fmt === 'both' ? 'Word- und PDF-Datei erstellt' : fmt === 'pdf' ? 'PDF-Datei erstellt' : 'Word-Datei erstellt'); }
   } catch(err){ console.error(err); toast('Export fehlgeschlagen: ' + err.message, true); }
+}
+const dlType = name => /\.pdf$/i.test(name) ? 'application/pdf' : /\.json$/i.test(name) ? 'application/json' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+/* mehrere Dateien auf einmal: am Handy in EINEM Teilen-Dialog, sonst nacheinander herunterladen */
+async function abDownloadMany(list){
+  try { if(window.claude && typeof window.claude.use === 'function'){ const dl = await window.claude.use('downloads'); if(dl){ for(const [u8, name] of list) await dl.save({filename:name, data:new Blob([u8], {type:dlType(name)})}); return true; } } } catch(e){}
+  const files = list.map(([u8, name]) => new File([new Blob([u8], {type:dlType(name)})], name, {type:dlType(name)}));
+  try { if(/iPhone|iPad|Android/i.test(navigator.userAgent) && navigator.canShare && navigator.canShare({files})){ await navigator.share({files, title:files.map(f => f.name).join(', ')}); return true; } } catch(e){ if(e && e.name === 'AbortError') return false; }
+  files.forEach((f, i) => setTimeout(() => { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000); }, i * 700));
+  return true;
 }
 async function abDownload(u8, name){
   const type = /\.pdf$/i.test(name) ? 'application/pdf' : /\.json$/i.test(name) ? 'application/json' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -5358,13 +5369,14 @@ document.addEventListener('input', e => { const t = e.target; if(!t.dataset || !
    Unterstützt: Absätze, Schriftgrößen, fett/kursiv/unterstrichen,
    Tabellen mit Rahmen, Kästchen, Bilder (JPEG/PNG), Seitenumbrüche.
    ========================================================= */
-const expFmt = () => store.get('expfmt', 'docx') === 'pdf' ? 'pdf' : 'docx';
-const expBtnHTML = () => { const p = expFmt() === 'pdf'; return `<label class="lbl">Exportformat</label><div class="seg expseg"><button type="button" class="${p ? '' : 'on'}" data-expfmt="docx">Word</button><button type="button" class="${p ? 'on' : ''}" data-expfmt="pdf">PDF</button></div><button class="btn primary big" data-ab="export">⬇ Als <span data-explabel>${p ? 'PDF' : 'Word'}</span>-Datei exportieren</button>`; };
+const expFmt = () => { const v = store.get('expfmt', 'docx'); return v === 'pdf' || v === 'both' ? v : 'docx'; };
+const EXP_LBL = {docx:'Als Word-Datei exportieren', pdf:'Als PDF-Datei exportieren', both:'Als Word und PDF exportieren'};
+const expBtnHTML = () => { const f = expFmt(); return `<label class="lbl">Exportformat</label><div class="seg expseg">${[['docx', 'Word'], ['pdf', 'PDF'], ['both', 'Beides']].map(([k, l]) => `<button type="button" class="${f === k ? 'on' : ''}" data-expfmt="${k}">${l}</button>`).join('')}</div><button class="btn primary big" data-ab="export">⬇ <span data-explabel>${EXP_LBL[f]}</span></button>`; };
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-expfmt]'); if(!b) return; e.preventDefault();
   store.set('expfmt', b.dataset.expfmt);
   document.querySelectorAll('[data-expfmt]').forEach(x => x.classList.toggle('on', x.dataset.expfmt === b.dataset.expfmt));
-  document.querySelectorAll('[data-explabel]').forEach(x => x.textContent = b.dataset.expfmt === 'pdf' ? 'PDF' : 'Word');
+  document.querySelectorAll('[data-explabel]').forEach(x => x.textContent = EXP_LBL[b.dataset.expfmt] || EXP_LBL.docx);
 });
 
 function docxToPdf(files){

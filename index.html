@@ -440,6 +440,10 @@ div.vcsig{display:flex;align-items:center;justify-content:center;padding:10px;bo
 .wvzbadge{background:rgba(255,255,255,.95);color:#222;padding:6px 10px;border-radius:10px;font:600 13px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.2)}.wvzbadge.err{background:#c62828;color:#fff}
 .sigimp .sigprev{background:#fff repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0/16px 16px;border-radius:10px;min-height:110px;display:flex;align-items:center;justify-content:center;padding:10px;margin:10px 0}.sigimp .sigprev img{max-width:100%;max-height:160px}
 .sigimp input[type=range]{width:100%}
+.owihd,.owirow{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center}
+.owihd{font-size:11.5px;text-align:center;padding-bottom:6px;border-bottom:1px solid rgba(128,128,128,.25)}.owihd b{width:128px;line-height:1.2}.owihd small{display:block;font-weight:400;opacity:.7}
+.owirow{padding:7px 0;border-bottom:1px solid rgba(128,128,128,.18)}.owirow>span{font-size:14px;min-width:0}
+.owirow .akpst button{width:34px;height:38px;font-size:20px}.owirow .akpst input{width:44px}
 </style>
 </head>
 <body>
@@ -1024,6 +1028,7 @@ function route(){
   else if(h.startsWith('m/') && MASS.find(m => m.id === h.slice(2))){ view = 'mass'; massId = h.slice(2); }
   else if(['start','massnahmen','lernen','zeichen','notfall','telefon','berichte','kennzeichen','bubatz','azubi','dolmetscher','visitenkarte','wvzkarte'].includes(h)){ view = h; telPath = []; }
   else if(h === 'bericht/neu'){ const r = abNew(); location.replace('#bericht/' + r.id); return; }
+  else if(h === 'bericht/neu-owi'){ const r = abNew('owi'); location.replace('#bericht/' + r.id); return; }
   else if(h === 'bericht/neu-akp'){ const r = abNew('akp'); location.replace('#bericht/' + r.id); return; }
   else if(h === 'bericht/profil'){ location.replace('#visitenkarte'); return; }
   else if(h === 'bericht/neu-sonder'){ const r = abNew('sonder'); location.replace('#bericht/' + r.id); return; }
@@ -1057,7 +1062,7 @@ function render(top){
   else if(view === 'bubatz'){ setHeader('Cannabis-Karte', 'Konsumverbotszonen § 5 KCanG'); html = viewBubatz(); }
   else if(view === 'berichte'){ setHeader('Berichte', 'Ausfüllen und als Word oder PDF exportieren'); html = viewBerichte(); }
   else if(view === 'abprofil'){ setHeader('Meine Angaben', 'Berichte'); html = viewProfil(); }
-  else if(view === 'bericht'){ setHeader(abRec() && abRec().typ === 'akp' ? 'AKP-Bericht' : abRec() && abRec().typ === 'abschlepp' ? 'Abschleppmaßnahme' : abRec() && abRec().typ === 'klein' ? 'Standardanzeige' : abRec() && abRec().typ === 'tnd' ? 'TND-Bericht' : abRec() && abRec().typ === 'streife' ? 'Streifenbericht' : abRec() && abRec().typ === 'vers' ? 'Pflichtversicherung' : abRec() && abRec().typ === 'sonder' ? 'Sondernutzung' : 'Antreffbericht', 'Berichte'); html = viewBericht(abRec()); }
+  else if(view === 'bericht'){ setHeader(abRec() && abRec().typ === 'owi' ? 'Sammelbericht OWI-to-Go' : abRec() && abRec().typ === 'akp' ? 'AKP-Bericht' : abRec() && abRec().typ === 'abschlepp' ? 'Abschleppmaßnahme' : abRec() && abRec().typ === 'klein' ? 'Standardanzeige' : abRec() && abRec().typ === 'tnd' ? 'TND-Bericht' : abRec() && abRec().typ === 'streife' ? 'Streifenbericht' : abRec() && abRec().typ === 'vers' ? 'Pflichtversicherung' : abRec() && abRec().typ === 'sonder' ? 'Sondernutzung' : 'Antreffbericht', 'Berichte'); html = viewBericht(abRec()); }
   else if(view === 'massnahmen'){ setHeader('Maßnahmen','Checklisten zum Abhaken'); html = viewMass(); }
   else if(view === 'lernen'){ setHeader('Lernen & Prüfen','Fragen ankreuzen, Lernstand sehen'); html = viewQuiz(); }
   else if(view === 'zeichen'){ setHeader('Verkehrszeichen','Katalog mit Bild und Nummer'); html = viewZeichen(); }
@@ -2017,6 +2022,7 @@ const abGet = id => abList().find(r => r.id === id);
 const abProfile = () => { const v = (typeof vcGet === 'function') ? vcGet() : {}, o = store.get('abprofil', {}); return {name:v.nachname || o.name || '', funktion:v.titel || o.funktion || 'GVB', ek:v.ek != null ? v.ek : (o.ek || ''), nebenstelle:v.nebenstelle != null ? v.nebenstelle : (o.nebenstelle || ''), dg:v.dg || '', sig:v.sig || ''}; };
 function abNew(typ){
   const p = abProfile(), d = new Date(), pad = n => String(n).padStart(2, '0');
+  if(typ === 'owi'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, sb:[p.funktion || 'GVB', p.name].filter(Boolean).join(' '), nst:p.nebenstelle || '', an:'32-21.1', sigOn:!!p.sig } }; const l = abList(); l.unshift(r); abSave(l); return r; }
   if(typ === 'akp'){ const h = d.getHours() * 60 + d.getMinutes(), sp = h >= 17 * 60 + 45 ? ['18:30', '20:30'] : ['15:30', '17:30'];
     const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:sp[0], bis:sp[1], sb:p.name || '', dg:String(p.dg || '').replace(/^\s*(DG|Dienstgruppe)\s*/i, ''), sigOn:!!p.sig } }; const l = abList(); l.unshift(r); abSave(l); return r; }
   if(typ === 'sonder'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:'', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'Bußgeldstelle', zk:'32-21.1', sTyp:'', photos:[] } }; const l = abList(); l.unshift(r); abSave(l); return r; }
@@ -2038,8 +2044,8 @@ function viewBerichte(){
   const weg = abPurge(); if(weg) setTimeout(() => toast(`${weg} ${weg === 1 ? 'Bericht' : 'Berichte'} älter als 30 Tage automatisch gelöscht`), 50);
   const list = abList();
   return `<div class="thead">${ico('i_sign', '#e5dcf3')}<p>Berichte direkt auf dem Handy ausfüllen und als <b>Word- oder PDF-Datei</b> exportieren. Die Tagebuchnummer kann leer bleiben und auf der Wache ergänzt werden. Name, Funktion, Dienstgruppe, Nebenstelle und Signatur kommen aus der <a href="#visitenkarte">Visitenkarte</a>.</p></div>`
-   + grid([tile('#bericht/neu', 'i_sign', '#e5dcf3', 'Neuer Antreffbericht', 'Vorlage 32-21.1'), tile('#bericht/neu-abschlepp', 'i_tow', '#e5dcf3', 'Neue Abschleppmaßnahme', 'Vorlage 32-32.3'), tile('#bericht/neu-klein', 'i_warn', '#e5dcf3', 'Neue Standardanzeige', 'Müll, Schrottrad, Mängel …'), tile('#bericht/neu-tnd', 'i_paw', '#e5dcf3', 'Neuer TND-Bericht', 'Tiernotdienst'), tile('#bericht/neu-streife', 'i_route', '#e5dcf3', 'Neuer Streifenbericht', 'an 32-21.1, z. K. L-Einsatz'), tile('#bericht/neu-sonder', 'i_music', '#e5dcf3', 'Sondernutzungs&shy;anzeige', 'Straßenmusik, Betteln'), tile('#bericht/neu-vers', 'i_scooter', '#e5dcf3', 'Verstoß Pflicht&shy;versicherung', 'E-Scooter, Versicherungskennzeichen'), tile('#bericht/neu-akp', 'i_route', '#e5dcf3', 'AKP-Bericht', 'Sondereinsatz AKP und Umfeld')])
-   + (list.length ? `<div class="sec">Gespeicherte Berichte (${list.length})</div><p class="small" style="margin:-4px 0 8px">Nach links wischen: <b>Duplizieren</b> oder <b>Löschen</b>. Berichte werden 30 Tage nach der letzten Änderung automatisch gelöscht.</p>` + list.map(r => swWrap(r, r.typ === 'akp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · AKP-Bericht</span><br><b>${esc([r.f.von, r.f.bis].filter(Boolean).join('–') || 'Sondereinsatz AKP')}${r.f.dg ? ' · DG ' + esc(r.f.dg) : ''}</b><br><small class="small">${esc(r.f.staerke || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'sonder' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sondernutzung</span><br><b>${esc((SN_TYP[r.f.sTyp] || {t:'Art noch nicht gewählt'}).t)}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || r.f.spielort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'vers' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Pflichtversicherung</span><br><b>${esc(((r.f.vsNum || '') + ' ' + (r.f.vsBuch || '')).trim() || 'ohne Kennzeichen')}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'streife' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Streifenbericht</span><br><b>${esc(r.f.gebiet || stRows(r.f).map(x => x.ort).filter(Boolean).slice(0, 2).join(', ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ek || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'tnd' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · TND-Bericht</span><br><b>${esc([r.f.vorgang, r.f.tierart].filter(Boolean).join(' · ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'klein' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Standardanzeige</span><br><b>${esc((kaType(r.f) || {}).t || 'Art noch nicht gewählt')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'abschlepp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Abschleppmaßnahme</span><br><b>${esc(r.f.kennz || 'ohne Kennzeichen')}</b><br><small class="small">${esc(r.f.ortAnkunft || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Antreffbericht · ${esc(r.f.art === 'Eigener Zusatz' ? (r.f.artFrei || '') : (r.f.art || 'ohne Art'))}</span><br><b>${esc(abTitle(r.f))}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>`)).join('') : '')
+   + grid([tile('#bericht/neu', 'i_sign', '#e5dcf3', 'Neuer Antreffbericht', 'Vorlage 32-21.1'), tile('#bericht/neu-abschlepp', 'i_tow', '#e5dcf3', 'Neue Abschleppmaßnahme', 'Vorlage 32-32.3'), tile('#bericht/neu-klein', 'i_warn', '#e5dcf3', 'Neue Standardanzeige', 'Müll, Schrottrad, Mängel …'), tile('#bericht/neu-tnd', 'i_paw', '#e5dcf3', 'Neuer TND-Bericht', 'Tiernotdienst'), tile('#bericht/neu-streife', 'i_route', '#e5dcf3', 'Neuer Streifenbericht', 'an 32-21.1, z. K. L-Einsatz'), tile('#bericht/neu-sonder', 'i_music', '#e5dcf3', 'Sondernutzungs&shy;anzeige', 'Straßenmusik, Betteln'), tile('#bericht/neu-vers', 'i_scooter', '#e5dcf3', 'Verstoß Pflicht&shy;versicherung', 'E-Scooter, Versicherungskennzeichen'), tile('#bericht/neu-akp', 'i_route', '#e5dcf3', 'AKP-Bericht', 'Sondereinsatz AKP und Umfeld'), tile('#bericht/neu-owi', 'i_euro', '#e5dcf3', 'Sammelbericht OWI-to-Go', 'Anzeigen & mdl. Verwarnungen')])
+   + (list.length ? `<div class="sec">Gespeicherte Berichte (${list.length})</div><p class="small" style="margin:-4px 0 8px">Nach links wischen: <b>Duplizieren</b> oder <b>Löschen</b>. Berichte werden 30 Tage nach der letzten Änderung automatisch gelöscht.</p>` + list.map(r => swWrap(r, r.typ === 'owi' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sammelbericht</span><br><b>OWI-to-Go & mdl. Verwarnungen</b><br><small class="small">${(() => { let o = 0, m = 0; OWI_ROWS.forEach((_, i) => { o += parseInt(r.f['o' + i], 10) || 0; m += parseInt(r.f['m' + i], 10) || 0; }); return o + ' OWI · ' + m + ' mdl.'; })()}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'akp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · AKP-Bericht</span><br><b>${esc([r.f.von, r.f.bis].filter(Boolean).join('–') || 'Sondereinsatz AKP')}${r.f.dg ? ' · DG ' + esc(r.f.dg) : ''}</b><br><small class="small">${esc(r.f.staerke || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'sonder' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sondernutzung</span><br><b>${esc((SN_TYP[r.f.sTyp] || {t:'Art noch nicht gewählt'}).t)}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || r.f.spielort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'vers' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Pflichtversicherung</span><br><b>${esc(((r.f.vsNum || '') + ' ' + (r.f.vsBuch || '')).trim() || 'ohne Kennzeichen')}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'streife' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Streifenbericht</span><br><b>${esc(r.f.gebiet || stRows(r.f).map(x => x.ort).filter(Boolean).slice(0, 2).join(', ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ek || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'tnd' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · TND-Bericht</span><br><b>${esc([r.f.vorgang, r.f.tierart].filter(Boolean).join(' · ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'klein' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Standardanzeige</span><br><b>${esc((kaType(r.f) || {}).t || 'Art noch nicht gewählt')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'abschlepp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Abschleppmaßnahme</span><br><b>${esc(r.f.kennz || 'ohne Kennzeichen')}</b><br><small class="small">${esc(r.f.ortAnkunft || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Antreffbericht · ${esc(r.f.art === 'Eigener Zusatz' ? (r.f.artFrei || '') : (r.f.art || 'ohne Art'))}</span><br><b>${esc(abTitle(r.f))}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>`)).join('') : '')
    + (typeof bkCardHTML === 'function' ? bkCardHTML() : '')
    + `<div class="note" style="margin-top:14px"><b>Datenschutz:</b> Berichte liegen nur auf diesem Gerät. Ausweisfotos werden nicht gespeichert, nur der erkannte Text. Nach dem Export und der Abgabe auf der Wache den Bericht hier löschen. Möglichst nur auf dem Diensthandy nutzen.</div>` + disclaimer();
 }
@@ -2105,6 +2111,7 @@ function viewBericht(r){
   if(r.typ === 'tnd') return viewTnd(r);
   if(r.typ === 'streife') return viewStreife(r);
   if(r.typ === 'vers') return viewVers(r);
+  if(r.typ === 'owi') return viewOwi(r);
   if(r.typ === 'akp') return viewAkp(r);
   if(r.typ === 'sonder') return viewSonder(r);
   const f = r.f;
@@ -3149,8 +3156,8 @@ function abBuildDocx(f){
 async function abExport(){
   abFlush(); const r = abRec(); if(!r) return;
   try {
-    const u8 = r.typ === 'akp' ? akpBuildDocx(r.f) : r.typ === 'sonder' ? snBuildDocx(r.f) : r.typ === 'vers' ? vsBuildDocx(r.f) : r.typ === 'streife' ? stBuildDocx(r.f) : r.typ === 'tnd' ? tndBuildDocx(r.f) : r.typ === 'klein' ? kaBuildDocx(r.f, {sig:true}) : r.typ === 'abschlepp' ? await asBuildDocx(r.f) : abBuildDocx(r.f);
-    const nm = r.typ === 'akp' ? `AKP-Bericht_${r.f.tgb ? r.f.tgb + '-' + (r.f.datum || '').slice(2, 4) + '_' : ''}${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'sonder' ? `Sondernutzung_${(SN_TYP[r.f.sTyp] || {}).t || 'Anzeige'}_${r.f.name || 'ohne-Name'}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'vers' ? `Pflichtversicherung_${(r.f.vsNum || '') + (r.f.vsBuch || '') || 'ohne-Kennzeichen'}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'streife' ? `Streifenbericht_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'tnd' ? `TND_Bericht_${r.f.tgb ? r.f.tgb + '-' + (r.f.datum || '').slice(2, 4) + '_' : ''}${(r.f.vorgang || '') + (r.f.tierart ? '_' + r.f.tierart : '')}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'klein' ? `Standardanzeige_${(kaType(r.f) || {}).file || 'Standardanzeige'}_${r.f.datum || ''}.docx` : r.typ === 'abschlepp' ? `Abschleppmassnahme_${r.f.datum || ''}_${(r.f.kennz || 'ohne-Kennzeichen').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, '_')}.docx` : `Antreffbericht_${r.f.datum || ''}_${(r.f.name || r.f.firma || 'ohne-Name').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, '_')}.docx`;
+    const u8 = r.typ === 'owi' ? owiBuildDocx(r.f) : r.typ === 'akp' ? akpBuildDocx(r.f) : r.typ === 'sonder' ? snBuildDocx(r.f) : r.typ === 'vers' ? vsBuildDocx(r.f) : r.typ === 'streife' ? stBuildDocx(r.f) : r.typ === 'tnd' ? tndBuildDocx(r.f) : r.typ === 'klein' ? kaBuildDocx(r.f, {sig:true}) : r.typ === 'abschlepp' ? await asBuildDocx(r.f) : abBuildDocx(r.f);
+    const nm = r.typ === 'owi' ? `Sammelbericht_OWI-to-Go_${r.f.tgb ? r.f.tgb + '-' + (r.f.datum || '').slice(2, 4) + '_' : ''}${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'akp' ? `AKP-Bericht_${r.f.tgb ? r.f.tgb + '-' + (r.f.datum || '').slice(2, 4) + '_' : ''}${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'sonder' ? `Sondernutzung_${(SN_TYP[r.f.sTyp] || {}).t || 'Anzeige'}_${r.f.name || 'ohne-Name'}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'vers' ? `Pflichtversicherung_${(r.f.vsNum || '') + (r.f.vsBuch || '') || 'ohne-Kennzeichen'}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'streife' ? `Streifenbericht_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'tnd' ? `TND_Bericht_${r.f.tgb ? r.f.tgb + '-' + (r.f.datum || '').slice(2, 4) + '_' : ''}${(r.f.vorgang || '') + (r.f.tierart ? '_' + r.f.tierart : '')}_${r.f.datum || ''}.docx`.replace(/[^A-Za-zÄÖÜäöüß0-9_.\-]+/g, '_') : r.typ === 'klein' ? `Standardanzeige_${(kaType(r.f) || {}).file || 'Standardanzeige'}_${r.f.datum || ''}.docx` : r.typ === 'abschlepp' ? `Abschleppmassnahme_${r.f.datum || ''}_${(r.f.kennz || 'ohne-Kennzeichen').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, '_')}.docx` : `Antreffbericht_${r.f.datum || ''}_${(r.f.name || r.f.firma || 'ohne-Name').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, '_')}.docx`;
     const fmt = expFmt(), files = [];
     if(fmt !== 'pdf') files.push([u8, nm]);
     if(fmt !== 'docx') files.push([docxToPdf(zipStore.last), nm.replace(/\.docx$/, '.pdf')]);
@@ -3857,7 +3864,7 @@ function stBuildDocx(f){
 
 /* ---------- Gespeicherte Berichte: nach links wischen zum Löschen ---------- */
 const AB_TTL = 30 * 864e5;   // Autolöschen nach 30 Tagen ohne Änderung
-const abTypName = r => ({akp:'AKP-Bericht', tnd:'TND-Bericht', streife:'Streifenbericht', klein:'Standardanzeige', abschlepp:'Abschleppmaßnahme', vers:'Pflichtversicherung', sonder:'Sondernutzung'})[r.typ] || 'Antreffbericht';
+const abTypName = r => ({owi:'Sammelbericht OWI-to-Go', akp:'AKP-Bericht', tnd:'TND-Bericht', streife:'Streifenbericht', klein:'Standardanzeige', abschlepp:'Abschleppmaßnahme', vers:'Pflichtversicherung', sonder:'Sondernutzung'})[r.typ] || 'Antreffbericht';
 const abDelDate = r => new Date((r.upd || Date.now()) + AB_TTL);
 function abPurge(){
   const l = abList(); if(!l.length) return 0; const now = Date.now();
@@ -5941,6 +5948,78 @@ async function wvzInitMap(force){
 addEventListener('hashchange', () => { if(!/^#wvzkarte/.test(location.hash) && wvzWatch != null){ try { navigator.geolocation.clearWatch(wvzWatch); } catch(e){} wvzWatch = null; } });
 document.addEventListener('click', e => { const b = e.target.closest('[data-wvz]'); if(!b) return; e.preventDefault(); const box = document.getElementById('wvzMap'); if(b.dataset.wvz === 'gps'){ if(box && box._gps) box._gps(); } else { store.del('wvzgeo'); wvzInitMap(true); } });
 new MutationObserver(() => { const m = document.getElementById('wvzMap'); if(m && !m.dataset.init) wvzInitMap(); }).observe(document.getElementById('app'), {childList:true, subtree:true});
+
+/* =========================================================
+   SAMMELBERICHT OWI-to-Go & mündliche Verwarnungen (an 32-21.1)
+   ========================================================= */
+const OWI_ROWS = ['Parken auf Behi. Parkplatz', 'Parken Brandschutzzone', 'KFZ Parken Fußgängerzone', 'KFZ Fahren Fußgängerzone', 'Rad / E-Scooter fahren Fußgängerzone',
+  'KFZ Parken Gehweg', 'KFZ Fahren Gehweg', 'Rad / E-Scooter fahren Gehweg', 'Parken auf Grünfläche', 'Keine Umweltplakette', 'Parken im abs. Haltverbot',
+  'Parken VZ 250 / 260', 'Fahren VZ 250 / 260', 'Freilaufender Hund', 'Abgelaufene HU'];
+const owiStep = (k, f, label) => `<div class="akpst"><button type="button" data-akp="${k}" data-d="-1" aria-label="${label} minus">−</button><input class="inp" type="number" inputmode="numeric" min="0" data-f="${k}" value="${esc(f[k] || '')}" autocomplete="off"><button type="button" data-akp="${k}" data-d="1" aria-label="${label} plus">+</button></div>`;
+function viewOwi(r){
+  const f = r.f, sum = p => OWI_ROWS.reduce((n, _, i) => n + (parseInt(f[p + i], 10) || 0), 0);
+  return `<div class="abform">
+   <div class="detail"><div class="dhd">${ico('i_euro', '#e5dcf3')}<div class="dt"><h2>Sammelbericht OWI-to-Go</h2><span>Beanstandungen mittels OWI-to-Go & mündliche Verwarnungen</span></div></div><div class="body">
+    ${abIn('Tagebuch-Nr. (GZ 32-21.1/…/' + ((f.datum || '').slice(2, 4) || 'JJ') + ') – darf leer bleiben', 'tgb', f.tgb, 'wird sonst auf der Wache eingetragen')}
+    ${abIn('Datum der Streife', 'datum', f.datum, '', 'f', 'date')}
+    <div class="abrow"><div>${abIn('Sachbearbeiter (SB)', 'sb', f.sb, '')}</div><div>${abIn('Nebenstelle', 'nst', f.nst, '', 'f', 'tel')}</div></div>
+    ${abIn('An', 'an', f.an, '')}
+   </div></div>
+   <div class="detail"><div class="body"><h4>Beanstandungen</h4>
+    <div class="owihd"><span></span><b>OWI-Anzeigen<small>auch OWI-to-Go</small></b><b>Mündl. Verwarnungen</b></div>
+    ${OWI_ROWS.map((t, i) => `<div class="owirow"><span>${esc(t)}</span>${owiStep('o' + i, f, t + ' OWI')}${owiStep('m' + i, f, t + ' mündlich')}</div>`).join('')}
+    <p class="small" id="owiSum">Summe: ${sum('o')} OWI-Anzeigen · ${sum('m')} mündliche Verwarnungen</p>
+   </div></div>
+   <div class="detail"><div class="body"><h4>Unterschrift</h4>
+    <label class="abck"><input type="checkbox" data-f="sigOn"${f.sigOn ? ' checked' : ''}><span>Digitale Signatur einfügen</span></label>${abProfile().sig ? '' : '<p class="small">Noch keine Signatur hinterlegt – unter <a href="#visitenkarte">Meine Angaben</a> unterschreiben.</p>'}
+   </div></div>
+   ${expBtnHTML()}
+   <button class="btn big" data-ab="delete" style="margin-top:10px">Bericht löschen</button>
+  </div>`;
+}
+// Summe live aktualisieren
+const owiSumUpd = () => { const el = document.getElementById('owiSum'), r = abRec(); if(!el || !r || r.typ !== 'owi') return; const s = p => OWI_ROWS.reduce((n, _, i) => n + (parseInt(r.f[p + i], 10) || 0), 0); el.textContent = `Summe: ${s('o')} OWI-Anzeigen · ${s('m')} mündliche Verwarnungen`; };
+document.addEventListener('click', e => { if(e.target.closest('[data-akp]')) setTimeout(owiSumUpd, 0); });
+document.addEventListener('input', e => { if(e.target.closest('.owirow')) setTimeout(owiSumUpd, 300); });
+
+function owiBuildDocx(f){
+  const W = 9638, yy = (f.datum || '').slice(2, 4), dt = fmtD(f.datum);
+  const R = (t, o) => { o = o || {}; return `<w:r><w:rPr>${o.b ? '<w:b/>' : ''}${o.sz ? `<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>` : ''}</w:rPr><w:t xml:space="preserve">${xe(t == null ? '' : t)}</w:t></w:r>`; };
+  const P = (inner, o) => { o = o || {}; return `<w:p><w:pPr>${o.jc ? `<w:jc w:val="${o.jc}"/>` : ''}<w:spacing w:before="${o.before || 0}" w:after="${o.after || 0}"/></w:pPr>${inner || ''}</w:p>`; };
+  const nob = '<w:tcBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/></w:tcBorders>';
+  const box = '<w:tcBorders><w:top w:val="single" w:sz="6" w:space="0" w:color="000000"/><w:left w:val="single" w:sz="6" w:space="0" w:color="000000"/><w:bottom w:val="single" w:sz="6" w:space="0" w:color="000000"/><w:right w:val="single" w:sz="6" w:space="0" w:color="000000"/></w:tcBorders>';
+  const sigUrl = f.sigOn ? (abProfile().sig || '') : '', sz = sigUrl ? pngSize(sigUrl) : null;
+  let body = '';
+  // Kopf
+  const kl = [['Amt für öffentliche Ordnung', true], ['Städtischer Vollzugsdienst', true], ['GZ: 32-21.1/' + (f.tgb || '') + '/' + yy, false]];
+  const kr = ['Stuttgart, ' + dt, 'Nebenstelle: ' + (f.nst || ''), 'SB.: ' + (f.sb || '')];
+  body += `<w:tbl><w:tblPr><w:tblW w:w="${W}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="6200"/><w:gridCol w:w="${W - 6200}"/></w:tblGrid>`
+    + kl.map(([t, b], i) => `<w:tr><w:tc><w:tcPr><w:tcW w:w="6200" w:type="dxa"/>${nob}</w:tcPr>${P(R(t, {b}))}</w:tc><w:tc><w:tcPr><w:tcW w:w="${W - 6200}" w:type="dxa"/>${nob}</w:tcPr>${P(R(kr[i]))}</w:tc></w:tr>`).join('') + '</w:tbl>';
+  body += P(R('An', {b:true}), {before:600}) + P(R(f.an || '32-21.1', {b:true}));
+  body += P(R('Beanstandungen mittels OWI-to-Go & mündliche Verwarnungen', {b:true}), {before:600, after:360});
+  body += P(R(`Im Rahmen der Streife am ${dt} kam es zu folgenden Beanstandungen:`), {after:300});
+  const cw = [3300, 3150, W - 6450];
+  const cell = (w, inner, jc) => `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${box}<w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr>${jc ? `<w:jc w:val="${jc}"/>` : ''}<w:spacing w:before="60" w:after="60"/></w:pPr>${inner}</w:p></w:tc>`;
+  const rows = [`<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="560" w:hRule="atLeast"/></w:trPr>${cell(cw[0], R('Verstoß / Vorkommnis:', {b:true}))}${cell(cw[1], R('OWI-Anzeigen ', {b:true}) + R('(auch OWI-toGo)', {sz:16}))}${cell(cw[2], R('Mündliche Verwarnungen', {b:true}))}</w:tr>`]
+    .concat(OWI_ROWS.map((t, i) => `<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="560" w:hRule="atLeast"/></w:trPr>${cell(cw[0], R(t))}${cell(cw[1], R(f['o' + i] || ''), 'center')}${cell(cw[2], R(f['m' + i] || ''), 'center')}</w:tr>`));
+  body += `<w:tbl><w:tblPr><w:tblW w:w="${W}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${cw.map(w => `<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.join('')}</w:tbl>`;
+  if(sz){
+    const h = 480000, w = Math.min(2340000, Math.round(h * sz[0] / sz[1])), hh = Math.round(w * sz[1] / sz[0]);
+    body += `<w:p><w:pPr><w:spacing w:before="360" w:after="0"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${w}" cy="${hh}"/><wp:docPr id="900" name="Signatur"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="900" name="Signatur"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdSig"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${w}" cy="${hh}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+  } else body += P('', {before:900});
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="de-DE"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Standard"><w:name w:val="Normal"/></w:style></w:styles>`;
+  const ct = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`;
+  const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+  const drels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${sz ? '<Relationship Id="rIdSig" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/signatur.png"/>' : ''}</Relationships>`;
+  const enc = new TextEncoder();
+  return zipStore([{name:'[Content_Types].xml', data:enc.encode(ct)}, {name:'_rels/.rels', data:enc.encode(rels)}, {name:'word/document.xml', data:enc.encode(doc)}, {name:'word/styles.xml', data:enc.encode(styles)}, {name:'word/_rels/document.xml.rels', data:enc.encode(drels)}, ...(sz ? [{name:'word/media/signatur.png', data:b64u8(sigUrl.split(',')[1])}] : [])]);
+}
 
 </script>
 <script data-app>if("serviceWorker" in navigator && location.protocol==="https:" && !/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("sw.js").catch(()=>{});}</script>

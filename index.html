@@ -438,6 +438,8 @@ div.vcsig{display:flex;align-items:center;justify-content:center;padding:10px;bo
 .wvzpos b{font-size:16px}
 #camOv .camSys{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 112px);border:0;background:rgba(0,0,0,.5);color:#fff;font-size:13px;padding:8px 14px;border-radius:20px;white-space:nowrap;cursor:pointer}
 .wvzbadge{background:rgba(255,255,255,.95);color:#222;padding:6px 10px;border-radius:10px;font:600 13px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.2)}.wvzbadge.err{background:#c62828;color:#fff}
+.sigimp .sigprev{background:#fff repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0/16px 16px;border-radius:10px;min-height:110px;display:flex;align-items:center;justify-content:center;padding:10px;margin:10px 0}.sigimp .sigprev img{max-width:100%;max-height:160px}
+.sigimp input[type=range]{width:100%}
 </style>
 </head>
 <body>
@@ -4956,8 +4958,94 @@ function viewVisitenkarte(){
    </div></div>`;
 }
 function vcSigHTML(v){
-  return v.sig ? `<div class="vcsig"><img src="${v.sig}" alt="Signatur"></div><div class="row"><button class="btn" data-vcsig="new">Neu zeichnen</button><button class="btn" data-vcsig="del">Signatur löschen</button></div>`
-               : `<canvas class="vcsig" id="vcSigPad" width="900" height="300"></canvas><div class="row"><button class="btn primary" data-vcsig="save">Signatur speichern</button><button class="btn" data-vcsig="clear">Leeren</button></div><p class="small">Mit dem Finger im weißen Feld unterschreiben, dann speichern.</p>`;
+  const imp = `<button class="btn" data-vcsig="import">📷 Foto einer Unterschrift</button>`;
+  return v.sig ? `<div class="vcsig"><img src="${v.sig}" alt="Signatur"></div><div class="row"><button class="btn" data-vcsig="new">Neu zeichnen</button>${imp}<button class="btn" data-vcsig="del">Signatur löschen</button></div>`
+               : `<canvas class="vcsig" id="vcSigPad" width="900" height="300"></canvas><div class="row"><button class="btn primary" data-vcsig="save">Signatur speichern</button><button class="btn" data-vcsig="clear">Leeren</button>${imp}</div><p class="small">Mit dem Finger im weißen Feld unterschreiben – oder auf weißem Papier mit dunklem Stift unterschreiben und ein Foto davon machen. Die Unterschrift wird automatisch freigestellt.</p>`;
+}
+/* ---------- Unterschrift aus Foto freistellen ----------
+   Hintergrund (Papier, Schatten) wird geschätzt und herausgerechnet, kleine Flecken und
+   Ränder entfernt, die Unterschrift eng zugeschnitten und mit transparentem Hintergrund gespeichert. */
+function sigExtract(img, sens){
+  const MAX = 1600, k = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+  const W = Math.round(img.naturalWidth * k), H = Math.round(img.naturalHeight * k);
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d', {willReadFrequently:true}); g.drawImage(img, 0, 0, W, H);
+  const src = g.getImageData(0, 0, W, H).data;
+  // Hintergrund: stark verkleinern (Maximum der Helligkeit je Feld) und weich wieder vergrößern
+  const bs = 24, bw = Math.ceil(W / bs), bh = Math.ceil(H / bs), bgS = new Float32Array(bw * bh);
+  for(let by = 0; by < bh; by++) for(let bx = 0; bx < bw; bx++){
+    const v = []; for(let y = by * bs; y < Math.min(H, by * bs + bs); y += 3) for(let x = bx * bs; x < Math.min(W, bx * bs + bs); x += 3){ const i = (y * W + x) * 4; v.push(src[i] * .3 + src[i + 1] * .59 + src[i + 2] * .11); }
+    v.sort((a, b) => a - b); bgS[by * bw + bx] = v[Math.floor(v.length * .9)] || 255;
+  }
+  const bgAt = (x, y) => { const fx = Math.min(bw - 1.001, Math.max(0, x / bs - .5)), fy = Math.min(bh - 1.001, Math.max(0, y / bs - .5)), x0 = Math.floor(fx), y0 = Math.floor(fy), x1 = Math.min(bw - 1, x0 + 1), y1 = Math.min(bh - 1, y0 + 1), ax = fx - x0, ay = fy - y0;
+    return (bgS[y0 * bw + x0] * (1 - ax) + bgS[y0 * bw + x1] * ax) * (1 - ay) + (bgS[y1 * bw + x0] * (1 - ax) + bgS[y1 * bw + x1] * ax) * ay; };
+  const N = W * H, ratio = new Float32Array(N), bgv = new Float32Array(N);
+  for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){ const i = y * W + x, j = i * 4, L = src[j] * .3 + src[j + 1] * .59 + src[j + 2] * .11, b = Math.max(40, bgAt(x, y)); bgv[i] = b; ratio[i] = L / b; }
+  const t = 0.62 + 0.25 * (sens == null ? .5 : sens), mask = new Uint8Array(N);
+  // Papierfläche bestimmen: helle Pixel; Tinte zählt nur, wenn in allen vier Richtungen Papier liegt (schließt Tischkante aus)
+  const Ls = []; for(let i = 0; i < N; i += 7) Ls.push(src[i * 4] * .3 + src[i * 4 + 1] * .59 + src[i * 4 + 2] * .11); Ls.sort((a, b) => a - b);
+  const pT = Ls[Math.floor(Ls.length * .92)] * .72, paper = i => (src[i * 4] * .3 + src[i * 4 + 1] * .59 + src[i * 4 + 2] * .11) > pT;
+  const rl = new Int32Array(H).fill(W), rr = new Int32Array(H).fill(-1), ct = new Int32Array(W).fill(H), cb = new Int32Array(W).fill(-1);
+  for(let y = 0; y < H; y++) for(let x = 0; x < W; x++) if(paper(y * W + x)){ if(x < rl[y]) rl[y] = x; if(x > rr[y]) rr[y] = x; if(y < ct[x]) ct[x] = y; if(y > cb[x]) cb[x] = y; }
+  const mg = Math.round(Math.max(W, H) * .012);
+  for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){ const i = y * W + x;
+    mask[i] = ratio[i] < t && bgv[i] > 90 && x > rl[y] + mg && x < rr[y] - mg && y > ct[x] + mg && y < cb[x] - mg ? 1 : 0; }
+  // zusammenhängende Flächen: kleine Flecken und Flächen am Bildrand (Tischkante, Schatten) verwerfen
+  const lab = new Int32Array(N), keep = [0]; let n = 0; const st = [];
+  for(let i = 0; i < N; i++){
+    if(!mask[i] || lab[i]) continue; n++; let cnt = 0, edge = false, x0 = W, y0 = H, x1 = 0, y1 = 0; st.push(i); lab[i] = n;
+    while(st.length){ const p = st.pop(), x = p % W, y = (p / W) | 0; cnt++; if(x < 3 || y < 3 || x > W - 4 || y > H - 4) edge = true; if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y;
+      for(let dy = -1; dy <= 1; dy++) for(let dx = -1; dx <= 1; dx++){ const xx = x + dx, yy = y + dy; if(xx < 0 || yy < 0 || xx >= W || yy >= H) continue; const q = yy * W + xx; if(mask[q] && !lab[q]){ lab[q] = n; st.push(q); } } }
+    const big = (x1 - x0) > W * .9 || (y1 - y0) > H * .9;
+    keep[n] = cnt >= Math.max(12, N * .00004) && !(edge && (big || cnt > N * .01)) ? {x0, y0, x1, y1, cnt} : 0;
+  }
+  const comps = keep.filter(Boolean); if(!comps.length) return null;
+  // Hauptgruppe: größte Komponente plus alles in ihrer Nähe (Unterschrift besteht aus mehreren Strichen)
+  const main = comps.reduce((a, b) => a.cnt > b.cnt ? a : b), gap = Math.max(W, H) * .12;
+  let X0 = main.x0, Y0 = main.y0, X1 = main.x1, Y1 = main.y1, grew = true;
+  const inG = new Set([main]);
+  while(grew){ grew = false; for(const cp of comps){ if(inG.has(cp)) continue; if(cp.x0 < X1 + gap && cp.x1 > X0 - gap && cp.y0 < Y1 + gap * .6 && cp.y1 > Y0 - gap * .6){ inG.add(cp); X0 = Math.min(X0, cp.x0); Y0 = Math.min(Y0, cp.y0); X1 = Math.max(X1, cp.x1); Y1 = Math.max(Y1, cp.y1); grew = true; } } }
+  const ok = new Uint8Array(n + 1); keep.forEach((cp, idx) => { if(cp && inG.has(cp)) ok[idx] = 1; });
+  // Tintenfarbe: Mittel der kräftigsten Pixel, dunkel gehalten
+  let r = 0, gg = 0, b = 0, m = 0;
+  for(let i = 0; i < N; i++) if(ok[lab[i]] && ratio[i] < t - .2){ r += src[i * 4]; gg += src[i * 4 + 1]; b += src[i * 4 + 2]; m++; }
+  if(m){ r /= m; gg /= m; b /= m; } else { r = gg = b = 20; }
+  const dk = Math.min(1, 90 / Math.max(1, Math.max(r, gg, b))); r *= dk; gg *= dk; b *= dk;
+  const pad = 10; X0 = Math.max(0, X0 - pad); Y0 = Math.max(0, Y0 - pad); X1 = Math.min(W - 1, X1 + pad); Y1 = Math.min(H - 1, Y1 + pad);
+  const ow = X1 - X0 + 1, oh = Y1 - Y0 + 1, o = document.createElement('canvas'); o.width = ow; o.height = oh;
+  const og = o.getContext('2d'), od = og.createImageData(ow, oh);
+  for(let y = 0; y < oh; y++) for(let x = 0; x < ow; x++){
+    const i = (y + Y0) * W + (x + X0), q = (y * ow + x) * 4;
+    // weiche Kanten: auch Nachbarpixel einer behaltenen Fläche bekommen Deckkraft nach Dunkelheit
+    let a = 0; if(ok[lab[i]] || (ratio[i] < t + .1 && ((x > 0 && ok[lab[i - 1]]) || (x < ow - 1 && ok[lab[i + 1]]) || ok[lab[i - W] || 0] || ok[lab[i + W] || 0]))) a = Math.max(0, Math.min(1, (t + .12 - ratio[i]) / .3));
+    od.data[q] = r; od.data[q + 1] = gg; od.data[q + 2] = b; od.data[q + 3] = Math.round(a * 255);
+  }
+  og.putImageData(od, 0, 0);
+  // auf handliche Größe bringen
+  const s2 = Math.min(1, 900 / ow, 320 / oh), f = document.createElement('canvas'); f.width = Math.max(1, Math.round(ow * s2)); f.height = Math.max(1, Math.round(oh * s2));
+  const fg = f.getContext('2d'); fg.imageSmoothingQuality = 'high'; fg.drawImage(o, 0, 0, f.width, f.height);
+  return {url:f.toDataURL('image/png'), w:f.width, h:f.height, ratio:ow / oh};
+}
+function sigImportDialog(file){
+  const url = URL.createObjectURL(file), img = new Image();
+  img.onload = () => {
+    let sens = .5, res = null;
+    const ov = document.createElement('div'); ov.className = 'modal sigimp';
+    ov.innerHTML = `<div class="box"><b>Unterschrift aus Foto</b>
+      <div class="sigprev"><img alt="Vorschau"></div>
+      <label class="lbl">Empfindlichkeit</label><input type="range" min="0" max="100" value="50" class="sigrange">
+      <p class="small sigmsg">Kariert/schattig? Regler nach links. Zu dünn oder lückenhaft? Nach rechts.</p>
+      <div class="row"><button class="btn primary" data-si="ok">Als Signatur übernehmen</button><button class="btn" data-si="no">Abbrechen</button></div></div>`;
+    document.body.appendChild(ov);
+    const pv = ov.querySelector('.sigprev img'), msg = ov.querySelector('.sigmsg');
+    const run = () => { res = sigExtract(img, sens); if(res){ pv.src = res.url; pv.style.display = ''; msg.textContent = res.ratio < 1.2 ? 'Hinweis: Das sieht nicht nach einer typischen Unterschrift aus – Ausschnitt prüfen.' : 'Kariert/schattig? Regler nach links. Zu dünn oder lückenhaft? Nach rechts.'; } else { pv.style.display = 'none'; msg.textContent = 'Keine Unterschrift erkannt – dunkler Stift auf weißem Papier, gut ausgeleuchtet, Blatt füllend fotografieren.'; } };
+    setTimeout(run, 30);
+    let tt = 0; ov.querySelector('.sigrange').addEventListener('input', e => { sens = e.target.value / 100; clearTimeout(tt); tt = setTimeout(run, 120); });
+    ov.addEventListener('click', e => { const b = e.target.closest('[data-si]'); if(!b) return;
+      if(b.dataset.si === 'ok'){ if(!res){ toast('Keine Unterschrift erkannt', true); return; } const v = store.get('vcard', {}); v.sig = res.url; if(!store.set('vcard', v)){ toast('Speicher voll – Signatur nicht gespeichert', true); return; } toast('Signatur übernommen'); const box = document.getElementById('vcSigBox'); if(box) box.innerHTML = vcSigHTML(vcGet()); }
+      ov.remove(); URL.revokeObjectURL(url); });
+  };
+  img.onerror = () => toast('Bild konnte nicht gelesen werden', true);
+  img.src = url;
 }
 function vcSigCrop(c){
   const g = c.getContext('2d'), d = g.getImageData(0, 0, c.width, c.height).data; let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
@@ -4980,6 +5068,7 @@ function vcSigCrop(c){
     if(act === 'save'){ const url = c && vcSigCrop(c); if(!url){ toast('Bitte zuerst unterschreiben', true); return; } v.sig = url; if(!store.set('vcard', v)){ toast('Speicher voll – Signatur nicht gespeichert', true); return; } toast('Signatur gespeichert'); }
     if(act === 'del'){ if(!(await askConfirm('Signatur wirklich löschen?', 'Löschen'))) return; delete v.sig; store.set('vcard', v); toast('Signatur gelöscht'); }
     if(act === 'new'){ if(box) box.innerHTML = vcSigHTML({}); return; }
+    if(act === 'import'){ const fi = document.createElement('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.style.display = 'none'; document.body.appendChild(fi); fi.addEventListener('change', () => { const f = fi.files[0]; fi.remove(); if(f) sigImportDialog(f); }); fi.click(); return; }
     if(box) box.innerHTML = vcSigHTML(vcGet());
   });
 })();

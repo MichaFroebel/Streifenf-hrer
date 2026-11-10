@@ -432,11 +432,12 @@ div.vcsig{display:flex;align-items:center;justify-content:center;padding:10px;bo
 .wvzbar{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:14px;margin:0 2px 12px;background:#fff4d6;color:#5a4300;text-decoration:none;border:1.5px solid #e9c46a}
 .wvzbar.on{background:#c62828;color:#fff;border-color:#c62828}.wvzbar b{font-size:15px}.wvzbar span{font-size:13px;opacity:.92}
 @media (prefers-color-scheme:dark){.wvzbar:not(.on){background:#3a3115;color:#f3dc9a;border-color:#6b5a26}}
-.wvzmap{height:58vh;min-height:320px;border-radius:14px;overflow:hidden;margin:0 2px;background:#dfe5ee}
+.wvzmap{position:relative;z-index:0;isolation:isolate;height:58vh;min-height:320px;border-radius:14px;overflow:hidden;margin:0 2px;background:#dfe5ee}
 .wvzpos{display:flex;flex-direction:column;gap:2px;margin:10px 2px 0;padding:12px 14px;border-radius:14px;background:var(--card,#fff);border:1.5px solid rgba(128,128,128,.3)}
 .wvzpos.on{background:#c62828;color:#fff;border-color:#c62828}.wvzpos.in{background:#fff4d6;color:#5a4300;border-color:#e9c46a}.wvzpos.out{border-color:#2e7d32}
 .wvzpos b{font-size:16px}
 #camOv .camSys{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 112px);border:0;background:rgba(0,0,0,.5);color:#fff;font-size:13px;padding:8px 14px;border-radius:20px;white-space:nowrap;cursor:pointer}
+.wvzbadge{background:rgba(255,255,255,.95);color:#222;padding:6px 10px;border-radius:10px;font:600 13px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.2)}.wvzbadge.err{background:#c62828;color:#fff}
 </style>
 </head>
 <body>
@@ -5733,10 +5734,17 @@ const geoD = (a, b) => { const k = Math.PI / 180, x = (b[1] - a[1]) * k * Math.c
 async function wvzFetchOsm(){
   const names = WVZ_STEPS.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
   const q = `[out:json][timeout:25];way["highway"]["name"~"^(${names})$"](${WVZ_BBOX.join(',')});out geom;`;
-  for(const host of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']){
-    try { const r = await fetch(host, {method:'POST', body:'data=' + encodeURIComponent(q), headers:{'Content-Type':'application/x-www-form-urlencoded'}}); if(r.ok) return await r.json(); } catch(e){}
+  let last = '';
+  for(const host of ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']){
+    const ac = new AbortController(), t = setTimeout(() => ac.abort(), 30000);
+    try {
+      const r = await fetch(host + '?data=' + encodeURIComponent(q), {signal:ac.signal});
+      if(r.ok){ const j = await r.json(); if(j && j.elements && j.elements.length) return j; last = 'keine Daten'; }
+      else last = 'Server ' + r.status;
+    } catch(e){ last = e.name === 'AbortError' ? 'Zeitüberschreitung' : 'keine Verbindung'; }
+    finally { clearTimeout(t); }
   }
-  throw new Error('Kartendaten nicht erreichbar');
+  throw new Error('Kartendaten nicht erreichbar: ' + last);
 }
 /* Grenze bauen: Kreuzungspunkte benachbarter Grenzstraßen, dazwischen dem Straßenverlauf folgen */
 function wvzBuild(osm){
@@ -5789,34 +5797,44 @@ async function wvzInitMap(force){
   if(box._map){ box._map.remove(); box._map = null; }
   const map = L.map(box, {zoomControl:true}).setView([48.7775, 9.1780], 15); box._map = map;
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OpenStreetMap'}).addTo(map);
+  const badge = L.control({position:'topright'}); badge.onAdd = () => { const d = L.DomUtil.create('div', 'wvzbadge'); d.id = 'wvzBadge'; return d; }; badge.addTo(map);
+  const setBadge = (t, err) => { const d = document.getElementById('wvzBadge'); if(d){ d.innerHTML = t || ''; d.style.display = t ? '' : 'none'; d.classList.toggle('err', !!err); } };
   let geo = force ? null : store.get('wvzgeo', null);
-  if(!geo || !geo.ring || geo.v !== 1){
-    if(info) info.textContent = 'Grenze wird aus OpenStreetMap berechnet …';
-    try { geo = Object.assign(wvzBuild(await wvzFetchOsm()), {v:1}); store.set('wvzgeo', geo); }
-    catch(e){ if(info) info.textContent = 'Grenze konnte nicht berechnet werden (' + e.message + '). Bitte den Plan der Stadt nutzen.'; geo = null; }
-  }
-  let poly = null;
-  if(geo){
-    poly = L.polygon(geo.ring, {color:'#c62828', weight:3, fillColor:'#c62828', fillOpacity:.14}).addTo(map);
-    map.fitBounds(poly.getBounds(), {padding:[10, 10]});
-    if(info) info.textContent = `Grenze berechnet am ${new Date(geo.ts).toLocaleDateString('de-DE')}${geo.missing.length ? ' · nicht gefunden: ' + geo.missing.join(', ') : ''}${geo.gaps ? ' · ' + geo.gaps + ' Übergänge als gerade Linie ergänzt' : ''}.`;
-  }
-  let me = null, acc = null, first = true;
+  const startGeo = () => {
+    if(wvzWatch != null) try { navigator.geolocation.clearWatch(wvzWatch); } catch(e){}
+    if(!navigator.geolocation){ if(posEl) posEl.textContent = 'Standort wird von diesem Gerät nicht unterstützt.'; return; }
+    wvzWatch = navigator.geolocation.watchPosition(p => show(p), err => { if(posEl) posEl.innerHTML = `<b>Standort nicht verfügbar</b><span class="small">${err && err.code === 1 ? 'Ortungsfreigabe für die App bzw. den Browser erlauben (Einstellungen → Datenschutz → Ortungsdienste).' : 'Kein GPS-Signal – später erneut versuchen.'}</span>`; }, {enableHighAccuracy:true, maximumAge:5000, timeout:20000});
+  };
+  let me = null, acc = null, first = true, lastP = null;
   const show = p => {
+    lastP = p;
     const ll = [p.coords.latitude, p.coords.longitude], a = Math.round(p.coords.accuracy);
     if(!me){ me = L.circleMarker(ll, {radius:8, color:'#fff', weight:3, fillColor:'#1d4ed8', fillOpacity:1}).addTo(map); acc = L.circle(ll, {radius:a, color:'#1d4ed8', weight:1, fillOpacity:.08}).addTo(map); }
     else { me.setLatLng(ll); acc.setLatLng(ll).setRadius(a); }
-    if(first){ first = false; if(!geo || wvzInside(ll, geo.ring) || geoD(ll, [48.7775, 9.178]) < 3000) map.setView(ll, 16); }
+    if(first){ first = false; if(geoD(ll, [48.7775, 9.178]) < 3000) map.setView(ll, 16); }
     const st = wvzStatus();
     if(geo && posEl){
       const inn = wvzInside(ll, geo.ring);
       posEl.className = 'wvzpos ' + (inn ? (st.aktiv ? 'on' : 'in') : 'out');
       posEl.innerHTML = inn ? `<b>Du bist in der Waffenverbotszone</b><span>${st.aktiv ? 'Verbot gilt <b>jetzt</b> bis ' + wvzFmt(st.cur.e) : 'Verbot gilt gerade nicht' + (st.next ? ' – nächstes Mal ' + wvzFmt(st.next.s) : '')}</span><span class="small">GPS ± ${a} m${a > 40 ? ' – am Rand ungenau' : ''}</span>`
                             : `<b>Du bist außerhalb der Waffenverbotszone</b><span class="small">GPS ± ${a} m</span>`;
-    } else if(posEl) posEl.innerHTML = `<b>Standort</b><span class="small">GPS ± ${a} m</span>`;
+    } else if(posEl){ posEl.className = 'wvzpos'; posEl.innerHTML = `<b>Standort gefunden</b><span class="small">GPS ± ${a} m · Grenze ${geo ? '' : 'noch nicht geladen – drin/draußen nicht prüfbar'}</span>`; }
   };
-  if(wvzWatch != null) try { navigator.geolocation.clearWatch(wvzWatch); } catch(e){}
-  if(navigator.geolocation) wvzWatch = navigator.geolocation.watchPosition(show, () => { if(posEl) posEl.textContent = 'Standort nicht verfügbar – Freigabe prüfen.'; }, {enableHighAccuracy:true, maximumAge:5000, timeout:20000});
+  startGeo();
+  if(!geo || !geo.ring || geo.v !== 1){
+    setBadge('⏳ Grenze wird geladen …');
+    if(info) info.textContent = 'Grenze wird aus OpenStreetMap berechnet (Internet nötig, kann bis zu 30 Sekunden dauern) …';
+    try { geo = Object.assign(wvzBuild(await wvzFetchOsm()), {v:1}); store.set('wvzgeo', geo); setBadge(''); }
+    catch(e){ geo = null; setBadge('⚠ Grenze nicht geladen', true); if(info) info.innerHTML = '<b>Grenze konnte nicht geladen werden</b> (' + esc(e.message) + '). Mit Internet „Grenze neu laden“ tippen – bis dahin bitte den Plan der Stadt nutzen.'; }
+  }
+  if(!document.body.contains(box)) return;
+  let poly = null;
+  if(geo){
+    poly = L.polygon(geo.ring, {color:'#c62828', weight:3, fillColor:'#c62828', fillOpacity:.14}).addTo(map);
+    map.fitBounds(poly.getBounds(), {padding:[10, 10]});
+    if(info) info.textContent = `Grenze berechnet am ${new Date(geo.ts).toLocaleDateString('de-DE')}${geo.missing.length ? ' · nicht gefunden: ' + geo.missing.join(', ') : ''}${geo.gaps ? ' · ' + geo.gaps + ' Übergänge als gerade Linie ergänzt' : ''}.`;
+  }
+  if(lastP) show(lastP);
   box._gps = () => { if(me) map.setView(me.getLatLng(), 17); };
 }
 addEventListener('hashchange', () => { if(!/^#wvzkarte/.test(location.hash) && wvzWatch != null){ try { navigator.geolocation.clearWatch(wvzWatch); } catch(e){} wvzWatch = null; } });

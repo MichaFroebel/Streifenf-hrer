@@ -444,6 +444,119 @@ div.vcsig{display:flex;align-items:center;justify-content:center;padding:10px;bo
 .owihd{font-size:11.5px;text-align:center;padding-bottom:6px;border-bottom:1px solid rgba(128,128,128,.25)}.owihd b{width:128px;line-height:1.2}.owihd small{display:block;font-weight:400;opacity:.7}
 .owirow{padding:7px 0;border-bottom:1px solid rgba(128,128,128,.18)}.owirow>span{font-size:14px;min-width:0}
 .owirow .akpst button{width:34px;height:38px;font-size:20px}.owirow .akpst input{width:44px}
+/* ===== Design 2.0: Tiefe, Licht und Schatten ===== */
+:root{--bg:#eef1f6;--line:#e1e6ee;--shc:15,27,45;--glow:rgba(66,110,190,.10);--hi:rgba(255,255,255,.9);
+ --e1:0 1px 1px rgba(var(--shc),.04),0 2px 6px -1px rgba(var(--shc),.06),0 10px 24px -12px rgba(var(--shc),.16);
+ --e2:0 1px 2px rgba(var(--shc),.06),0 6px 14px -4px rgba(var(--shc),.10),0 18px 36px -14px rgba(var(--shc),.24)}
+@media (prefers-color-scheme:dark){:root{--bg:#09111d;--line:#203049;--shc:0,0,0;--glow:rgba(90,140,230,.14);--hi:rgba(255,255,255,.05)}}
+html.night{--shc:0,0,0;--glow:transparent;--hi:rgba(255,255,255,.03)}
+body{background:radial-gradient(900px 380px at 50% -140px,var(--glow),transparent 70%) no-repeat,var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:-.003em}
+header{background:linear-gradient(165deg,#1d3354 0%,#122340 45%,#0b1527 100%);border-radius:0 0 20px 20px;box-shadow:0 8px 22px -10px rgba(5,12,25,.65),inset 0 -1px 0 rgba(255,255,255,.05)}
+html.night header{background:#000}
+.htitle b{font-weight:750;letter-spacing:-.01em}
+.badge{background:linear-gradient(160deg,#ffe07a,#f2c230 45%,#d9a400);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 4px rgba(120,80,0,.25),0 4px 10px -3px rgba(242,194,48,.55);border-radius:10px}
+.back,.nightbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.10);border-radius:11px;transition:transform .12s,background .15s}
+.back:active,.nightbtn:active{transform:scale(.92);background:rgba(255,255,255,.16)}
+.search input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.09);box-shadow:inset 0 2px 4px rgba(0,0,0,.18);border-radius:12px;transition:background .15s,box-shadow .15s}
+.search input:focus{background:rgba(255,255,255,.13);box-shadow:inset 0 2px 4px rgba(0,0,0,.18),0 0 0 3px rgba(242,194,48,.35)}
+.panel,.card,.tile,.call,.detail,.rowlink,.modal .box{border-color:transparent;box-shadow:var(--e1),inset 0 1px 0 var(--hi)}
+@media (prefers-color-scheme:dark){.panel,.card,.tile,.call,.detail,.rowlink,.modal .box{border-color:rgba(255,255,255,.05)}}
+html.night :is(.panel,.card,.tile,.call,.detail,.rowlink){border-color:#1b2533}
+.panel{border-radius:22px}
+.rowlink,.tile,.call{transition:transform .14s ease,box-shadow .14s ease}
+.rowlink:active,.tile:active,.call:active{transform:scale(.985);box-shadow:0 1px 2px rgba(var(--shc),.08)}
+.modal .box{box-shadow:var(--e2)}
+.modal{backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.blob{position:relative;background:radial-gradient(85% 85% at 32% 22%,rgba(255,255,255,.80) 0,rgba(255,255,255,0) 52%),radial-gradient(90% 90% at 72% 92%,rgba(0,0,0,.09) 0,rgba(0,0,0,0) 60%),var(--bc,#e3e8f2);
+ box-shadow:inset 0 1px 1px rgba(255,255,255,.7),inset 0 -3px 7px rgba(0,0,0,.07),0 7px 14px -7px rgba(var(--shc),.38);transition:transform .16s cubic-bezier(.3,1.6,.5,1)}
+.blob svg{filter:drop-shadow(0 1px 0 rgba(255,255,255,.55))}
+.cat:active .blob,.rowlink:active .blob{transform:scale(.9)}
+.addtile .blob{background:transparent;box-shadow:none}
+.cat span{font-weight:550}
+.sec{display:flex;align-items:center;gap:7px;letter-spacing:.09em}
+.sec:before{content:"";width:4px;height:13px;border-radius:2px;background:linear-gradient(180deg,#f7d153,#d9a400);flex:none}
+.btn{border-color:transparent;box-shadow:0 1px 2px rgba(var(--shc),.08),0 3px 8px -3px rgba(var(--shc),.16),inset 0 1px 0 var(--hi);transition:transform .1s,box-shadow .1s;font-weight:600}
+.btn:active{transform:translateY(1px) scale(.985);box-shadow:0 1px 1px rgba(var(--shc),.10)}
+@media (prefers-color-scheme:dark){.btn{border-color:rgba(255,255,255,.06)}}
+.btn.primary{background:linear-gradient(180deg,#ffd862,#f2c230 55%,#e2ad12);border-color:#d9a400;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 6px 14px -6px rgba(217,164,0,.75)}
+.chip{box-shadow:0 1px 2px rgba(var(--shc),.07),inset 0 1px 0 var(--hi);transition:transform .1s}
+.chip:active{transform:scale(.96)}
+.chip.on{background:linear-gradient(170deg,#24406a,#0f1b2d);border-color:#0f1b2d;box-shadow:0 4px 10px -4px rgba(15,27,45,.6),inset 0 1px 0 rgba(255,255,255,.12)}
+.seg{background:rgba(var(--shc),.06);box-shadow:inset 0 1px 3px rgba(var(--shc),.10)}
+@media (prefers-color-scheme:dark){.seg{background:rgba(255,255,255,.04)}}
+.seg button.on{box-shadow:0 1px 2px rgba(var(--shc),.10),0 4px 12px -4px rgba(var(--shc),.22),inset 0 1px 0 var(--hi)}
+.inp,.sbody textarea,.field input,.field select,.hutool select{background:var(--card);border-color:var(--line);box-shadow:inset 0 1px 2px rgba(var(--shc),.06);transition:border-color .15s,box-shadow .15s}
+.inp:focus,.sbody textarea:focus,.field input:focus,.field select:focus{outline:none;border-color:#d9a400;box-shadow:inset 0 1px 2px rgba(var(--shc),.06),0 0 0 3px rgba(242,194,48,.28)}
+nav{background:color-mix(in srgb,var(--card) 84%,transparent);backdrop-filter:saturate(1.8) blur(18px);-webkit-backdrop-filter:saturate(1.8) blur(18px);border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent);box-shadow:0 -8px 24px -14px rgba(var(--shc),.35)}
+nav a svg{box-sizing:content-box;padding:3px 16px;border-radius:12px;margin-bottom:1px;transition:background .2s,transform .15s}
+nav a.on svg{background:rgba(242,194,48,.20);color:#c99400}
+@media (prefers-color-scheme:dark){nav a.on svg{color:#f2c230}}
+nav a:active svg{transform:scale(.9)}
+.say{border-radius:0 12px 12px 0;box-shadow:inset 0 1px 0 var(--hi)}
+.note,.tip{border-radius:0 12px 12px 0}
+.tbl{border-radius:10px;overflow:hidden;border-collapse:separate;border-spacing:0;border:1px solid var(--line)}
+.tbl th,.tbl td{border:0;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
+.tbl tr>:last-child{border-right:0}.tbl tr:last-child>*{border-bottom:0}
+.tbl tr:nth-child(even) td{background:rgba(var(--shc),.025)}
+@media (prefers-color-scheme:dark){.tbl tr:nth-child(even) td{background:rgba(255,255,255,.025)}}
+.progress,.cat .mprog{box-shadow:inset 0 1px 2px rgba(var(--shc),.12)}
+.progress i,.cat .mprog b{background:linear-gradient(90deg,#27a862,#1d8a50)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ===== Design 3.0: hochwertige 3D-Optik ===== */
+:root{--bg:#e9edf4;--glow2:rgba(242,194,48,.10)}
+@media (prefers-color-scheme:dark){:root{--bg:#070d17;--glow2:rgba(242,194,48,.05)}}
+html.night{--glow2:transparent}
+body{background:radial-gradient(700px 420px at 105% 0%,var(--glow2),transparent 65%) no-repeat,radial-gradient(900px 480px at -10% -60px,var(--glow),transparent 70%) no-repeat,linear-gradient(180deg,var(--bg),color-mix(in srgb,var(--bg) 92%,#000) 140%) fixed}
+header{background:radial-gradient(120% 140% at 0% 0%,rgba(80,130,210,.30),transparent 55%),linear-gradient(165deg,#1e3658 0%,#12233f 48%,#0a1426 100%);box-shadow:0 14px 30px -14px rgba(5,12,25,.75),inset 0 1px 0 rgba(255,255,255,.10),inset 0 -1px 0 rgba(0,0,0,.35)}
+header:after{content:"";position:absolute;left:18px;right:18px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(242,194,48,.55),transparent);pointer-events:none}
+.badge{position:relative;overflow:hidden}
+.badge:after{content:"";position:absolute;left:-30%;top:-60%;width:160%;height:90%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.65),rgba(255,255,255,0));pointer-events:none}
+/* Flächen: leichte Wölbung durch Verlauf + Lichtkante + Tiefenschatten */
+.panel,.card,.tile,.call,.detail,.rowlink,.modal .box{background:linear-gradient(180deg,color-mix(in srgb,var(--card) 100%,#fff 0%) 0%,color-mix(in srgb,var(--card) 94%,var(--bg)) 100%);
+ box-shadow:inset 0 1px 0 var(--hi),inset 0 -1px 0 rgba(var(--shc),.05),0 1px 1px rgba(var(--shc),.05),0 4px 10px -2px rgba(var(--shc),.07),0 18px 34px -16px rgba(var(--shc),.26)}
+@media (prefers-color-scheme:dark){.panel,.card,.tile,.call,.detail,.rowlink,.modal .box{background:linear-gradient(180deg,#17253c 0%,#111d31 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 1px rgba(0,0,0,.4),0 18px 34px -16px rgba(0,0,0,.8)}}
+html.night :is(.panel,.card,.tile,.call,.detail,.rowlink,.modal .box){background:#0c121c;box-shadow:none}
+/* Symbole als glänzende 3D-Körper */
+.blob{color:color-mix(in srgb,var(--bc,#e3e8f2) 25%,#0f1b2d);
+ background:radial-gradient(70% 60% at 50% 100%,rgba(0,0,0,.12) 0,rgba(0,0,0,0) 70%),radial-gradient(90% 80% at 30% 18%,rgba(255,255,255,.95) 0,rgba(255,255,255,0) 48%),linear-gradient(160deg,color-mix(in srgb,var(--bc,#e3e8f2) 78%,#fff) 0%,var(--bc,#e3e8f2) 45%,color-mix(in srgb,var(--bc,#e3e8f2) 80%,#5a6a85) 100%);
+ box-shadow:inset 0 2px 1px rgba(255,255,255,.85),inset 0 -5px 9px rgba(20,30,50,.14),inset 0 0 0 1px rgba(255,255,255,.35),0 10px 18px -9px color-mix(in srgb,var(--bc,#e3e8f2) 40%,#0f1b2d),0 3px 5px -2px rgba(var(--shc),.18)}
+.blob:after{content:"";position:absolute;left:18%;top:9%;width:46%;height:26%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,0));filter:blur(.5px);pointer-events:none}
+.blob svg{position:relative;z-index:1;stroke-width:2;filter:drop-shadow(0 1px 0 rgba(255,255,255,.6)) drop-shadow(0 -1px 0 rgba(0,0,0,.08))}
+.cat .blob{width:62px;height:62px}
+.cat:active .blob,.rowlink:active .blob{transform:translateY(2px) scale(.92)}
+.addtile .blob:after{display:none}
+html.night .blob:after{opacity:.35}
+@media (prefers-color-scheme:dark){.blob{filter:brightness(.78) saturate(1.25)}.blob:after{opacity:.6}}
+#sosFloat{bottom:calc(86px + env(safe-area-inset-bottom))}
+/* Knöpfe */
+.btn{background:linear-gradient(180deg,color-mix(in srgb,var(--card) 100%,#fff 0%),color-mix(in srgb,var(--card) 90%,var(--bg)));box-shadow:inset 0 1px 0 var(--hi),inset 0 -2px 0 rgba(var(--shc),.06),0 1px 2px rgba(var(--shc),.10),0 6px 14px -6px rgba(var(--shc),.25)}
+.btn:active{box-shadow:inset 0 2px 4px rgba(var(--shc),.15)}
+.btn.primary{background:linear-gradient(180deg,#ffe38a 0%,#f7cb3c 38%,#e9b11a 72%,#d29b06 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 -2px 0 rgba(150,100,0,.35),0 2px 3px rgba(150,100,0,.25),0 10px 20px -8px rgba(217,164,0,.75);text-shadow:0 1px 0 rgba(255,255,255,.4)}
+.btn.primary:active{box-shadow:inset 0 2px 5px rgba(120,80,0,.4)}
+html.night .btn.primary{text-shadow:none}
+/* Eingaben: eingelassen */
+.inp,.sbody textarea,.field input,.field select{box-shadow:inset 0 2px 3px rgba(var(--shc),.07),inset 0 -1px 0 var(--hi)}
+.abck input,.steps input{accent-color:#1d3a6e;filter:drop-shadow(0 1px 1px rgba(var(--shc),.18))}
+/* Schwebende Navigationsleiste */
+nav{left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 8px);padding-bottom:0;border-radius:24px;border:1px solid color-mix(in srgb,var(--line) 60%,transparent);
+ background:color-mix(in srgb,var(--card) 78%,transparent);box-shadow:inset 0 1px 0 var(--hi),0 2px 6px rgba(var(--shc),.08),0 18px 36px -12px rgba(var(--shc),.45)}
+@media (prefers-color-scheme:dark){nav{background:rgba(20,32,53,.78);border-color:rgba(255,255,255,.07)}}
+html.night nav{background:rgba(8,12,18,.9)}
+nav a{padding:7px 1px 6px}
+nav a.on svg{background:linear-gradient(180deg,rgba(255,224,120,.55),rgba(242,194,48,.28));box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 4px 10px -4px rgba(217,164,0,.6)}
+@media (min-width:860px){nav{left:50%;right:auto;width:800px;transform:translateX(-50%)}}
+/* Segment- und Chip-Leisten */
+.seg{box-shadow:inset 0 2px 4px rgba(var(--shc),.12),inset 0 -1px 0 var(--hi)}
+.seg button.on{background:linear-gradient(180deg,color-mix(in srgb,var(--card) 100%,#fff 0%),color-mix(in srgb,var(--card) 92%,var(--bg)));box-shadow:inset 0 1px 0 var(--hi),0 2px 4px rgba(var(--shc),.10),0 8px 16px -8px rgba(var(--shc),.35)}
+.chip{background:linear-gradient(180deg,color-mix(in srgb,var(--card) 100%,#fff 0%),color-mix(in srgb,var(--card) 92%,var(--bg)))}
+.chip.on{background:linear-gradient(170deg,#2a4a7a,#0f1b2d)}
+/* SOS-Knopf als 3D-Kugel */
+.sosbtn{background:radial-gradient(80% 60% at 50% 18%,rgba(255,255,255,.45),rgba(255,255,255,0) 60%),radial-gradient(circle at 50% 40%,#ef4b3f,#c62828 55%,#8e1717 100%);box-shadow:inset 0 -6px 14px rgba(80,0,0,.45),inset 0 2px 2px rgba(255,255,255,.35),0 10px 24px -6px rgba(198,40,40,.65),0 3px 6px rgba(0,0,0,.2);text-shadow:0 1px 2px rgba(0,0,0,.35)}
+/* Detailköpfe und Abschnittskarten */
+.detail .dhd{padding-top:16px}
+.detail .dhd h2,.dt h2{letter-spacing:-.015em}
+.body h4{display:flex;align-items:center;gap:6px}
+.sec{font-weight:800;color:color-mix(in srgb,var(--muted) 85%,var(--ink))}
 html.night{--bg:#05080d;--card:#0c121c;--ink:#d9dee6;--muted:#8792a3;--line:#1b2533;--chip:#121a26;--navy:#000;color-scheme:dark;filter:brightness(.72) sepia(.45) saturate(1.4) hue-rotate(-12deg)}
 html.night .seg{background:#121a26}
 html.night .blob{filter:brightness(.6) saturate(.9)}
@@ -451,6 +564,7 @@ html.night .wvzbar:not(.on){background:#2a2410;color:#e3cf8f;border-color:#4d422
 html.night img,html.night video{filter:brightness(.85)}
 .nightbtn{all:unset;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;border-radius:8px;background:#1d2b42;flex:none;font-size:17px}
 html.night .nightbtn{background:#3a2a10}
+.badge.lhs{background:#fff;padding:2px;width:38px;height:38px;border-radius:10px;box-shadow:inset 0 1px 0 #fff,0 4px 12px -4px rgba(0,0,0,.6)}.badge.lhs:after{display:none}.badge.lhs img{width:100%;height:100%;object-fit:contain;display:block}html.night .badge.lhs{filter:brightness(.8)}
 </style>
 </head>
 <body>
@@ -458,7 +572,7 @@ html.night .nightbtn{background:#3a2a10}
 <header>
  <div class="bar">
   <button class="back" id="back" aria-label="Zurück" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6"><path d="m15 6-6 6 6 6"/></svg></button>
-  <div class="badge" id="logo">SVD</div>
+  <div class="badge lhs" id="logo"><img src="data:image/png;base64,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" alt="Landeshauptstadt Stuttgart"></div>
   <div class="htitle"><b id="htitle">SVD Streifenführer</b><small id="hsub">Städtischer Vollzugsdienst · Lernen & Nachschlagen</small></div>
   <button class="nightbtn" id="nightBtn" aria-label="Nachtmodus" title="Nachtmodus">🌙</button>
  </div>
@@ -1037,6 +1151,7 @@ function route(){
   else if(h.startsWith('m/') && MASS.find(m => m.id === h.slice(2))){ view = 'mass'; massId = h.slice(2); }
   else if(['start','massnahmen','lernen','zeichen','notfall','telefon','berichte','kennzeichen','bubatz','azubi','dolmetscher','visitenkarte','wvzkarte'].includes(h)){ view = h; telPath = []; }
   else if(h === 'bericht/neu'){ const r = abNew(); location.replace('#bericht/' + r.id); return; }
+  else if(h === 'bericht/neu-tierh' || h === 'bericht/neu-kampfh'){ const r = abNew(h.slice(12)); location.replace('#bericht/' + r.id); return; }
   else if(h === 'bericht/neu-owi'){ const r = abNew('owi'); location.replace('#bericht/' + r.id); return; }
   else if(h === 'bericht/neu-akp'){ const r = abNew('akp'); location.replace('#bericht/' + r.id); return; }
   else if(h === 'bericht/profil'){ location.replace('#visitenkarte'); return; }
@@ -1071,7 +1186,7 @@ function render(top){
   else if(view === 'bubatz'){ setHeader('Cannabis-Karte', 'Konsumverbotszonen § 5 KCanG'); html = viewBubatz(); }
   else if(view === 'berichte'){ setHeader('Berichte', 'Ausfüllen und als Word oder PDF exportieren'); html = viewBerichte(); }
   else if(view === 'abprofil'){ setHeader('Meine Angaben', 'Berichte'); html = viewProfil(); }
-  else if(view === 'bericht'){ setHeader(abRec() && abRec().typ === 'owi' ? 'Sammelbericht OWI-to-Go' : abRec() && abRec().typ === 'akp' ? 'AKP-Bericht' : abRec() && abRec().typ === 'abschlepp' ? 'Abschleppmaßnahme' : abRec() && abRec().typ === 'klein' ? 'Standardanzeige' : abRec() && abRec().typ === 'tnd' ? 'TND-Bericht' : abRec() && abRec().typ === 'streife' ? 'Streifenbericht' : abRec() && abRec().typ === 'vers' ? 'Pflichtversicherung' : abRec() && abRec().typ === 'sonder' ? 'Sondernutzung' : 'Antreffbericht', 'Berichte'); html = viewBericht(abRec()); }
+  else if(view === 'bericht'){ setHeader(abRec() && abRec().typ === 'tierh' ? 'Tierhaltungsüberprüfung' : abRec() && abRec().typ === 'kampfh' ? 'Kampfhundkontrolle' : abRec() && abRec().typ === 'owi' ? 'Sammelbericht OWI-to-Go' : abRec() && abRec().typ === 'akp' ? 'AKP-Bericht' : abRec() && abRec().typ === 'abschlepp' ? 'Abschleppmaßnahme' : abRec() && abRec().typ === 'klein' ? 'Standardanzeige' : abRec() && abRec().typ === 'tnd' ? 'TND-Bericht' : abRec() && abRec().typ === 'streife' ? 'Streifenbericht' : abRec() && abRec().typ === 'vers' ? 'Pflichtversicherung' : abRec() && abRec().typ === 'sonder' ? 'Sondernutzung' : 'Antreffbericht', 'Berichte'); html = viewBericht(abRec()); }
   else if(view === 'massnahmen'){ setHeader('Maßnahmen','Checklisten zum Abhaken'); html = viewMass(); }
   else if(view === 'lernen'){ setHeader('Lernen & Prüfen','Fragen ankreuzen, Lernstand sehen'); html = viewQuiz(); }
   else if(view === 'zeichen'){ setHeader('Verkehrszeichen','Katalog mit Bild und Nummer'); html = viewZeichen(); }
@@ -1817,12 +1932,12 @@ function exifDate(buf){
   return null;
 }
 /* stamp: {ort:'…'} → Datum, Uhrzeit und Ort werden unten ins Bild geschrieben */
-function resizeImage(file, stamp){
+function resizeImage(file, stamp, opt){ opt = opt || {};
   return new Promise((res, rej) => {
     const go = when => {
       const r = new FileReader();
       r.onload = () => { const im = new Image(); im.onload = () => {
-        const max = 1000, sc = Math.min(1, max / Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width * sc); c.height = Math.round(im.height * sc); const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+        const max = opt.max || 1000, sc = Math.min(1, max / Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width * sc); c.height = Math.round(im.height * sc); const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
         if(stamp){
           const d = when, p = n => String(n).padStart(2, '0');
           const l1 = `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()} · ${p(d.getHours())}:${p(d.getMinutes())} Uhr`;
@@ -1836,7 +1951,7 @@ function resizeImage(file, stamp){
           x.fillStyle = '#fff'; x.textBaseline = 'top';
           lines.forEach((ln, i) => x.fillText(ln, pad, c.height - h + pad * 0.6 + i * fs * 1.25));
         }
-        res(c.toDataURL('image/jpeg', 0.8)); }; im.onerror = rej; im.src = r.result; };
+        res(c.toDataURL('image/jpeg', opt.q || 0.8)); }; im.onerror = rej; im.src = r.result; };
       r.onerror = rej; r.readAsDataURL(file);
     };
     if(!stamp) return go(null);
@@ -2039,6 +2154,7 @@ const abGet = id => abList().find(r => r.id === id);
 const abProfile = () => { const v = (typeof vcGet === 'function') ? vcGet() : {}, o = store.get('abprofil', {}); return {name:v.nachname || o.name || '', funktion:v.titel || o.funktion || 'GVB', ek:v.ek != null ? v.ek : (o.ek || ''), nebenstelle:v.nebenstelle != null ? v.nebenstelle : (o.nebenstelle || ''), dg:v.dg || '', sig:v.sig || ''}; };
 function abNew(typ){
   const p = abProfile(), d = new Date(), pad = n => String(n).padStart(2, '0');
+  if(typ === 'tierh' || typ === 'kampfh'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:`${pad(d.getHours())}:${pad(d.getMinutes())}`, nebenstelle:p.nebenstelle || '', sb:p.name || '', ek:p.ek || p.name || '', funktion:p.funktion || 'GVB', unterschrift:p.name || '', an:'32-21.1', zk:'', sigOn:!!p.sig, photos:[] } }; const l = abList(); l.unshift(r); abSave(l); return r; }
   if(typ === 'owi'){ const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, sb:p.name || '', nst:p.nebenstelle || '', an:'32-21.1', sigOn:!!p.sig } }; const l = abList(); l.unshift(r); abSave(l); return r; }
   if(typ === 'akp'){ const h = d.getHours() * 60 + d.getMinutes(), sp = h >= 17 * 60 + 45 ? ['18:30', '20:30'] : ['15:30', '17:30'];
     const r = { id:'b' + Date.now().toString(36), typ, upd:Date.now(), f:{ datum:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, von:sp[0], bis:sp[1], sb:p.name || '', dg:String(p.dg || '').replace(/^\s*(DG|Dienstgruppe)\s*/i, ''), sigOn:!!p.sig } }; const l = abList(); l.unshift(r); abSave(l); return r; }
@@ -2061,8 +2177,8 @@ function viewBerichte(){
   const weg = abPurge(); if(weg) setTimeout(() => toast(`${weg} ${weg === 1 ? 'Bericht' : 'Berichte'} älter als 30 Tage automatisch gelöscht`), 50);
   const list = abList();
   return `<div class="thead">${ico('i_sign', '#e5dcf3')}<p>Berichte direkt auf dem Handy ausfüllen und als <b>Word- oder PDF-Datei</b> exportieren. Die Tagebuchnummer kann leer bleiben und auf der Wache ergänzt werden. Name, Funktion, Dienstgruppe, Nebenstelle und Signatur kommen aus der <a href="#visitenkarte">Visitenkarte</a>.</p></div>`
-   + grid([tile('#bericht/neu', 'i_sign', '#e5dcf3', 'Neuer Antreffbericht', 'Vorlage 32-21.1'), tile('#bericht/neu-abschlepp', 'i_tow', '#e5dcf3', 'Neue Abschleppmaßnahme', 'Vorlage 32-32.3'), tile('#bericht/neu-klein', 'i_warn', '#e5dcf3', 'Neue Standardanzeige', 'Müll, Schrottrad, Mängel …'), tile('#bericht/neu-tnd', 'i_paw', '#e5dcf3', 'Neuer TND-Bericht', 'Tiernotdienst'), tile('#bericht/neu-streife', 'i_route', '#e5dcf3', 'Neuer Streifenbericht', 'an 32-21.1, z. K. L-Einsatz'), tile('#bericht/neu-sonder', 'i_music', '#e5dcf3', 'Sondernutzungs&shy;anzeige', 'Straßenmusik, Betteln'), tile('#bericht/neu-vers', 'i_scooter', '#e5dcf3', 'Verstoß Pflicht&shy;versicherung', 'E-Scooter, Versicherungskennzeichen'), tile('#bericht/neu-akp', 'i_route', '#e5dcf3', 'AKP-Bericht', 'Sondereinsatz AKP und Umfeld'), tile('#bericht/neu-owi', 'i_euro', '#e5dcf3', 'Sammelbericht OWI-to-Go', 'Anzeigen & mdl. Verwarnungen')])
-   + (list.length ? `<div class="sec">Gespeicherte Berichte (${list.length})</div><p class="small" style="margin:-4px 0 8px">Nach links wischen: <b>Duplizieren</b> oder <b>Löschen</b>. Berichte werden 30 Tage nach der letzten Änderung automatisch gelöscht.</p>` + list.map(r => swWrap(r, r.typ === 'owi' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sammelbericht</span><br><b>OWI-to-Go & mdl. Verwarnungen</b><br><small class="small">${(() => { let o = 0, m = 0; OWI_ROWS.forEach((_, i) => { o += parseInt(r.f['o' + i], 10) || 0; m += parseInt(r.f['m' + i], 10) || 0; }); return o + ' OWI · ' + m + ' mdl.'; })()}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'akp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · AKP-Bericht</span><br><b>${esc([r.f.von, r.f.bis].filter(Boolean).join('–') || 'Sondereinsatz AKP')}${r.f.dg ? ' · DG ' + esc(r.f.dg) : ''}</b><br><small class="small">${esc(r.f.staerke || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'sonder' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sondernutzung</span><br><b>${esc((SN_TYP[r.f.sTyp] || {t:'Art noch nicht gewählt'}).t)}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || r.f.spielort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'vers' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Pflichtversicherung</span><br><b>${esc(((r.f.vsNum || '') + ' ' + (r.f.vsBuch || '')).trim() || 'ohne Kennzeichen')}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'streife' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Streifenbericht</span><br><b>${esc(r.f.gebiet || stRows(r.f).map(x => x.ort).filter(Boolean).slice(0, 2).join(', ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ek || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'tnd' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · TND-Bericht</span><br><b>${esc([r.f.vorgang, r.f.tierart].filter(Boolean).join(' · ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'klein' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Standardanzeige</span><br><b>${esc((kaType(r.f) || {}).t || 'Art noch nicht gewählt')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'abschlepp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Abschleppmaßnahme</span><br><b>${esc(r.f.kennz || 'ohne Kennzeichen')}</b><br><small class="small">${esc(r.f.ortAnkunft || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Antreffbericht · ${esc(r.f.art === 'Eigener Zusatz' ? (r.f.artFrei || '') : (r.f.art || 'ohne Art'))}</span><br><b>${esc(abTitle(r.f))}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>`)).join('') : '')
+   + grid([tile('#bericht/neu', 'i_sign', '#e5dcf3', 'Neuer Antreffbericht', 'Vorlage 32-21.1'), tile('#bericht/neu-abschlepp', 'i_tow', '#e5dcf3', 'Neue Abschleppmaßnahme', 'Vorlage 32-32.3'), tile('#bericht/neu-klein', 'i_warn', '#e5dcf3', 'Neue Standardanzeige', 'Müll, Schrottrad, Mängel …'), tile('#bericht/neu-tnd', 'i_paw', '#e5dcf3', 'Neuer TND-Bericht', 'Tiernotdienst'), tile('#bericht/neu-streife', 'i_route', '#e5dcf3', 'Neuer Streifenbericht', 'an 32-21.1, z. K. L-Einsatz'), tile('#bericht/neu-sonder', 'i_music', '#e5dcf3', 'Sondernutzungs&shy;anzeige', 'Straßenmusik, Betteln'), tile('#bericht/neu-vers', 'i_scooter', '#e5dcf3', 'Verstoß Pflicht&shy;versicherung', 'E-Scooter, Versicherungskennzeichen'), tile('#bericht/neu-akp', 'i_route', '#e5dcf3', 'AKP-Bericht', 'Sondereinsatz AKP und Umfeld'), tile('#bericht/neu-owi', 'i_euro', '#e5dcf3', 'Sammelbericht OWI-to-Go', 'Anzeigen & mdl. Verwarnungen'), tile('#bericht/neu-tierh', 'i_paw', '#e5dcf3', 'Tierhaltungs&shy;überprüfung', 'Haltung, Versorgung, Unterbringung'), tile('#bericht/neu-kampfh', 'i_dog', '#e5dcf3', 'Kampfhund&shy;kontrolle', 'Erlaubnis, Leine, Maulkorb')])
+   + (list.length ? `<div class="sec">Gespeicherte Berichte (${list.length})</div><p class="small" style="margin:-4px 0 8px">Nach links wischen: <b>Duplizieren</b> oder <b>Löschen</b>. Berichte werden 30 Tage nach der letzten Änderung automatisch gelöscht.</p>` + list.map(r => swWrap(r, r.typ === 'owi' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sammelbericht</span><br><b>OWI-to-Go & mdl. Verwarnungen</b><br><small class="small">${(() => { let o = 0, m = 0; OWI_ROWS.forEach((_, i) => { o += parseInt(r.f['o' + i], 10) || 0; m += parseInt(r.f['m' + i], 10) || 0; }); return o + ' OWI · ' + m + ' mdl.'; })()}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'tierh' || r.typ === 'kampfh' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · ${r.typ === 'tierh' ? 'Tierhaltungsüberprüfung' : 'Kampfhundkontrolle'}</span><br><b>${esc([r.f.name ? r.f.name.toUpperCase() : '', r.typ === 'kampfh' ? r.f.rasse : r.f.t0a].filter(Boolean).join(' · ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'akp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · AKP-Bericht</span><br><b>${esc([r.f.von, r.f.bis].filter(Boolean).join('–') || 'Sondereinsatz AKP')}${r.f.dg ? ' · DG ' + esc(r.f.dg) : ''}</b><br><small class="small">${esc(r.f.staerke || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'sonder' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sondernutzung</span><br><b>${esc((SN_TYP[r.f.sTyp] || {t:'Art noch nicht gewählt'}).t)}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || r.f.spielort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'vers' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Pflichtversicherung</span><br><b>${esc(((r.f.vsNum || '') + ' ' + (r.f.vsBuch || '')).trim() || 'ohne Kennzeichen')}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'streife' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Streifenbericht</span><br><b>${esc(r.f.gebiet || stRows(r.f).map(x => x.ort).filter(Boolean).slice(0, 2).join(', ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ek || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'tnd' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · TND-Bericht</span><br><b>${esc([r.f.vorgang, r.f.tierart].filter(Boolean).join(' · ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'klein' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Standardanzeige</span><br><b>${esc((kaType(r.f) || {}).t || 'Art noch nicht gewählt')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'abschlepp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Abschleppmaßnahme</span><br><b>${esc(r.f.kennz || 'ohne Kennzeichen')}</b><br><small class="small">${esc(r.f.ortAnkunft || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Antreffbericht · ${esc(r.f.art === 'Eigener Zusatz' ? (r.f.artFrei || '') : (r.f.art || 'ohne Art'))}</span><br><b>${esc(abTitle(r.f))}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>`)).join('') : '')
    + (typeof bkCardHTML === 'function' ? bkCardHTML() : '')
    + `<div class="note" style="margin-top:14px"><b>Datenschutz:</b> Berichte liegen nur auf diesem Gerät. Ausweisfotos werden nicht gespeichert, nur der erkannte Text. Nach dem Export und der Abgabe auf der Wache den Bericht hier löschen. Möglichst nur auf dem Diensthandy nutzen.</div>` + disclaimer();
 }
@@ -2105,9 +2221,10 @@ function uOrtZeit(f, o){
     ${o.extra || ''}
    </div></div>`;
 }
-const uFotos = f => { const photos = f.photos || []; return `<div class="detail"><div class="body"><h4>Lichtbilder <span class="small">(${photos.length}/6, mit Datum, Uhrzeit und Ort im Bild, werden ins Word-Dokument übernommen)</span></h4><p class="small" style="margin-top:-4px">Tipp: Ort zuerst eintragen bzw. Standort übernehmen, dann fotografieren.</p>
+const phMax = r => r && ['tierh', 'kampfh'].includes(r.typ) ? 20 : 6;
+const uFotos = (f, max) => { max = max || 6; const photos = f.photos || []; return `<div class="detail"><div class="body"><h4>Lichtbilder <span class="small">(${photos.length}/${max}, mit Datum, Uhrzeit und Ort im Bild, werden ins Word-Dokument übernommen)</span></h4><p class="small" style="margin-top:-4px">Tipp: Ort zuerst eintragen bzw. Standort übernehmen, dann fotografieren.</p>
     <div class="kaphotos">${photos.map((p, i) => `<div class="kaph"><img src="${p}" alt="Lichtbild ${i + 1}"><button class="btn" data-ka="delph" data-i="${i}" aria-label="Löschen">✕</button></div>`).join('')}</div>
-    ${photos.length < 6 ? `<div class="abrow2"><button class="btn primary" data-ka="photo" data-src="cam">📷 Kamera</button><button class="btn" data-ka="photo" data-src="gal">🖼 Galerie</button></div>` : ''}
+    ${photos.length < max ? `<div class="abrow2"><button class="btn primary" data-ka="photo" data-src="cam">📷 Kamera</button><button class="btn" data-ka="photo" data-src="gal">🖼 Galerie</button></div>` : ''}
     <input type="file" accept="image/*" capture="environment" hidden id="kacam"><input type="file" accept="image/*" multiple hidden id="kagal">
    </div></div>`; };
 function uAbschluss(r, extra){
@@ -2131,6 +2248,8 @@ function viewBericht(r){
   if(r.typ === 'streife') return viewStreife(r);
   if(r.typ === 'vers') return viewVers(r);
   if(r.typ === 'owi') return viewOwi(r);
+  if(r.typ === 'tierh') return viewTierh(r);
+  if(r.typ === 'kampfh') return viewKampfh(r);
   if(r.typ === 'akp') return viewAkp(r);
   if(r.typ === 'sonder') return viewSonder(r);
   const f = r.f;
@@ -3174,20 +3293,21 @@ function abBuildDocx(f){
 }
 function abFileName(r){
   const f = r.f || {}, c = s => String(s || '').replace(/[^A-Za-zÄÖÜäöüß0-9\-]+/g, ' ').replace(/\s+/g, ' ').trim();
-  const art = {owi:'Sammelbericht OWI-to-Go', akp:'AKP-Bericht', sonder:'Sondernutzungsanzeige', vers:'Pflichtversicherung', streife:'Streifenbericht', tnd:'TND-Bericht', klein:'Standardanzeige', abschlepp:'Abschleppmassnahme'}[r.typ] || 'Antreffbericht';
+  const art = {owi:'Sammelbericht OWI-to-Go', akp:'AKP-Bericht', sonder:'Sondernutzungsanzeige', vers:'Pflichtversicherung', streife:'Streifenbericht', tnd:'TND-Bericht', klein:'Standardanzeige', abschlepp:'Abschleppmassnahme', tierh:'Tierhaltungsüberprüfung', kampfh:'Kampfhundkontrolle'}[r.typ] || 'Antreffbericht';
   const nam = (f.name || f.firma || '').toUpperCase();
   const extra = r.typ === 'sonder' ? [nam]
     : r.typ === 'vers' ? [(f.vsNum || '') + ' ' + (f.vsBuch || '')]
     : r.typ === 'tnd' ? [f.vorgang, f.tierart]
     : r.typ === 'klein' ? [(kaType(f) || {}).file]
     : r.typ === 'abschlepp' ? [f.kennz]
+    : r.typ === 'kampfh' ? [nam, f.rasse]
     : ['owi', 'akp', 'streife'].includes(r.typ) ? [] : [nam];
   return ([tgbN(f.tgb), art, ...extra].map(c).filter(Boolean).join(' ') || 'Bericht') + '.docx';
 }
 async function abExport(){
   abFlush(); const r = abRec(); if(!r) return;
   try {
-    const u8 = r.typ === 'owi' ? owiBuildDocx(r.f) : r.typ === 'akp' ? akpBuildDocx(r.f) : r.typ === 'sonder' ? snBuildDocx(r.f) : r.typ === 'vers' ? vsBuildDocx(r.f) : r.typ === 'streife' ? stBuildDocx(r.f) : r.typ === 'tnd' ? tndBuildDocx(r.f) : r.typ === 'klein' ? kaBuildDocx(r.f, {sig:true}) : r.typ === 'abschlepp' ? await asBuildDocx(r.f) : abBuildDocx(r.f);
+    const u8 = r.typ === 'tierh' ? tierhBuildDocx(r.f) : r.typ === 'kampfh' ? kampfhBuildDocx(r.f) : r.typ === 'owi' ? owiBuildDocx(r.f) : r.typ === 'akp' ? akpBuildDocx(r.f) : r.typ === 'sonder' ? snBuildDocx(r.f) : r.typ === 'vers' ? vsBuildDocx(r.f) : r.typ === 'streife' ? stBuildDocx(r.f) : r.typ === 'tnd' ? tndBuildDocx(r.f) : r.typ === 'klein' ? kaBuildDocx(r.f, {sig:true}) : r.typ === 'abschlepp' ? await asBuildDocx(r.f) : abBuildDocx(r.f);
     const nm = abFileName(r);
     const fmt = expFmt(), files = [];
     if(fmt !== 'pdf') files.push([u8, nm]);
@@ -3609,8 +3729,8 @@ app.addEventListener('change', async e => {
   if(e.target.id !== 'kacam' && e.target.id !== 'kagal') return;
   const r = abRec(); r.f.photos = r.f.photos || [];
   for(const file of [...e.target.files]){
-    if(r.f.photos.length >= 6){ toast('Maximal 6 Lichtbilder', true); break; }
-    try { r.f.photos.push(await resizeImage(file, {ort: r.f.ort || r.f.ortAnkunft || r.f.spielort || r.f.gebiet || ''})); } catch(err){ toast('Bild konnte nicht gelesen werden', true); }
+    const mx = phMax(r); if(r.f.photos.length >= mx){ toast(`Maximal ${mx} Lichtbilder`, true); break; }
+    try { r.f.photos.push(await resizeImage(file, {ort: r.f.ort || r.f.ortAnkunft || r.f.spielort || r.f.gebiet || ''}, mx > 6 ? {max:900, q:0.62} : null)); } catch(err){ toast('Bild konnte nicht gelesen werden', true); }
   }
   abFlush(); render(false);
 });
@@ -3664,7 +3784,8 @@ function kaBuildDocx(f, o){
   if(imgs.length){
     body += P(R('Lichtbilder', {b:true, sz:24}), {before:360, after:160, keep:true});
     const cw = Math.floor(W / 2), maxW = 2970000; // ca. 8,25 cm
-    const pic = im => { const w = maxW, h = Math.round(maxW * (im.h / im.w)); return `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="60"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${w}" cy="${h}"/><wp:docPr id="${im.i + 1}" name="Bild ${im.i + 1}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${im.i + 1}" name="Bild ${im.i + 1}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${im.rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${w}" cy="${h}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>` + P(R('Bild ' + (im.i + 1), {sz:18}), {jc:'center', after:200}); };
+    const maxH = 4000000; // ca. 11,1 cm – damit 2 Reihen (4 Bilder) auf eine Seite passen
+    const pic = im => { let w = maxW, h = Math.round(maxW * (im.h / im.w)); if(h > maxH){ h = maxH; w = Math.round(maxH * (im.w / im.h)); } return `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="60" w:after="60"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${w}" cy="${h}"/><wp:docPr id="${im.i + 1}" name="Bild ${im.i + 1}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${im.i + 1}" name="Bild ${im.i + 1}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${im.rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${w}" cy="${h}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>` + P(R('Bild ' + (im.i + 1), {sz:18}), {jc:'center', after:200}); };
     imgs.forEach(im => { const s = kaImgSize(im.d); im.w = s[0]; im.h = s[1]; });
     const rows = []; for(let i = 0; i < imgs.length; i += 2) rows.push([pic(imgs[i]), imgs[i + 1] ? pic(imgs[i + 1]) : '']);
     body += TBL([cw, W - cw], rows).replace(/<w:tr>/g, '<w:tr><w:trPr><w:cantSplit/></w:trPr>');
@@ -6050,6 +6171,136 @@ function owiBuildDocx(f){
   const enc = new TextEncoder();
   return zipStore([{name:'[Content_Types].xml', data:enc.encode(ct)}, {name:'_rels/.rels', data:enc.encode(rels)}, {name:'word/document.xml', data:enc.encode(doc)}, {name:'word/styles.xml', data:enc.encode(styles)}, {name:'word/_rels/document.xml.rels', data:enc.encode(drels)}, ...(sz ? [{name:'word/media/signatur.png', data:b64u8(sigUrl.split(',')[1])}] : [])]);
 }
+
+/* =========================================================
+   TIERHALTUNGSÜBERPRÜFUNG & KAMPFHUNDKONTROLLE
+   Vorläufige Fassung – wird an die Vorlage der Dienststelle angepasst
+   ========================================================= */
+const TH_ANLASS = ['Hinweis / Beschwerde Bürger', 'Auftrag Veterinäramt', 'Eigene Feststellung', 'Nachkontrolle'];
+const TH_TIERE = ['Hund', 'Katze', 'Kaninchen', 'Meerschweinchen', 'Vögel', 'Hühner', 'Tauben', 'Pferd', 'Schaf', 'Ziege', 'Reptilien', 'Fische'];
+const TH_BEAN = ['Keine Beanstandung', 'Futter / Wasser fehlt oder unzureichend', 'Unterbringung verschmutzt (Kot, Urin)', 'Platz / Unterbringung unzureichend', 'Witterungsschutz fehlt', 'Tier(e) abgemagert / ungepflegt', 'Tier(e) verletzt oder erkennbar krank', 'Anzahl der Tiere auffällig hoch', 'Geruchsbelästigung für Nachbarn', 'Lärmbelästigung (z. B. Dauerbellen)'];
+const TH_MASSN = ['Halter/in mündlich belehrt', 'Veterinäramt informiert', 'Nachkontrolle vereinbart', 'Polizei verständigt', 'Tiernotdienst / Tier(e) sichergestellt'];
+const KH_RASSEN = ['American Staffordshire Terrier', 'Bullterrier', 'Pit Bull Terrier', 'Staffordshire Bullterrier', 'Bullmastiff', 'Mastiff', 'Mastino Napoletano', 'Mastín Español', 'Fila Brasileiro', 'Dogo Argentino', 'Bordeaux-Dogge', 'Tosa Inu', 'Kreuzung (Kampfhund-Anteil)'];
+const KH_PRUEF = [['Erlaubnis / Genehmigung zur Haltung vorgelegt', 'erlaubnis'], ['Nachweis Wesens- / Verhaltensprüfung vorgelegt', 'wesen'], ['Hund angeleint', ''], ['Maulkorb getragen (sofern keine Befreiung)', ''], ['Führende Person geeignet und volljährig', ''], ['Haftpflichtversicherung nachgewiesen', ''], ['Mikrochip vorhanden / abgelesen', ''], ['Hundesteuermarke sichtbar getragen', '']];
+const KH_MASSN = ['Mündliche Verwarnung', 'OWi-Anzeige', 'Anleinen / Maulkorb angeordnet', 'Nachweise innerhalb Frist nachzureichen', 'Polizei verständigt', 'Hund sichergestellt'];
+const KH_OPT = ['ja', 'nein', 'nicht geprüft'];
+
+const thPerson = (f, titel) => `<div class="detail"><div class="body">
+    <h4>${titel}</h4>
+    <div class="abside"><b>Ausweis Vorderseite</b><div class="abrow2"><button class="btn primary" data-ab="ocr" data-side="front" data-src="cam">📷 Kamera</button><button class="btn" data-ab="ocr" data-side="front" data-src="gal">🖼 Galerie</button></div></div>
+    <div class="abside"><b>Rückseite / Anschrift</b><div class="abrow2"><button class="btn primary" data-ab="ocr" data-side="back" data-src="cam">📷 Kamera</button><button class="btn" data-ab="ocr" data-side="back" data-src="gal">🖼 Galerie</button></div></div>
+    <input type="file" accept="image/*" capture="environment" hidden id="abcam"><input type="file" accept="image/*" hidden id="abgal">
+    <div id="ocrInfo" class="small"></div>
+    <div class="abrow"><div>${abIn('Name', 'name', f.name, '')}</div><div>${abIn('Vorname(n)', 'vorname', f.vorname, '')}</div></div>
+    <div class="abrow"><div>${abIn('Geburtsdatum', 'gebdat', f.gebdat, 'TTMMJJJJ').replace('<input ', '<input inputmode="numeric" data-datum="1" ')}</div><div>${abIn('Geburtsort', 'gebort', f.gebort, '')}</div></div>
+    ${abTa('Anschrift', 'anschrift', f.anschrift, U_ORT_PH, 2)}
+    ${abIn('Telefon (freiwillig)', 'tel', f.tel, '', 'f', 'tel')}
+   </div></div>`;
+const thN = f => Math.max(1, +f.tN || 1, ...[...Array(12).keys()].filter(i => ['a', 'n', 'r', 'c'].some(k => f['t' + i + k])).map(i => i + 1));
+const thChecks = (list, p, f) => `<div class="abgrp">${list.map((t, i) => `<label class="abck"><input type="checkbox" data-f="${p}${i}"${f[p + i] ? ' checked' : ''}><span>${t}</span></label>`).join('')}</div>`;
+
+function viewTierh(r){
+  const f = r.f;
+  return `<div class="abform">
+   ${uKopf(f, {ic:'i_paw', title:'Tierhaltungsüberprüfung'})}
+   ${uOrtZeit(f, {ortL:'Ort der Tierhaltung'})}
+   <div class="detail"><div class="body"><h4>Anlass</h4>
+    <label class="lbl">Anlass der Überprüfung</label>${comboHTML('anlass', f.anlass, TH_ANLASS, 'wählen oder eintragen')}
+    ${abIn('Hinweisgeber/in bzw. Auftrag (Az.)', 'hinweis', f.hinweis, 'freiwillig')}
+   </div></div>
+   ${thPerson(f, 'Tierhalter/in')}
+   <div class="detail"><div class="body"><h4>Tiere</h4>
+    ${Array.from({length:thN(f)}, (_, i) => i).map(i => `<div class="abrow"><div style="flex:2"><label class="lbl">Tierart${thN(f) > 1 ? ' ' + (i + 1) : ''}</label>${comboHTML('t' + i + 'a', f['t' + i + 'a'], TH_TIERE, 'Tierart')}</div><div style="flex:1">${abIn('Anzahl', 't' + i + 'n', f['t' + i + 'n'], '', 'f', 'number')}</div></div>
+     <div class="abrow"><div>${abIn('Rasse', 't' + i + 'r', f['t' + i + 'r'], '')}</div><div>${abIn('Chip-Nr. / Kennz.', 't' + i + 'c', f['t' + i + 'c'], '')}</div></div>`).join('<hr style="border:0;border-top:1px dashed var(--line);margin:12px 0 0">')}
+    <div class="abrow2" style="margin-top:12px">${thN(f) < 12 ? '<button class="btn primary" data-th="add">＋ Weiteres Tier</button>' : ''}${thN(f) > 1 ? '<button class="btn" data-th="del">Letztes entfernen</button>' : ''}</div>
+   </div></div>
+   <div class="detail"><div class="body"><h4>Feststellungen</h4>${thChecks(TH_BEAN, 'b', f)}</div></div>
+   <div class="detail"><div class="body"><h4>Maßnahmen</h4>${thChecks(TH_MASSN, 'm', f)}
+    ${abIn('Nachkontrolle am', 'nkDatum', f.nkDatum, '', 'f', 'date')}
+   </div></div>
+   <div class="detail"><div class="body">${abTa('Sachverhalt', 'bericht', f.bericht, 'Was wurde vorgefunden? Angaben der Halterin / des Halters …', 6)}</div></div>
+   ${uFotos(f, 20)}
+   ${uAbschluss(r)}
+  </div>`;
+}
+
+function viewKampfh(r){
+  const f = r.f;
+  return `<div class="abform">
+   ${uKopf(f, {ic:'i_dog', title:'Kampfhundkontrolle'})}
+   ${uOrtZeit(f, {ortL:'Kontrollort'})}
+   ${thPerson(f, 'Halter/in')}
+   <div class="detail"><div class="body"><h4>Führende Person</h4>
+    <label class="abck"><input type="checkbox" data-f="fGleich"${f.fGleich ? ' checked' : ''}><span>Halter/in führt den Hund selbst</span></label>
+    <div id="khF"${f.fGleich ? ' hidden' : ''}><div class="abrow"><div>${abIn('Name, Vorname', 'fName', f.fName, '')}</div><div>${abIn('Geburtsdatum', 'fGeb', f.fGeb, 'TTMMJJJJ')}</div></div>${abTa('Anschrift', 'fAnschrift', f.fAnschrift, U_ORT_PH, 2)}</div>
+   </div></div>
+   <div class="detail"><div class="body"><h4>Hund</h4>
+    <label class="lbl">Rasse</label>${comboHTML('rasse', f.rasse, KH_RASSEN, 'wählen oder eintragen')}
+    <div class="abrow"><div>${abIn('Name des Hundes', 'hName', f.hName, '')}</div><div>${abSel('Geschlecht', 'hSex', f.hSex, ['Rüde', 'Hündin', 'Rüde (kastriert)', 'Hündin (kastriert)'])}</div></div>
+    <div class="abrow"><div>${abIn('Farbe / Merkmale', 'hFarbe', f.hFarbe, '')}</div><div>${abIn('Alter', 'hAlter', f.hAlter, '')}</div></div>
+    <div class="abrow"><div>${abIn('Chip-Nr.', 'chip', f.chip, '15-stellig')}</div><div>${abIn('Steuermarke Nr.', 'steuer', f.steuer, '')}</div></div>
+   </div></div>
+   <div class="detail"><div class="body"><h4>Prüfpunkte</h4>
+    ${KH_PRUEF.map(([t, k], i) => `${abSel(t, 'k' + i, f['k' + i], KH_OPT)}${k ? abIn('Aktenzeichen / Aussteller', k, f[k], '').replace('<label class="lbl">', '<label class="lbl" style="margin-top:6px;text-transform:none;letter-spacing:0;font-weight:500">') : ''}`).join('')}
+   </div></div>
+   <div class="detail"><div class="body"><h4>Maßnahmen</h4>${thChecks(KH_MASSN, 'm', f)}
+    ${abIn('Frist zur Vorlage der Nachweise', 'frist', f.frist, '', 'f', 'date')}
+   </div></div>
+   <div class="detail"><div class="body">${abTa('Sachverhalt', 'bericht', f.bericht, 'Verhalten des Hundes, Angaben der Halterin / des Halters …', 6)}</div></div>
+   ${uFotos(f, 20)}
+   ${uAbschluss(r)}
+  </div>`;
+}
+
+const thPersonFs = f => [
+  ['Name, Vorname', [f.name ? f.name.toUpperCase() : '', f.vorname].filter(Boolean).join(', ')],
+  ['Geburtsdatum/-ort', [f.gebdat, f.gebort].filter(Boolean).join(' in ')],
+  ['Anschrift', (f.anschrift || '').replace(/\n+/g, ', ')],
+  ['Telefon', f.tel || '']
+];
+
+function tierhBuildDocx(f){
+  const tiere = Array.from({length:Math.max(thN(f), 12)}, (_, i) => i).map(i => [f['t' + i + 'a'], f['t' + i + 'n'], f['t' + i + 'r'], f['t' + i + 'c']]).filter(r => r.some(Boolean));
+  const fs = [
+    ['Anlass', f.anlass || ''],
+    ['Hinweis / Auftrag', f.hinweis || ''],
+    ...thPersonFs(f).map(([a, b]) => [a === 'Name, Vorname' ? 'Tierhalter/in' : a, b]),
+    ['Feststellungen', TH_BEAN.filter((x, i) => f['b' + i]).join('; ')],
+    ['Maßnahmen', TH_MASSN.filter((x, i) => f['m' + i]).map(x => x === 'Nachkontrolle vereinbart' && f.nkDatum ? `${x} (${fmtD(f.nkDatum)})` : x).join('; ')],
+    ['Nachkontrolle', f.nkDatum && !f.m2 ? fmtD(f.nkDatum) : '']
+  ].filter(([a, b]) => b);
+  return kaBuildDocx(f, {title:'Tierhaltungsüberprüfung', fs, fsTitel:'Feststellungen',
+    tabelle:{titel:'Tiere', cols:[['Tierart', 3000], ['Anzahl', 1100], ['Rasse', 2700], ['Chip-Nr. / Kennz.', 2838]], rows:tiere}});
+}
+
+function kampfhBuildDocx(f){
+  const fuehrer = f.fGleich ? 'Halter/in selbst' : [f.fName, f.fGeb, (f.fAnschrift || '').replace(/\n+/g, ', ')].filter(Boolean).join(' – ');
+  const fs = [
+    ...thPersonFs(f).map(([a, b]) => [a === 'Name, Vorname' ? 'Halter/in' : a, b]),
+    ['Führende Person', fuehrer],
+    ['Hund', [f.rasse, f.hName ? '„' + f.hName + '“' : '', f.hSex, f.hFarbe, f.hAlter ? 'Alter ' + f.hAlter : ''].filter(Boolean).join(', ')],
+    ['Chip-Nr.', f.chip || ''],
+    ['Steuermarke', f.steuer || '']
+  ].filter(([a, b]) => b);
+  const pr = KH_PRUEF.map(([t, k], i) => [t, (f['k' + i] || '–') + (k && f[k] ? ` (${f[k]})` : '')]);
+  const massn = KH_MASSN.filter((x, i) => f['m' + i]).map(x => x === 'Nachweise innerhalb Frist nachzureichen' && f.frist ? `Nachweise bis ${fmtD(f.frist)} nachzureichen` : x).join('; ');
+  return kaBuildDocx(f, {title:'Kampfhundkontrolle', fs, fsTitel:'Angaben',
+    tabelle:{titel:'Prüfpunkte', cols:[['Prüfpunkt', 6400], ['Ergebnis', 3238]], rows:pr},
+    abschnitte:[['Maßnahmen', massn + (f.frist && !f.m3 ? (massn ? '\n' : '') + 'Frist: ' + fmtD(f.frist) : '')], ['Sachverhalt', f.bericht]]});
+}
+
+// Führende Person ein-/ausblenden
+app.addEventListener('change', e => { if(e.target.matches && e.target.matches('[data-f="fGleich"]')) { const d = document.getElementById('khF'); if(d) d.hidden = e.target.checked; } });
+
+// Tiere hinzufügen / entfernen
+app.addEventListener('click', async e => {
+  const b = e.target.closest('[data-th]'); if(!b) return; const r = abRec(); if(!r || r.typ !== 'tierh') return;
+  const n = thN(r.f);
+  if(b.dataset.th === 'add'){ abSetMany({tN:n + 1}); render(false); setTimeout(() => { const el = app.querySelector(`[data-f="t${n}a"]`); if(el){ el.scrollIntoView({block:'center', behavior:'smooth'}); el.focus(); } }, 50); }
+  if(b.dataset.th === 'del'){ const i = n - 1, has = ['a', 'n', 'r', 'c'].some(k => r.f['t' + i + k]);
+    if(has && !(await askConfirm(`Tier ${n} mit Angaben entfernen?`, 'Entfernen'))) return;
+    const p = {tN:n - 1}; ['a', 'n', 'r', 'c'].forEach(k => p['t' + i + k] = ''); abSetMany(p); render(false); }
+});
 
 </script>
 <script data-app>if("serviceWorker" in navigator && location.protocol==="https:" && !/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("sw.js").catch(()=>{});}</script>

@@ -397,7 +397,7 @@ body.noscroll{overflow:hidden}
 .vcqrempty{height:120px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11.5px;line-height:1.35;padding:6px;white-space:normal}.vcqrwrap .vcqr{display:block;width:120px;height:120px}
 .row2{display:flex;gap:8px}.row2>*{flex:1;min-width:0}.row2 .lbl{display:block}
 #vcFull{position:fixed;inset:0;z-index:300;background:#fff;display:flex;align-items:center;justify-content:center;padding:20px}
-.vcfbox{display:flex;flex-direction:column;align-items:center;gap:6px;color:#111;text-align:center}.vcfbox b{font-size:22px;margin-top:8px}.vcfbox span{font-size:15px;color:#444}.vcfbox small{color:#777;margin-top:10px}
+.vcfbox{display:flex;flex-direction:column;align-items:center;gap:6px;color:#111;text-align:center}.vcfbox b{font-size:22px;margin-top:8px}.vcfbox span{font-size:15px;color:#444}.vcfbox .vcfmode{font-style:normal;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1d3a6e;background:#e6edf8;border-radius:999px;padding:3px 10px}.vcfbox small{color:#777;margin-top:10px}
 #camOv{position:fixed;inset:0;z-index:400;background:#000;overflow:hidden;touch-action:none}
 #camOv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #camOv .camFrame{position:absolute;border-radius:12px;box-shadow:0 0 0 200vmax rgba(0,0,0,.58);outline:2px solid rgba(255,255,255,.85)}
@@ -5047,6 +5047,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 ICONS.i_card = '<rect x="2.5" y="5" width="19" height="14" rx="2"/><circle cx="8" cy="11" r="2.2"/><path d="M4.8 16.2c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14 10h5M14 13h4"/>';
 const VC_DEF = {vorname:'', nachname:'', titel:'GVB', org:'Landeshauptstadt Stuttgart', abt:'Amt für öffentliche Ordnung', tel:'', mobil:'', mail:'', str:'', plz:'', ort:'Stuttgart', notiz:''};
 const vcGet = () => { const o = store.get('abprofil', {}), v = Object.assign({}, VC_DEF, {nachname:o.name || '', titel:o.funktion || 'GVB', ek:o.ek || '', nebenstelle:o.nebenstelle || ''}, store.get('vcard', {})); if(v.titel === 'Städtischer Vollzugsdienst') v.titel = 'GVB'; return v; };
+let VC_MODE = 'polizei'; // startet immer mit „Für Polizei“
+const vcMode = () => VC_MODE;
+// Je nach Empfänger nur die freigegebenen Felder weitergeben
+const vcFor = (v, mode) => { mode = mode || vcMode(); if(mode !== 'buerger') return Object.assign({}, v, {_mode:'polizei'});
+  return {_mode:'buerger', vorname:v.vorname, nachname:v.nachname, org:v.org, abt:v.abt, tel:v.tel, mailWache:v.mailWache, str:v.str, plz:v.plz, ort:v.ort}; };
 const vcEsc = s => String(s || '').trim().replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1');
 function vcText(v){
   const L = ['BEGIN:VCARD', 'VERSION:3.0'];
@@ -5058,8 +5063,10 @@ function vcText(v){
   if(v.tel) L.push(`TEL;TYPE=WORK,VOICE:${v.tel.trim()}`);
   if(v.mobil) L.push(`TEL;TYPE=WORK,CELL:${v.mobil.trim()}`);
   if(v.mail) L.push(`EMAIL;TYPE=WORK:${v.mail.trim()}`);
+  if(v.mailWache) L.push(`item1.EMAIL;TYPE=INTERNET:${v.mailWache.trim()}`, 'item1.X-ABLabel:Wache');
   if(v.str || v.plz || v.ort) L.push(`ADR;TYPE=WORK:;;${vcEsc(v.str)};${vcEsc(v.ort)};;${vcEsc(v.plz)};Deutschland`);
-  if(v.notiz) L.push(`NOTE:${vcEsc(v.notiz)}`);
+  const note = [v.gebort ? 'Geburtsort: ' + v.gebort.trim() : '', v.famstand ? 'Familienstand: ' + v.famstand.trim() : '', v.notiz].filter(x => x && x.trim()).join('\n');
+  if(note) L.push(`NOTE:${vcEsc(note)}`);
   L.push('END:VCARD');
   return L.join('\r\n');
 }
@@ -5074,13 +5081,14 @@ function vcQrSvg(text, px){
   } catch(e){ return `<div class="note">QR-Code konnte nicht erzeugt werden (zu viel Text?). Notiz kürzen.</div>`; }
 }
 function vcPreview(v){
+  v = vcFor(v);
   const name = [v.vorname, v.nachname].filter(Boolean).join(' ');
-  const hasData = name || v.tel || v.mobil || v.mail;
+  const hasData = name || v.tel || v.mobil || v.mail || v.mailWache;
   return `<div class="vccard">
     <div class="vcinfo"><b class="vcname">${esc(name || 'Name eintragen')}</b>
      ${v.titel || v.dg ? `<span>${esc([v.titel, v.dg ? 'Dienstgruppe ' + String(v.dg).replace(/^\s*(DG|Dienstgruppe)\s*/i, '') : ''].filter(Boolean).join(' · '))}</span>` : ''}
      <span class="vcorg">${esc([v.org, v.abt].filter(Boolean).join(' · '))}</span>
-     <div class="vcdet">${v.tel ? `☎ ${esc(v.tel)}<br>` : ''}${v.mobil ? `📱 ${esc(v.mobil)}<br>` : ''}${v.mail ? `✉ ${esc(v.mail)}<br>` : ''}${v.str || v.plz ? `📍 ${esc([v.str, [v.plz, v.ort].filter(Boolean).join(' ')].filter(Boolean).join(', '))}` : ''}</div></div>
+     <div class="vcdet">${v.tel ? `☎ ${esc(v.tel)}<br>` : ''}${v.mobil ? `📱 ${esc(v.mobil)}<br>` : ''}${v.mail ? `✉ ${esc(v.mail)}<br>` : ''}${v.mailWache ? `🏢 ${esc(v.mailWache)} (Wache)<br>` : ''}${v.gebort ? `Geburtsort: ${esc(v.gebort)}<br>` : ''}${v.famstand ? `Familienstand: ${esc(v.famstand)}<br>` : ''}${v.str || v.plz ? `📍 ${esc([v.str, [v.plz, v.ort].filter(Boolean).join(' ')].filter(Boolean).join(', '))}` : ''}</div></div>
     <div class="vcqrwrap">${hasData ? vcQrSvg(vcText(v), 150) : '<div class="vcqrempty">QR-Code erscheint, sobald Name oder Kontakt eingetragen ist</div>'}</div>
    </div>`;
 }
@@ -5088,6 +5096,8 @@ function viewVisitenkarte(){
   const v = vcGet(), F = (label, k, ph, type, im) => `<label class="lbl">${label}</label><input class="inp" data-vc="${k}" value="${esc(v[k] || '')}" placeholder="${ph || ''}"${type ? ` type="${type}"` : ''}${im ? ` inputmode="${im}"` : ''} autocomplete="off">`;
   return `<div class="detail"><div class="dhd">${ico('i_card', '#dbe7fb')}<div class="dt"><h2>Digitale Visitenkarte</h2><span>QR-Code zeigen – Gegenüber scannt mit der Kamera und speichert den Kontakt</span></div></div>
    <div class="body">
+    <div class="seg" style="margin:4px 0 12px"><button class="${vcMode() === 'polizei' ? 'on' : ''}" data-vcmode="polizei">Für Polizei</button><button class="${vcMode() === 'buerger' ? 'on' : ''}" data-vcmode="buerger">Für Bürger</button></div>
+    <p class="small" id="vcModeInfo" style="margin:-4px 0 10px">${vcModeInfo()}</p>
     <div id="vcPrev">${vcPreview(v)}</div>
     <div class="row" style="margin-top:10px"><button class="btn primary big" data-vcfull>🔳 QR groß zeigen</button><button class="btn" data-vcshare>Als Kontakt teilen</button></div>
     <div class="note" style="margin-top:10px">Nur <b>dienstliche</b> Kontaktdaten eintragen – keine privaten Nummern. Die Daten bleiben nur auf diesem Gerät; der QR-Code wird ohne Internet erzeugt.</div>
@@ -5099,8 +5109,10 @@ function viewVisitenkarte(){
      ${F('Telefon (dienstlich)', 'tel', '+49 711 …', 'tel', 'tel')}
      ${F('Mobil (dienstlich)', 'mobil', '+49 …', 'tel', 'tel')}
      ${F('E-Mail (dienstlich)', 'mail', 'vorname.nachname@stuttgart.de', 'email', 'email')}
+     ${F('E-Mail Wache', 'mailWache', 'z. B. wache@stuttgart.de', 'email', 'email')}
      ${F('Straße und Hausnummer', 'str')}
      <div class="row2"><div style="flex:.6">${F('PLZ', 'plz', '', '', 'numeric')}</div><div>${F('Ort', 'ort')}</div></div>
+     <div class="row2"><div>${F('Geburtsort', 'gebort')}</div><div>${F('Familienstand', 'famstand', 'z. B. verheiratet')}</div></div>
      ${F('Notiz (optional)', 'notiz', 'z. B. Erreichbarkeit, Aktenzeichen')}
      <h4 style="margin-top:18px">Angaben für Berichte</h4>
      <p class="small" style="margin-top:-4px">Nachname, Funktion und Dienstgruppe von oben werden in neue Berichte übernommen. Die folgenden Angaben stehen <b>nicht</b> auf der Visitenkarte und nicht im QR-Code.</p>
@@ -5116,6 +5128,9 @@ function viewVisitenkarte(){
     </div>
    </div></div>`;
 }
+function vcModeInfo(){ return vcMode() === 'buerger'
+  ? 'Für Bürger: nur Name, Organisation, Abteilung, Telefon dienstlich, E-Mail Wache und Adresse.'
+  : 'Für Polizei: alle Angaben inkl. Funktion, Dienstgruppe, Mobil, E-Mail, Geburtsort und Familienstand.'; }
 function vcSigHTML(v){
   const imp = `<button class="btn" data-vcsig="import">📷 Foto einer Unterschrift</button>`;
   return v.sig ? `<div class="vcsig"><img src="${v.sig}" alt="Signatur"></div><div class="row"><button class="btn" data-vcsig="new">Neu zeichnen</button>${imp}<button class="btn" data-vcsig="del">Signatur löschen</button></div>`
@@ -5232,15 +5247,15 @@ function vcSigCrop(c){
   });
 })();
 function vcFull(){
-  const v = vcGet(), name = [v.vorname, v.nachname].filter(Boolean).join(' ');
+  const v = vcFor(vcGet()), name = [v.vorname, v.nachname].filter(Boolean).join(' ');
   const el = document.createElement('div'); el.id = 'vcFull';
   const w = Math.min(innerWidth, innerHeight) - 60;
-  el.innerHTML = `<div class="vcfbox">${vcQrSvg(vcText(v), Math.max(220, Math.min(w, 520)))}<b>${esc(name)}</b><span>${esc([v.titel, v.org].filter(Boolean).join(' · '))}</span><small>Mit der Handykamera scannen · Tippen zum Schließen</small></div>`;
+  el.innerHTML = `<div class="vcfbox">${vcQrSvg(vcText(v), Math.max(220, Math.min(w, 520)))}<b>${esc(name)}</b><span>${esc([v.titel, v.org].filter(Boolean).join(' · '))}</span><em class="vcfmode">${v._mode === 'buerger' ? 'Visitenkarte für Bürger' : 'Visitenkarte für Polizei'}</em><small>Mit der Handykamera scannen · Tippen zum Schließen</small></div>`;
   document.body.appendChild(el);
   el.addEventListener('click', () => el.remove());
 }
 async function vcShare(){
-  const v = vcGet(), txt = vcText(v), nm = ([v.vorname, v.nachname].filter(Boolean).join('_') || 'Kontakt').replace(/[^\wäöüÄÖÜß-]/g, '') + '.vcf';
+  const v = vcFor(vcGet()), txt = vcText(v), nm = ([v.vorname, v.nachname].filter(Boolean).join('_') || 'Kontakt').replace(/[^\wäöüÄÖÜß-]/g, '') + '.vcf';
   const blob = new Blob([txt], {type:'text/vcard'});
   try {
     const file = new File([blob], nm, {type:'text/vcard'});
@@ -5257,7 +5272,10 @@ async function vcShare(){
     clearTimeout(t); t = setTimeout(() => { const p = document.getElementById('vcPrev'); if(p) p.innerHTML = vcPreview(vcGet()); }, 200);
   });
   document.addEventListener('click', e => {
-    if(e.target.closest('[data-vcfull]')){ const v = vcGet(); if(!(v.vorname || v.nachname || v.tel || v.mobil || v.mail)){ toast('Bitte zuerst Name oder Kontakt eintragen', true); return; } vcFull(); }
+    const mb = e.target.closest('[data-vcmode]');
+    if(mb){ VC_MODE = mb.dataset.vcmode === 'buerger' ? 'buerger' : 'polizei'; mb.parentNode.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === mb));
+      const p = document.getElementById('vcPrev'); if(p) p.innerHTML = vcPreview(vcGet()); const i = document.getElementById('vcModeInfo'); if(i) i.textContent = vcModeInfo(); return; }
+    if(e.target.closest('[data-vcfull]')){ const v = vcFor(vcGet()); if(!(v.vorname || v.nachname || v.tel || v.mobil || v.mail || v.mailWache)){ toast('Bitte zuerst Name oder Kontakt eintragen', true); return; } vcFull(); }
     else if(e.target.closest('[data-vcshare]')) vcShare();
   });
 })();

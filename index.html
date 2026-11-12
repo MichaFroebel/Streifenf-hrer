@@ -763,13 +763,47 @@ html.night .cat .blob svg > :last-child{stroke:#8a7430}
 .introbtns{justify-content:space-between;margin-top:14px}
 .introos{margin:6px 0 8px}
 html.night .introbox{background:#0c121c;color:#d9dee6;border-color:#1b2533}
-html.night{--bg:#05080d;--card:#0c121c;--ink:#d9dee6;--muted:#8792a3;--line:#1b2533;--chip:#121a26;--navy:#000;color-scheme:dark;filter:brightness(.72) sepia(.45) saturate(1.4) hue-rotate(-12deg)}
+header{background:linear-gradient(180deg,rgba(246,239,226,.90),rgba(236,226,207,.78))}
+.search input{background:rgba(255,251,243,.85);border-color:rgba(120,95,50,.12)}
+/* ===== Beige statt Weiß für alle Glasflächen ===== */
+:root{--glass:rgba(246,239,226,.80);--glass2:rgba(236,226,207,.58);--gb:rgba(255,248,235,.85)}
+.panel,.card,.tile,.call,.detail,.rowlink,.modal .box{background:linear-gradient(145deg,rgba(246,239,226,.82),rgba(236,226,207,.60));border-color:rgba(255,248,235,.85)}
+.panel:has(> .cats){background:linear-gradient(150deg,rgba(246,239,226,.66),rgba(236,226,207,.40));border-color:rgba(255,248,235,.8)}
+.panel .tile,.panel .call,.panel .rowlink,.detail .call,.detail .rowlink{background:rgba(250,245,234,.65);border-color:rgba(255,248,235,.9)}
+.thead,.herotop,.heroshift{background:linear-gradient(150deg,rgba(246,239,226,.88),rgba(236,226,207,.68));border-color:rgba(255,248,235,.9)}
+.sec{background:rgba(246,239,226,.88);border-color:rgba(255,248,235,.9)}
+#app > p.small,#app > .small,.disclaimer,.note,.tip,.say{background:rgba(246,239,226,.82);border-color:rgba(255,248,235,.85)}
+.seg{background:rgba(240,231,214,.62);border-color:rgba(255,248,235,.85)}
+.seg button.on{background:#fbf6ec}
+nav{background:rgba(244,236,221,.78);border-color:rgba(255,248,235,.9)}
+.btn{background:rgba(250,244,232,.85);border-color:rgba(255,248,235,.95)}
+.btn:active{background:#fbf6ec}
+.chip{background:rgba(248,241,228,.8);border-color:rgba(255,248,235,.95)}
+.inp,.sbody textarea,.field input,.field select,.hutool select,.abform select,.abform textarea{background:rgba(255,251,243,.88);border-color:rgba(120,95,50,.14)}
+.modal .box,.introbox{background:linear-gradient(160deg,rgba(250,245,234,.97),rgba(240,231,214,.94))}
+.tbl{background:rgba(250,245,234,.6)}
+.cat .blob{background:radial-gradient(75% 60% at 32% 18%,rgba(255,252,245,.95),rgba(255,252,245,0) 60%) padding-box,linear-gradient(165deg,color-mix(in srgb,var(--bc,#e8dcc6) 30%,rgba(250,244,232,.6)),color-mix(in srgb,var(--bc,#e8dcc6) 45%,rgba(240,231,214,.25))) padding-box,
+  linear-gradient(145deg,#ffe07a 0%,#f2c230 22%,#8f84c9 58%,#1e3658 100%) border-box}
+html.night{--bg:#05080d;--card:#0c121c;--ink:#d9dee6;--muted:#8792a3;--line:#1b2533;--chip:#121a26;--navy:#000;color-scheme:dark;filter:brightness(.9) sepia(.25) saturate(1.2) hue-rotate(-8deg)}
 html.night .seg{background:#121a26}
-html.night .blob{filter:brightness(.6) saturate(.9)}
+
 html.night .wvzbar:not(.on){background:#2a2410;color:#e3cf8f;border-color:#4d4220}
 html.night img,html.night video{filter:brightness(.85)}
 .nightbtn{all:unset;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;border-radius:8px;background:#1d2b42;flex:none;font-size:17px}
 html.night .nightbtn{background:#3a2a10}
+/* Nachtmodus: heller und mit gut sichtbaren Symbolen */
+html.night body:before{background:linear-gradient(180deg,#070a14,#0d1222 60%,#121829)}
+html.night :is(.panel,.card,.tile,.call,.detail,.rowlink,.modal .box,nav,.btn,.chip,.seg,.inp,.note,.say,.tip,.sec,.thead,.herotop,.heroshift,#app > p.small,.disclaimer){background:#111a29;border-color:#25324a}
+html.night .panel:has(> .cats){background:#0e1624;border-color:#25324a}
+html.night .blob{filter:none!important}
+html.night .cat .blob{background:radial-gradient(75% 60% at 32% 18%,rgba(255,255,255,.10),transparent 60%),#1a2538!important;border:2px solid #b8962e!important;box-shadow:0 0 14px -4px rgba(242,194,48,.35)!important}
+html.night .cat .blob svg,html.night .thead .blob svg,html.night .dhd .blob svg{color:#eef2f8!important;stroke-width:2.1}
+html.night .cat .blob svg > :last-child:not(:only-child){stroke:#f2c230!important}
+html.night .cat span{color:#eef2f8}html.night .cat small{color:#a9b4c6}
+html.night .sec{color:#d9dee6}
+html.night .blob:not(.cat .blob){background:#1a2538!important;color:#eef2f8}
+html.night .back{background:#1a2538;border-color:#25324a;box-shadow:none}
+html.night nav a{color:#a9b4c6}html.night nav a.on{color:#f2c230}
 .badge.lhs{background:#fff;padding:2px;width:42px;height:42px;border-radius:12px;box-shadow:inset 0 1px 0 #fff,0 6px 14px -6px rgba(0,0,0,.45)}.badge.lhs:after{display:none}.badge.lhs img{width:100%;height:100%;object-fit:contain;display:block}html.night .badge.lhs{filter:brightness(.8)}
 </style>
 </head>
@@ -1882,7 +1916,8 @@ document.addEventListener('click', e => { if(e.target.closest('[data-introshow]'
 /* =========================================================
    AUSBILDER-MODUS: Bearbeiten ohne Programmierung
    ========================================================= */
-let EDIT = !!store.get('editOn', false) && !!store.get('pin', null);
+const AUSB_HASH = '1a9fzojl'; // Ausbilder-Passwort (nur als Hash)
+let EDIT = !!store.get('editOn', false) && store.get('ausbOk', null) === AUSB_HASH;
 const uid = () => 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const draftOld = () => hasDraft() && store.get('draftBase', BASE_HASH) !== BASE_HASH;
 const hasDraft = () => { try { return localStorage.getItem('kodst_draft') != null; } catch(e){ return false; } };
@@ -2062,18 +2097,15 @@ async function edAction(act, arg){
 
 /* ---------- PIN ---------- */
 function pinDialog(){
-  const has = !!store.get('pin', null);
-  const s = sheet(has ? 'Ausbilder-Modus' : 'PIN festlegen', `
-    <p>${has ? 'Bitte PIN eingeben.' : 'Lege eine PIN (mind. 4 Ziffern) fest. Sie schützt vor versehentlichem Bearbeiten auf diesem Gerät.'}</p>
-    <div class="field"><input type="password" inputmode="numeric" autocomplete="off" name="pin" placeholder="PIN"></div>
-    ${has ? '' : '<div class="field"><input type="password" inputmode="numeric" autocomplete="off" name="pin2" placeholder="PIN wiederholen"></div>'}
-    <p class="small">Hinweis: Die PIN ist eine Sperre gegen versehentliche Änderungen, kein Schutz der Inhalte. Änderungen erreichen andere erst, wenn du sie veröffentlichst.</p>`,
+  const s = sheet('Ausbilder-Modus', `
+    <p>Bitte das Ausbilder-Passwort eingeben.</p>
+    <div class="field"><input type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" name="pin" placeholder="Passwort"></div>
+    <p class="small">Groß-/Kleinschreibung beachten. Das Passwort ist eine Sperre gegen versehentliche Änderungen, kein Schutz der Inhalte. Änderungen erreichen andere erst, wenn du sie veröffentlichst.</p>`,
     el => {
       const p = el.querySelector('[name=pin]').value.trim();
-      if(has){ if(hashStr('svd' + p) !== store.get('pin')){ toast('Falsche PIN', true); return false; } }
-      else { if(!/^\d{4,}$/.test(p)){ toast('Mindestens 4 Ziffern', true); return false; } if(p !== el.querySelector('[name=pin2]').value.trim()){ toast('PINs stimmen nicht überein', true); return false; } store.set('pin', hashStr('svd' + p)); }
-      EDIT = true; store.set('editOn', true); render(true); toast('Ausbilder-Modus aktiv');
-    }, {save: has ? 'Öffnen' : 'Festlegen'});
+      if(hashStr('kod-ausb|' + p) !== AUSB_HASH){ toast('Falsches Passwort', true); return false; }
+      store.set('ausbOk', AUSB_HASH); EDIT = true; store.set('editOn', true); render(true); toast('Ausbilder-Modus aktiv');
+    }, {save:'Öffnen'});
   setTimeout(() => s.querySelector('[name=pin]').focus(), 50);
 }
 
@@ -2085,7 +2117,6 @@ function edMenu(){
      <button class="mi" data-m="backup"><b>Entwurf sichern</b><small>Als Datei speichern, z. B. um am PC weiterzumachen</small></button>
      <button class="mi" data-m="restore"><b>Entwurf laden</b><small>Gesicherte Entwurfs-Datei öffnen</small></button>
      <button class="mi" data-m="apppw"><b>App-Passwort ändern</b><small>Gilt für alle nach dem nächsten Veröffentlichen</small></button>
-     <button class="mi" data-m="pin"><b>PIN ändern</b><small>Neue PIN für dieses Gerät</small></button>
      <button class="mi" data-m="discard"><b>Änderungen verwerfen</b><small>Zurück zum veröffentlichten Stand</small></button>
      <button class="mi" data-m="help"><b>Anleitung</b><small>So funktioniert das Bearbeiten</small></button>
      <button class="mi" data-m="exit"><b>Ausbilder-Modus beenden</b><small>Zurück zur normalen Ansicht</small></button>
@@ -2098,7 +2129,6 @@ function edMenu(){
     if(a === 'publish') publish();
     else if(a === 'backup') download(JSON.stringify(D, null, 1), 'svd-entwurf.json', 'application/json');
     else if(a === 'apppw'){ const s2 = sheet('App-Passwort ändern', `<p>Das Passwort, das alle beim Öffnen der App eingeben müssen. Groß-/Kleinschreibung egal.</p>${fld('Neues App-Passwort', 'np', '', 'mind. 3 Zeichen')}<p class="small">Wird erst nach „Veröffentlichen“ und Hochladen für alle gültig. Danach müssen alle das neue Passwort einmal eingeben.</p>`, el => { const v = val(el, 'np').trim(); if(v.length < 3){ toast('Mindestens 3 Zeichen', true); return false; } D.pw = pwHash(v); store.set('unlock', D.pw); saveDraft(); toast('App-Passwort geändert'); }); }
-    else if(a === 'pin'){ store.del('pin'); EDIT = false; pinDialog(); }
     else if(a === 'discard'){ if(await askConfirm('Alle unveröffentlichten Änderungen auf diesem Gerät verwerfen?', 'Verwerfen')){ store.del('draft'); store.del('draftBase'); D = JSON.parse(BASE_TXT); bindData(); buildQK(); buildIndex(); render(false); toast('Änderungen verworfen'); } }
     else if(a === 'help') helpSheet();
     else if(a === 'exit') edAction('exit');

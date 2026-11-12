@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f1b2d">
+<meta name="theme-color" content="#eae9ee">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SVD Streifenführer">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link data-app rel="manifest" href="manifest.webmanifest">
 <link data-app rel="apple-touch-icon" href="icon-180.png">
 <link data-app rel="icon" href="icon-192.png">
 <title>SVD Streifenführer Stuttgart</title>
 <style data-app>
 :root{--bg:#f2f4f7;--card:#fff;--ink:#132033;--muted:#5d6a7c;--line:#dde3eb;--navy:#0f1b2d;--accent:#f2c230;--accent-ink:#1a1400;--ok:#1d8a50;--bad:#c0392b;--warn:#b4561f;--chip:#e9eef6}
-@media (prefers-color-scheme:dark){:root{--bg:#0b1320;--card:#142035;--ink:#e8edf5;--muted:#9aa7ba;--line:#24334c;--chip:#1c2b44}}
+@media (max-width:0px){:root{--bg:#0b1320;--card:#142035;--ink:#e8edf5;--muted:#9aa7ba;--line:#24334c;--chip:#1c2b44}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
@@ -156,7 +156,7 @@ nav a.on svg{color:#d9a400}
 
 /* ===== Ordner-Aufbau: Raster mit Piktogrammen ===== */
 .seg{display:flex;background:#e4e9f1;border-radius:14px;padding:4px;margin:0 2px 14px}
-@media (prefers-color-scheme:dark){.seg{background:#1c2b44}}
+@media (max-width:0px){.seg{background:#1c2b44}}
 .seg button{all:unset;flex:1;text-align:center;padding:9px 0;border-radius:11px;font-weight:700;font-size:15px;color:var(--muted);cursor:pointer}
 .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 5px rgba(0,0,0,.10)}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 6px 6px;margin-bottom:12px}
@@ -431,7 +431,7 @@ div.vcsig{display:flex;align-items:center;justify-content:center;padding:10px;bo
 .expseg{margin:4px 0 10px}
 .wvzbar{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:14px;margin:0 2px 12px;background:#fff4d6;color:#5a4300;text-decoration:none;border:1.5px solid #e9c46a}
 .wvzbar.on{background:#c62828;color:#fff;border-color:#c62828}.wvzbar b{font-size:15px}.wvzbar span{font-size:13px;opacity:.92}
-@media (prefers-color-scheme:dark){.wvzbar:not(.on){background:#3a3115;color:#f3dc9a;border-color:#6b5a26}}
+@media (max-width:0px){.wvzbar:not(.on){background:#3a3115;color:#f3dc9a;border-color:#6b5a26}}
 .wvzmap{position:relative;z-index:0;isolation:isolate;height:58vh;min-height:320px;border-radius:14px;overflow:hidden;margin:0 2px;background:#dfe5ee}
 .wvzpos{display:flex;flex-direction:column;gap:2px;margin:10px 2px 0;padding:12px 14px;border-radius:14px;background:var(--card,#fff);border:1.5px solid rgba(128,128,128,.3)}
 .wvzpos.on{background:#c62828;color:#fff;border-color:#c62828}.wvzpos.in{background:#fff4d6;color:#5a4300;border-color:#e9c46a}.wvzpos.out{border-color:#2e7d32}
@@ -448,7 +448,7 @@ div.vcsig{display:flex;align-items:center;justify-content:center;padding:10px;bo
 :root{--bg:#eef1f6;--line:#e1e6ee;--shc:15,27,45;--glow:rgba(66,110,190,.10);--hi:rgba(255,255,255,.9);
  --e1:0 1px 1px rgba(var(--shc),.04),0 2px 6px -1px rgba(var(--shc),.06),0 10px 24px -12px rgba(var(--shc),.16);
  --e2:0 1px 2px rgba(var(--shc),.06),0 6px 14px -4px rgba(var(--shc),.10),0 18px 36px -14px rgba(var(--shc),.24)}
-@media (prefers-color-scheme:dark){:root{--bg:#09111d;--line:#203049;--shc:0,0,0;--glow:rgba(90,140,230,.14);--hi:rgba(255,255,255,.05)}}
+@media (max-width:0px){:root{--bg:#09111d;--line:#203049;--shc:0,0,0;--glow:rgba(90,140,230,.14);--hi:rgba(255,255,255,.05)}}
 html.night{--shc:0,0,0;--glow:transparent;--hi:rgba(255,255,255,.03)}
 body{background:radial-gradient(900px 380px at 50% -140px,var(--glow),transparent 70%) no-repeat,var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:-.003em}
 header{background:linear-gradient(165deg,#1d3354 0%,#122340 45%,#0b1527 100%);border-radius:0 0 20px 20px;box-shadow:0 8px 22px -10px rgba(5,12,25,.65),inset 0 -1px 0 rgba(255,255,255,.05)}
@@ -460,7 +460,7 @@ html.night header{background:#000}
 .search input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.09);box-shadow:inset 0 2px 4px rgba(0,0,0,.18);border-radius:12px;transition:background .15s,box-shadow .15s}
 .search input:focus{background:rgba(255,255,255,.13);box-shadow:inset 0 2px 4px rgba(0,0,0,.18),0 0 0 3px rgba(242,194,48,.35)}
 .panel,.card,.tile,.call,.detail,.rowlink,.modal .box{border-color:transparent;box-shadow:var(--e1),inset 0 1px 0 var(--hi)}
-@media (prefers-color-scheme:dark){.panel,.card,.tile,.call,.detail,.rowlink,.modal .box{border-color:rgba(255,255,255,.05)}}
+@media (max-width:0px){.panel,.card,.tile,.call,.detail,.rowlink,.modal .box{border-color:rgba(255,255,255,.05)}}
 html.night :is(.panel,.card,.tile,.call,.detail,.rowlink){border-color:#1b2533}
 .panel{border-radius:22px}
 .rowlink,.tile,.call{transition:transform .14s ease,box-shadow .14s ease}
@@ -477,20 +477,20 @@ html.night :is(.panel,.card,.tile,.call,.detail,.rowlink){border-color:#1b2533}
 .sec:before{content:"";width:4px;height:13px;border-radius:2px;background:linear-gradient(180deg,#f7d153,#d9a400);flex:none}
 .btn{border-color:transparent;box-shadow:0 1px 2px rgba(var(--shc),.08),0 3px 8px -3px rgba(var(--shc),.16),inset 0 1px 0 var(--hi);transition:transform .1s,box-shadow .1s;font-weight:600}
 .btn:active{transform:translateY(1px) scale(.985);box-shadow:0 1px 1px rgba(var(--shc),.10)}
-@media (prefers-color-scheme:dark){.btn{border-color:rgba(255,255,255,.06)}}
+@media (max-width:0px){.btn{border-color:rgba(255,255,255,.06)}}
 .btn.primary{background:linear-gradient(180deg,#ffd862,#f2c230 55%,#e2ad12);border-color:#d9a400;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 6px 14px -6px rgba(217,164,0,.75)}
 .chip{box-shadow:0 1px 2px rgba(var(--shc),.07),inset 0 1px 0 var(--hi);transition:transform .1s}
 .chip:active{transform:scale(.96)}
 .chip.on{background:linear-gradient(170deg,#24406a,#0f1b2d);border-color:#0f1b2d;box-shadow:0 4px 10px -4px rgba(15,27,45,.6),inset 0 1px 0 rgba(255,255,255,.12)}
 .seg{background:rgba(var(--shc),.06);box-shadow:inset 0 1px 3px rgba(var(--shc),.10)}
-@media (prefers-color-scheme:dark){.seg{background:rgba(255,255,255,.04)}}
+@media (max-width:0px){.seg{background:rgba(255,255,255,.04)}}
 .seg button.on{box-shadow:0 1px 2px rgba(var(--shc),.10),0 4px 12px -4px rgba(var(--shc),.22),inset 0 1px 0 var(--hi)}
 .inp,.sbody textarea,.field input,.field select,.hutool select{background:var(--card);border-color:var(--line);box-shadow:inset 0 1px 2px rgba(var(--shc),.06);transition:border-color .15s,box-shadow .15s}
 .inp:focus,.sbody textarea:focus,.field input:focus,.field select:focus{outline:none;border-color:#d9a400;box-shadow:inset 0 1px 2px rgba(var(--shc),.06),0 0 0 3px rgba(242,194,48,.28)}
 nav{background:color-mix(in srgb,var(--card) 84%,transparent);backdrop-filter:saturate(1.8) blur(18px);-webkit-backdrop-filter:saturate(1.8) blur(18px);border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent);box-shadow:0 -8px 24px -14px rgba(var(--shc),.35)}
 nav a svg{box-sizing:content-box;padding:3px 16px;border-radius:12px;margin-bottom:1px;transition:background .2s,transform .15s}
 nav a.on svg{background:rgba(242,194,48,.20);color:#c99400}
-@media (prefers-color-scheme:dark){nav a.on svg{color:#f2c230}}
+@media (max-width:0px){nav a.on svg{color:#f2c230}}
 nav a:active svg{transform:scale(.9)}
 .say{border-radius:0 12px 12px 0;box-shadow:inset 0 1px 0 var(--hi)}
 .note,.tip{border-radius:0 12px 12px 0}
@@ -498,13 +498,13 @@ nav a:active svg{transform:scale(.9)}
 .tbl th,.tbl td{border:0;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
 .tbl tr>:last-child{border-right:0}.tbl tr:last-child>*{border-bottom:0}
 .tbl tr:nth-child(even) td{background:rgba(var(--shc),.025)}
-@media (prefers-color-scheme:dark){.tbl tr:nth-child(even) td{background:rgba(255,255,255,.025)}}
+@media (max-width:0px){.tbl tr:nth-child(even) td{background:rgba(255,255,255,.025)}}
 .progress,.cat .mprog{box-shadow:inset 0 1px 2px rgba(var(--shc),.12)}
 .progress i,.cat .mprog b{background:linear-gradient(90deg,#27a862,#1d8a50)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* ===== Design 3.0: hochwertige 3D-Optik ===== */
 :root{--bg:#e9edf4;--glow2:rgba(242,194,48,.10)}
-@media (prefers-color-scheme:dark){:root{--bg:#070d17;--glow2:rgba(242,194,48,.05)}}
+@media (max-width:0px){:root{--bg:#070d17;--glow2:rgba(242,194,48,.05)}}
 html.night{--glow2:transparent}
 body{background:radial-gradient(700px 420px at 105% 0%,var(--glow2),transparent 65%) no-repeat,radial-gradient(900px 480px at -10% -60px,var(--glow),transparent 70%) no-repeat,linear-gradient(180deg,var(--bg),color-mix(in srgb,var(--bg) 92%,#000) 140%) fixed}
 header{background:radial-gradient(120% 140% at 0% 0%,rgba(80,130,210,.30),transparent 55%),linear-gradient(165deg,#1e3658 0%,#12233f 48%,#0a1426 100%);box-shadow:0 14px 30px -14px rgba(5,12,25,.75),inset 0 1px 0 rgba(255,255,255,.10),inset 0 -1px 0 rgba(0,0,0,.35)}
@@ -514,7 +514,7 @@ header:after{content:"";position:absolute;left:18px;right:18px;bottom:0;height:1
 /* Flächen: leichte Wölbung durch Verlauf + Lichtkante + Tiefenschatten */
 .panel,.card,.tile,.call,.detail,.rowlink,.modal .box{background:linear-gradient(180deg,color-mix(in srgb,var(--card) 100%,#fff 0%) 0%,color-mix(in srgb,var(--card) 94%,var(--bg)) 100%);
  box-shadow:inset 0 1px 0 var(--hi),inset 0 -1px 0 rgba(var(--shc),.05),0 1px 1px rgba(var(--shc),.05),0 4px 10px -2px rgba(var(--shc),.07),0 18px 34px -16px rgba(var(--shc),.26)}
-@media (prefers-color-scheme:dark){.panel,.card,.tile,.call,.detail,.rowlink,.modal .box{background:linear-gradient(180deg,#17253c 0%,#111d31 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 1px rgba(0,0,0,.4),0 18px 34px -16px rgba(0,0,0,.8)}}
+@media (max-width:0px){.panel,.card,.tile,.call,.detail,.rowlink,.modal .box{background:linear-gradient(180deg,#17253c 0%,#111d31 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 1px rgba(0,0,0,.4),0 18px 34px -16px rgba(0,0,0,.8)}}
 html.night :is(.panel,.card,.tile,.call,.detail,.rowlink,.modal .box){background:#0c121c;box-shadow:none}
 /* Symbole als glänzende 3D-Körper */
 .blob{color:color-mix(in srgb,var(--bc,#e3e8f2) 25%,#0f1b2d);
@@ -526,7 +526,7 @@ html.night :is(.panel,.card,.tile,.call,.detail,.rowlink,.modal .box){background
 .cat:active .blob,.rowlink:active .blob{transform:translateY(2px) scale(.92)}
 .addtile .blob:after{display:none}
 html.night .blob:after{opacity:.35}
-@media (prefers-color-scheme:dark){.blob{filter:brightness(.78) saturate(1.25)}.blob:after{opacity:.6}}
+@media (max-width:0px){.blob{filter:brightness(.78) saturate(1.25)}.blob:after{opacity:.6}}
 #sosFloat{bottom:calc(86px + env(safe-area-inset-bottom))}
 /* Knöpfe */
 .btn{background:linear-gradient(180deg,color-mix(in srgb,var(--card) 100%,#fff 0%),color-mix(in srgb,var(--card) 90%,var(--bg)));box-shadow:inset 0 1px 0 var(--hi),inset 0 -2px 0 rgba(var(--shc),.06),0 1px 2px rgba(var(--shc),.10),0 6px 14px -6px rgba(var(--shc),.25)}
@@ -540,7 +540,7 @@ html.night .btn.primary{text-shadow:none}
 /* Schwebende Navigationsleiste */
 nav{left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 8px);padding-bottom:0;border-radius:24px;border:1px solid color-mix(in srgb,var(--line) 60%,transparent);
  background:color-mix(in srgb,var(--card) 78%,transparent);box-shadow:inset 0 1px 0 var(--hi),0 2px 6px rgba(var(--shc),.08),0 18px 36px -12px rgba(var(--shc),.45)}
-@media (prefers-color-scheme:dark){nav{background:rgba(20,32,53,.78);border-color:rgba(255,255,255,.07)}}
+@media (max-width:0px){nav{background:rgba(20,32,53,.78);border-color:rgba(255,255,255,.07)}}
 html.night nav{background:rgba(8,12,18,.9)}
 nav a{padding:7px 1px 6px}
 nav a.on svg{background:linear-gradient(180deg,rgba(255,224,120,.55),rgba(242,194,48,.28));box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 4px 10px -4px rgba(217,164,0,.6)}
@@ -557,6 +557,212 @@ nav a.on svg{background:linear-gradient(180deg,rgba(255,224,120,.55),rgba(242,19
 .detail .dhd h2,.dt h2{letter-spacing:-.015em}
 .body h4{display:flex;align-items:center;gap:6px}
 .sec{font-weight:800;color:color-mix(in srgb,var(--muted) 85%,var(--ink))}
+/* ===== Design 4.1: helles Glas (Sand/Grau + Nachtblau + Gold) ===== */
+:root{--bg:#eae9ee;--card:rgba(255,255,255,.62);--ink:#14213a;--muted:#5f6b7d;--line:rgba(20,33,58,.10);--chip:rgba(255,255,255,.6);--hi:rgba(255,255,255,.95);--shc:60,52,40;color-scheme:light;
+ --glass:rgba(255,255,255,.66);--glass2:rgba(255,255,255,.42);--gb:rgba(255,255,255,.85)}
+html,body{background:
+  radial-gradient(260px 260px at 8% 6%,rgba(150,135,205,.38),transparent 70%),
+  radial-gradient(300px 300px at 98% 26%,rgba(165,150,215,.32),transparent 70%),
+  radial-gradient(240px 240px at 85% 4%,rgba(242,194,48,.18),transparent 70%),
+  radial-gradient(320px 320px at 12% 62%,rgba(140,125,200,.30),transparent 70%),
+  radial-gradient(300px 300px at 92% 88%,rgba(160,145,210,.34),transparent 70%),
+  linear-gradient(180deg,#f0eff2 0%,#eae9ee 55%,#e5e3ea 100%) fixed;min-height:100vh}
+/* Kopf: helles Glas, Schrift Nachtblau */
+header{background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.48));color:var(--ink);backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);
+ border-radius:0 0 26px 26px;border-bottom:1px solid rgba(255,255,255,.9);box-shadow:0 12px 30px -18px rgba(60,52,40,.45),inset 0 -1px 0 rgba(20,33,58,.05)}
+header:after{left:40px;right:40px;background:linear-gradient(90deg,transparent,rgba(217,164,0,.55),transparent)}
+.htitle b{color:#0f1b2d;font-size:19px;font-weight:750;letter-spacing:-.02em}
+.htitle small{color:#5f6b7d}
+.search input{background:rgba(255,255,255,.7);border:1px solid rgba(20,33,58,.08);color:var(--ink);border-radius:16px;box-shadow:inset 0 1px 2px rgba(60,52,40,.08)}
+.search input::placeholder{color:#8a93a1}
+.search svg,.search .ic{color:#5f6b7d}
+.back,.nightbtn{background:rgba(255,255,255,.75);border:1px solid rgba(20,33,58,.08);color:#0f1b2d;border-radius:14px;box-shadow:0 4px 12px -6px rgba(60,52,40,.35),inset 0 1px 0 #fff}
+.nightbtn{background:linear-gradient(160deg,#1e3658,#0f1b2d);border-color:transparent}
+/* Glaskarten */
+.panel,.card,.tile,.call,.detail,.rowlink,.modal .box{background:linear-gradient(145deg,var(--glass) 0%,var(--glass2) 100%);border:1px solid var(--gb);
+ backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);
+ box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(60,52,40,.06),0 18px 36px -20px rgba(60,52,40,.40);border-radius:24px}
+.panel .tile,.panel .call,.panel .rowlink,.detail .call,.detail .rowlink{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.55);border-color:rgba(255,255,255,.9)}
+.modal .box{background:rgba(250,248,244,.94)}
+.detail .dhd{border-bottom:1px solid rgba(20,33,58,.06)}
+/* Symbole: helle Glaskörper mit farbiger Tönung, Piktogramm in kräftigem Ton */
+.blob{color:color-mix(in srgb,var(--bc,#dbe3ef) 28%,#0f1b2d);
+ background:radial-gradient(90% 70% at 30% 15%,rgba(255,255,255,.95),rgba(255,255,255,0) 55%),linear-gradient(150deg,color-mix(in srgb,var(--bc,#dbe3ef) 85%,#fff),color-mix(in srgb,var(--bc,#dbe3ef) 100%,#7d8aa0 10%));
+ border:1px solid rgba(255,255,255,.95);
+ box-shadow:inset 0 -3px 8px color-mix(in srgb,var(--bc,#dbe3ef) 60%,rgba(0,0,0,.08)),0 12px 22px -12px color-mix(in srgb,var(--bc,#dbe3ef) 50%,#3c3428),0 2px 4px -1px rgba(60,52,40,.12);filter:saturate(1.35)}
+.blob:after{display:block;opacity:.7}
+.blob svg{filter:none;stroke-width:2}
+.cat span{color:#14213a;font-weight:600}
+.cat small{color:#6b7584}
+.sec{color:#4b5668}
+/* Knöpfe */
+.btn{background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.95);color:#14213a;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(60,52,40,.08),0 8px 18px -12px rgba(60,52,40,.45)}
+.btn:active{background:rgba(255,255,255,.95)}
+.btn.primary{color:#1a1400;border-color:rgba(217,164,0,.5)}
+.chip{background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.95);color:#2a3850;box-shadow:0 4px 10px -8px rgba(60,52,40,.5)}
+.chip.on{background:linear-gradient(170deg,#24406a,#0f1b2d);color:#fff;border-color:transparent}
+.seg{background:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.85);box-shadow:inset 0 1px 3px rgba(60,52,40,.12)}
+.seg button{color:#6b7584}
+.seg button.on{background:#fff;color:#0f1b2d;box-shadow:0 1px 2px rgba(60,52,40,.10),0 8px 18px -10px rgba(60,52,40,.45)}
+/* Eingaben */
+.inp,.sbody textarea,.field input,.field select,.hutool select,.abform select,.abform textarea{background:rgba(255,255,255,.8);border:1px solid rgba(20,33,58,.10);color:#14213a;box-shadow:inset 0 1px 2px rgba(60,52,40,.08)}
+.inp:focus,.sbody textarea:focus,.abform textarea:focus,.abform select:focus{border-color:#d9a400;box-shadow:0 0 0 3px rgba(242,194,48,.28)}
+/* Hinweise und Tabellen */
+.note,.tip,.say{background:rgba(255,255,255,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.tbl{border-color:rgba(20,33,58,.10);background:rgba(255,255,255,.5)}
+.tbl th{background:rgba(15,27,45,.06)}
+/* Navigation: schwebendes helles Glas */
+nav{background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.95);backdrop-filter:blur(24px) saturate(1.7);-webkit-backdrop-filter:blur(24px) saturate(1.7);box-shadow:inset 0 1px 0 #fff,0 18px 40px -16px rgba(60,52,40,.55)}
+nav a{color:#7a8494}
+nav a.on{color:#0f1b2d}
+nav a.on svg{background:linear-gradient(180deg,#ffe07a,#f2c230);color:#0f1b2d;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 6px 14px -6px rgba(217,164,0,.7)}
+.vccard{background:linear-gradient(145deg,#1e3658,#0f1b2d);border:1px solid rgba(255,255,255,.5);box-shadow:0 18px 36px -18px rgba(15,27,45,.6)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.panel,.card,.detail,.modal .box,nav,header{background:#faf8f4}}
+/* Nachtmodus bleibt dunkel */
+.back svg,.search svg{stroke:#0f1b2d}
+html.night .back svg,html.night .search svg{stroke:#fff}
+html.night body{background:#05080d}
+html.night header{background:#000;color:#fff;border-color:#111}
+html.night .htitle b{color:#d9dee6}
+html.night :is(.panel,.card,.tile,.call,.detail,.rowlink,.modal .box,nav,.btn,.chip,.seg,.inp,.note,.say,.tip){background:#0c121c;border-color:#1b2533;box-shadow:none;color:#d9dee6}
+html.night .cat span{color:#d9dee6}
+html.night .search input{background:#0c121c;border-color:#1b2533;color:#d9dee6}
+html.night .seg button.on{background:#1b2533;color:#d9dee6;box-shadow:none}
+html.night .seg button{color:#8792a3}
+html.night nav a.on svg{background:#3a2a10;color:#e3cf8f;box-shadow:none}
+html.night .blob{filter:brightness(.55)}
+/* ===== Kacheln: einzelne Glaskarten mit runden Glas-Symbolen ===== */
+.panel:has(> .cats){background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0}
+.cats{gap:10px}
+.cat{background:linear-gradient(160deg,rgba(255,255,255,.72),rgba(255,255,255,.46));border:1px solid rgba(255,255,255,.95);border-radius:22px;
+ backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
+ box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(70,60,110,.06),0 14px 28px -18px rgba(70,60,110,.45);padding:16px 6px 14px;gap:10px;min-height:132px;justify-content:flex-start;transition:transform .14s,box-shadow .14s}
+.cat:active{transform:scale(.97);box-shadow:inset 0 1px 0 #fff,0 4px 10px -8px rgba(70,60,110,.5)}
+.cat .blob,.blob{border-radius:50%!important}
+.cat .blob{width:54px;height:54px;color:#14213a;
+ background:radial-gradient(80% 70% at 32% 20%,#fff 0,rgba(255,255,255,0) 60%),linear-gradient(160deg,color-mix(in srgb,var(--bc,#e3e1ec) 30%,#fff),color-mix(in srgb,var(--bc,#e3e1ec) 60%,#ecebf1));
+ border:1px solid rgba(255,255,255,.95);
+ box-shadow:inset 0 -2px 5px rgba(70,60,110,.08),inset 0 1px 0 #fff,0 6px 14px -8px rgba(70,60,110,.45);filter:none}
+.cat .blob:after{display:none}
+.cat .blob svg{width:24px;height:24px;stroke-width:1.9}
+.cat:active .blob{transform:none}
+.cat span{font-size:13px;font-weight:600;color:#14213a}
+.cat small{font-size:11px;color:#7a8191}
+.cat .favdot{top:8px;right:10px}
+.addtile{background:rgba(255,255,255,.25)!important;border:1.5px dashed rgba(120,110,170,.45)!important;box-shadow:none!important}
+html.night .cat{background:#0c121c;border-color:#1b2533;box-shadow:none}
+html.night .cat .blob{background:#141c28;border-color:#1b2533;box-shadow:none;color:#c9ced8}
+/* ===== Design 5: Begrüßung, Schicht-Info und Ring-Kacheln ===== */
+.hero{margin:2px 0 14px}
+.herotop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 4px 12px}
+.herohi small{display:block;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#6b7584;font-weight:600}
+.herohi b{display:block;font-size:22px;line-height:1.15;font-weight:800;letter-spacing:-.01em;color:#0f1b2d;text-transform:uppercase}
+.heroav{all:unset;box-sizing:border-box;cursor:pointer;flex:none;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;text-decoration:none;font-weight:800;font-size:15px;color:#0f1b2d;
+ background:radial-gradient(80% 70% at 30% 20%,#fff,rgba(255,255,255,0) 60%),linear-gradient(160deg,#ffe38a,#f2c230 55%,#d9a400);border:2px solid #fff;box-shadow:0 8px 18px -8px rgba(217,164,0,.8),0 0 0 4px rgba(242,194,48,.18)}
+.heroshift{position:relative;overflow:hidden;text-align:center;padding:16px 16px 14px;border-radius:26px;
+ background:linear-gradient(160deg,rgba(255,255,255,.78),rgba(255,255,255,.45));border:1px solid rgba(255,255,255,.95);
+ backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:inset 0 1px 0 #fff,0 20px 40px -22px rgba(70,60,110,.55)}
+.heroshift:before{content:"";position:absolute;inset:auto -20% -60% -20%;height:120%;background:radial-gradient(closest-side,rgba(150,135,205,.25),transparent);pointer-events:none}
+.herolbl{position:relative;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a07a00}
+.heroclock{position:relative;font-size:58px;line-height:1.05;font-weight:800;letter-spacing:-.02em;color:#0f1b2d;font-variant-numeric:tabular-nums;margin-top:2px}
+.herodate{position:relative;font-size:13.5px;color:#5f6b7d;font-weight:500}
+.herometa{position:relative;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.herometa>*{font-size:12.5px;font-weight:700;letter-spacing:.04em;padding:5px 12px;border-radius:999px;background:rgba(15,27,45,.06);color:#26344c;text-decoration:none}
+.herostat.on{background:linear-gradient(180deg,#ffe07a,#f2c230);color:#1a1400;box-shadow:0 6px 14px -8px rgba(217,164,0,.8)}
+/* Ring-Kacheln: runde Glas-Knöpfe mit Leuchtring, keine Karte */
+.cat{background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;min-height:0;padding:6px 2px 12px;gap:9px}
+.cat:active{transform:none;box-shadow:none}
+.cats{gap:8px 4px}
+.cat .blob{width:74px;height:74px;color:#0f1b2d;border:2.5px solid transparent;
+ background:radial-gradient(75% 60% at 32% 18%,rgba(255,255,255,.98),rgba(255,255,255,0) 62%) padding-box,linear-gradient(165deg,color-mix(in srgb,var(--bc,#e3e1ec) 40%,#fff),color-mix(in srgb,var(--bc,#e3e1ec) 75%,#e6e4ee)) padding-box,
+  linear-gradient(145deg,#ffe07a 0%,#f2c230 22%,#8f84c9 58%,#1e3658 100%) border-box;
+ box-shadow:0 0 0 5px rgba(255,255,255,.55),0 0 22px -4px rgba(143,132,201,.55),0 14px 24px -12px rgba(30,54,88,.55),inset 0 -4px 10px rgba(70,60,110,.10);transition:transform .14s,box-shadow .14s}
+.cat .blob svg{width:30px;height:30px;stroke-width:1.9}
+.cat:active .blob{transform:scale(.93);box-shadow:0 0 0 5px rgba(255,255,255,.55),0 0 30px -2px rgba(242,194,48,.65),0 6px 12px -8px rgba(30,54,88,.55)}
+.cat span{font-size:12.5px;font-weight:800;letter-spacing:.02em;color:#14213a}
+.cat small{font-size:11px;font-weight:500}
+.addtile{background:none!important;border:0!important}
+.addtile .blob{background:rgba(255,255,255,.4)!important;border:2px dashed rgba(120,110,170,.5)!important;box-shadow:none!important}
+html.night .heroshift{background:#0c121c;border-color:#1b2533;box-shadow:none}
+html.night .heroclock,html.night .herohi b{color:#d9dee6}
+html.night .cat{background:none}
+html.night .cat .blob{border:2px solid #2a2410;background:#101824;box-shadow:none}
+/* ===== Design 5.1 ===== */
+/* fester Hintergrund (auch auf dem iPhone), Inhalte gleiten darüber */
+html,body{background:#d9d7e1}
+body{background:transparent}
+body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+  radial-gradient(240px 240px at 6% 8%,rgba(132,112,200,.55),transparent 72%),
+  radial-gradient(300px 300px at 100% 24%,rgba(150,128,210,.50),transparent 72%),
+  radial-gradient(220px 220px at 88% 3%,rgba(242,194,48,.28),transparent 72%),
+  radial-gradient(320px 320px at 10% 60%,rgba(120,100,190,.45),transparent 72%),
+  radial-gradient(300px 300px at 95% 90%,rgba(145,122,205,.50),transparent 72%),
+  radial-gradient(220px 220px at 45% 40%,rgba(255,255,255,.35),transparent 72%),
+  linear-gradient(180deg,#e2e0e8 0%,#d9d6e1 55%,#d0ccda 100%)}
+html.night body:before{background:#05080d}
+/* Themen / Werkzeuge / Berichte eingerahmt */
+.panel:has(> .cats){background:linear-gradient(150deg,rgba(255,255,255,.50),rgba(255,255,255,.22));border:1px solid rgba(255,255,255,.85);border-radius:28px;padding:14px 8px 4px;
+ backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 22px 44px -26px rgba(60,45,110,.55)}
+html.night .panel:has(> .cats){background:#0a0f17;border-color:#1b2533;box-shadow:none}
+/* Glas-Symbole: transparenter, Hintergrund schimmert durch */
+.cat .blob{background:radial-gradient(75% 60% at 32% 18%,rgba(255,255,255,.95),rgba(255,255,255,0) 60%) padding-box,linear-gradient(165deg,color-mix(in srgb,var(--bc,#e3e1ec) 30%,rgba(255,255,255,.55)),color-mix(in srgb,var(--bc,#e3e1ec) 45%,rgba(255,255,255,.18))) padding-box,
+  linear-gradient(145deg,#ffe07a 0%,#f2c230 22%,#8f84c9 58%,#1e3658 100%) border-box;
+ backdrop-filter:blur(8px) saturate(1.6);-webkit-backdrop-filter:blur(8px) saturate(1.6);
+ box-shadow:0 0 0 5px rgba(255,255,255,.35),0 0 24px -4px rgba(143,132,201,.65),0 16px 26px -12px rgba(30,40,88,.6),inset 0 -6px 12px rgba(70,60,110,.14),inset 0 2px 3px rgba(255,255,255,.8)}
+.cat .mprog{display:none}
+/* QR-Knopf oben links */
+.badge.qrbtn{all:unset;box-sizing:border-box;cursor:pointer;flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#0f1b2d;
+ background:radial-gradient(80% 70% at 30% 20%,rgba(255,255,255,.9),rgba(255,255,255,0) 60%),linear-gradient(160deg,#ffe38a,#f2c230 55%,#d9a400);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -2px 4px rgba(120,80,0,.25),0 8px 18px -8px rgba(217,164,0,.85);transition:transform .12s}
+.badge.qrbtn:after{display:none}
+.badge.qrbtn:active{transform:scale(.92)}
+.badge.qrbtn svg{width:26px;height:26px}
+.badge.qrbtn[hidden]{display:none}
+/* ===== Design 5.2: weicher Verlauf oben dunkel (Nachtblau/Lila) nach unten hell ===== */
+body:before{background:linear-gradient(180deg,#1c1940 0%,#26245a 16%,#38357a 32%,#5a5596 50%,#8c87bb 68%,#bdb8d8 84%,#dcd9ea 100%)}
+html.night body:before{background:#05080d}
+header{background:linear-gradient(180deg,rgba(255,255,255,.80),rgba(255,255,255,.62))}
+/* lose Texte bekommen eine helle Glasfläche, damit sie auf jedem Teil des Verlaufs lesbar bleiben */
+.sec{width:fit-content;background:rgba(255,255,255,.78);color:#1e2540;padding:5px 13px 5px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.9);
+ backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 6px 16px -10px rgba(20,15,60,.6);margin:18px 2px 10px}
+.thead,.herotop{background:linear-gradient(150deg,rgba(255,255,255,.80),rgba(255,255,255,.60));border:1px solid rgba(255,255,255,.9);border-radius:20px;padding:12px 14px;
+ backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);box-shadow:inset 0 1px 0 #fff,0 14px 30px -18px rgba(20,15,60,.65)}
+.thead p{color:#3d4658}
+.herotop{margin:4px 0 12px}
+#app > p.small,#app > .small,.disclaimer{background:rgba(255,255,255,.74);border:1px solid rgba(255,255,255,.9);border-radius:16px;padding:10px 14px;color:#3d4658;
+ backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.panel:has(> .cats){background:linear-gradient(150deg,rgba(255,255,255,.58),rgba(255,255,255,.32))}
+html.night :is(.sec,.thead,.herotop,#app > p.small,.disclaimer){background:#0c121c;border-color:#1b2533;color:#c9ced8;box-shadow:none}
+/* ===== Design 5.3: Satin-Verlauf Nachtblau-Lila, oben dunkel nach unten hell ===== */
+body:before{background:
+  url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+  radial-gradient(120% 55% at 50% 0%,rgba(10,12,40,.55),transparent 70%),
+  linear-gradient(180deg,rgba(255,255,255,0) 40%,rgba(255,235,250,.10) 62%,rgba(255,255,255,0) 80%),
+  linear-gradient(180deg,#141a3d 0%,#1f2252 14%,#2f2c66 28%,#463c7c 44%,#62528f 60%,#8471a6 76%,#a593bd 90%,#b8a8cb 100%)}
+html.night body:before{background:#05080d}
+.seg{background:rgba(255,255,255,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}.seg button{color:#3d4658}
+html.night .seg{background:#0c121c}
+.heroav svg{width:26px;height:26px;display:block}.heroav:active{transform:scale(.92)}
+/* ===== Seitenübergänge ===== */
+@keyframes pgF{from{opacity:0;transform:translateX(34px)}to{opacity:1;transform:none}}
+@keyframes pgB{from{opacity:0;transform:translateX(-34px)}to{opacity:1;transform:none}}
+#app.pg-f{animation:pgF .32s cubic-bezier(.2,.8,.2,1)}
+#app.pg-b{animation:pgB .32s cubic-bezier(.2,.8,.2,1)}
+/* Abenddämmerung: Hintergrund etwas dunkler */
+html.dusk body:before{filter:brightness(.78) saturate(1.1)}
+/* Einheitliche Piktogramme: Nachtblau mit goldenem Akzent */
+.cat .blob svg,.thead .blob svg,.dhd .blob svg{color:#14213a}
+.cat .blob svg > :last-child:not(:only-child),.thead .blob svg > :last-child:not(:only-child),.dhd .blob svg > :last-child:not(:only-child){stroke:#c48d00}
+html.night .cat .blob svg > :last-child{stroke:#8a7430}
+/* Einführung */
+.intro{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:rgba(12,14,40,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:pgF .3s ease}
+.introbox{width:100%;max-width:420px;max-height:86vh;overflow:auto;background:linear-gradient(160deg,rgba(255,255,255,.96),rgba(245,243,252,.92));border:1px solid #fff;border-radius:26px;padding:20px 18px 16px;box-shadow:0 30px 60px -20px rgba(10,10,40,.7);color:#14213a}
+.introbox h3{margin:6px 0 8px;font-size:21px;letter-spacing:-.01em}
+.introbody p{margin:8px 0}.introbody .ok{color:#1d8a50;font-weight:700}
+.introdots{display:flex;gap:6px;justify-content:center}.introdots i{width:8px;height:8px;border-radius:50%;background:#d6d2e6}.introdots i.on{width:22px;border-radius:4px;background:linear-gradient(90deg,#f2c230,#d9a400)}
+.introbtns{justify-content:space-between;margin-top:14px}
+.introos{margin:6px 0 8px}
+html.night .introbox{background:#0c121c;color:#d9dee6;border-color:#1b2533}
 html.night{--bg:#05080d;--card:#0c121c;--ink:#d9dee6;--muted:#8792a3;--line:#1b2533;--chip:#121a26;--navy:#000;color-scheme:dark;filter:brightness(.72) sepia(.45) saturate(1.4) hue-rotate(-12deg)}
 html.night .seg{background:#121a26}
 html.night .blob{filter:brightness(.6) saturate(.9)}
@@ -564,7 +770,7 @@ html.night .wvzbar:not(.on){background:#2a2410;color:#e3cf8f;border-color:#4d422
 html.night img,html.night video{filter:brightness(.85)}
 .nightbtn{all:unset;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;border-radius:8px;background:#1d2b42;flex:none;font-size:17px}
 html.night .nightbtn{background:#3a2a10}
-.badge.lhs{background:#fff;padding:2px;width:38px;height:38px;border-radius:10px;box-shadow:inset 0 1px 0 #fff,0 4px 12px -4px rgba(0,0,0,.6)}.badge.lhs:after{display:none}.badge.lhs img{width:100%;height:100%;object-fit:contain;display:block}html.night .badge.lhs{filter:brightness(.8)}
+.badge.lhs{background:#fff;padding:2px;width:42px;height:42px;border-radius:12px;box-shadow:inset 0 1px 0 #fff,0 6px 14px -6px rgba(0,0,0,.45)}.badge.lhs:after{display:none}.badge.lhs img{width:100%;height:100%;object-fit:contain;display:block}html.night .badge.lhs{filter:brightness(.8)}
 </style>
 </head>
 <body>
@@ -1144,6 +1350,8 @@ const grid = (items, list) => `<div class="panel"><div class="cats"${list ? ` da
 /* ================== Router ================== */
 let view = 'start', themeId = null, openCard = null, cardId = null, massId = null;
 function route(){
+  // offenes Eingabefeld zuerst schließen, damit seine Änderung noch beim alten Bericht landet
+  try { const ae = document.activeElement; if(ae && ae !== document.body && ae.matches && ae.matches('input,textarea,select')) ae.blur(); } catch(e){}
   const h = location.hash.replace('#','') || 'start';
   qEl.value = '';
   if(h.startsWith('t-') && THEMES.find(t => t.id === h.slice(2))){ view = 'theme'; themeId = h.slice(2); }
@@ -1193,6 +1401,8 @@ function render(top){
   else if(view === 'notfall'){ setHeader('Notfall & Funk','Notruf, Nummern, Buchstabiertafel'); html = viewNotfall(); }
   else if(view === 'telefon'){ const g = TEL[telPath[0]], sb = g && g.subs[telPath[1]]; setHeader(sb ? sb.s : g ? g.g : 'Telefonliste', sb ? g.g : g ? 'Telefonliste' : 'Dienststellen und Bereitschaftsdienste'); html = viewTel(); }
   app.innerHTML = html;
+  if(NAV_DIR && !matchMedia('(prefers-reduced-motion: reduce)').matches){ app.classList.remove('pg-f', 'pg-b'); void app.offsetWidth; app.classList.add('pg-' + NAV_DIR); }
+  NAV_DIR = null;
   if(['massnahmen','start','mass'].includes(view)) MASS.forEach(m => updProgress(m.id));
   if(top) window.scrollTo(0,0);
   huCheck();
@@ -1208,7 +1418,12 @@ $('#back').addEventListener('click', goBack);
   addEventListener('touchmove', e => { if(sx == null) return; const t = e.touches[0], dx = t.clientX - sx; if(Math.abs(t.clientY - sy) > 60){ sx = null; hint.style.opacity = 0; return; } hint.style.opacity = Math.min(1, dx / 90); }, {passive:true});
   addEventListener('touchend', e => { if(sx == null) return; const t = e.changedTouches[0], dx = t.clientX - sx; hint.style.opacity = 0; sx = null; if(dx > 80 && Math.abs(t.clientY - sy) < 60) goBack(); }, {passive:true});
 })();
-window.addEventListener('hashchange', () => { if(!document.body.classList.contains('locked')) route(); });
+let NAV_STACK = [location.hash], NAV_DIR = null;
+window.addEventListener('hashchange', () => {
+  const h = location.hash;
+  if(NAV_STACK.length > 1 && NAV_STACK[NAV_STACK.length - 2] === h){ NAV_STACK.pop(); NAV_DIR = 'b'; } else { NAV_STACK.push(h); if(NAV_STACK.length > 60) NAV_STACK.shift(); NAV_DIR = 'f'; }
+  if(!document.body.classList.contains('locked')) route();
+});
 const go = h => { if(location.hash === h) route(); else location.hash = h; };
 
 /* ================== Start ================== */
@@ -1227,11 +1442,11 @@ function azuGrid(ids, extra){
 }
 function viewStart(){
   const seg = `<div class="seg"><button class="${startTab==='kat'?'on':''}" data-tab="kat">Kategorien</button><button class="${startTab==='fav'?'on':''}" data-tab="fav">Favoriten${FAVS.length ? ' ('+FAVS.length+')' : ''}</button></div>`;
-  if(startTab === 'fav') return seg + viewFavs() + disclaimer();
+  if(startTab === 'fav') return startHero() + seg + viewFavs() + disclaimer();
   const mW = mastery(QW), mK = mastery(QK);
   const azu = THEMES.filter(t => AZUBI_IDS.includes(t.id));
-  return seg + (typeof wvzBanner === 'function' ? wvzBanner(true) : '') + `<div class="sec">Themen</div>` + grid([tile('#azubi', 'i_azubi', '#fde7c8', 'Ausbildung (Azubis)', azu.length + ' Themen · ' + azu.reduce((n, t) => n + t.cards.length, 0) + ' Seiten')].concat(THEMES.map((t,i) => AZUBI_IDS.includes(t.id) ? '' : tile('#t-'+t.id, t.icon, t.bg, esc(t.t), t.cards.length + ' Seiten', '', {si:i, ek:'editTheme', ea:t.id})).filter(Boolean)), 'themes')
-  + `<div class="sec">Werkzeuge</div>` + grid([
+  const themen = `<div class="sec">Themen</div>` + grid([tile('#azubi', 'i_azubi', '#fde7c8', 'Ausbildung (Azubis)', azu.length + ' Themen · ' + azu.reduce((n, t) => n + t.cards.length, 0) + ' Seiten')].concat(THEMES.map((t,i) => AZUBI_IDS.includes(t.id) ? '' : tile('#t-'+t.id, t.icon, t.bg, esc(t.t), t.cards.length + ' Seiten', '', {si:i, ek:'editTheme', ea:t.id})).filter(Boolean)), 'themes');
+  const werkzeuge = `<div class="sec">Werkzeuge</div>` + grid([
      tile('#berichte','i_sign','#e5dcf3','Berichte', 'Antreffbericht · Word'),
      tile('#zeichen','zeichen',null,'Verkehrs&shy;zeichen', VZ.length + ' Zeichen'),
      tile('#dolmetscher','i_dolm','#dbe7fb','Dolmetscher', DOL_LANGS.length + ' Sprachen · vorlesen'),
@@ -1241,6 +1456,8 @@ function viewStart(){
      tile('#bubatz','i_leaf','#dcefdc','Cannabis-Karte', 'Bubatzkarte mit Standort'),
      tile('#telefon','telefon',null,'Telefonliste', TEL.reduce((n,g) => n + telCount(g), 0) + ' Nummern'),
      tile('#notfall','notfall',null,'Notfall & Funk','Notruf, ABC')])
+;
+  return startHero() + seg + (typeof wvzBanner === 'function' ? wvzBanner(true) : '') + werkzeuge + themen
   + disclaimer() + edEntry();
 }
 function viewFavs(){
@@ -1318,6 +1535,8 @@ function telList(){
   const w = telQuery.toLowerCase().split(/\s+/).filter(Boolean);
   const out = [];
   TEL.forEach(g => g.subs.forEach(sb => { const it = sb.items.filter(([n,nr]) => w.every(x => (g.g+' '+sb.s+' '+n+' '+nr).toLowerCase().includes(x))); if(it.length) out.push(`<div class="sec">${esc(g.g)} › ${esc(sb.s)}</div>${it.map(telRow).join('')}`); }));
+  const ow = ownNums().filter(o => o.nr && w.every(x => (o.n + ' ' + o.nr).toLowerCase().includes(x)));
+  if(ow.length) out.unshift(`<div class="sec">Eigene Nummern</div>${ow.map(o => telRow([o.n || 'Eigene Nummer', o.nr])).join('')}`);
   return out.join('') || '<p class="small" style="text-align:center;padding:20px">Kein Treffer.</p>';
 }
 function telFolders(){
@@ -1328,25 +1547,31 @@ function telFolders(){
   if(EDIT) return telEditRows(gi, si);
   return g.subs[si].items.map(telRow).join('') + (g.note ? `<p class="small">${esc(g.note)}</p>` : '');
 }
+// Eigene Nummern (nur auf diesem Gerät, ohne Vorschläge)
+const OWN_OLD = ['Städt. Vollzugsdienst / Tiernotdienst (6–22 Uhr)', 'Leitstelle / Wache', 'Nachsuchengespann'];
+const ownNums = () => (store.get('nums', []) || []).filter(o => o && (o.nr || (o.n && !OWN_OLD.includes(o.n))));
+function telOwn(){
+  const own = ownNums(), rows = own.length ? own : [{n:'', nr:''}];
+  return `<div class="sec">Eigene Nummern</div>
+   ${own.filter(o => o.nr).map(o => `<a class="call" href="tel:${esc(o.nr.replace(/[^0-9+]/g, ''))}"><div><span>${esc(o.n || 'Eigene Nummer')}</span><br><b style="font-size:18px">${esc(o.nr)}</b></div>${chev}</a>`).join('')}
+   <div class="card open"><div class="body" style="padding-top:12px"><b>Eigene Nummern eintragen</b> <span class="small">(nur auf diesem Gerät gespeichert)</span>
+    ${rows.map((o, i) => `<div class="field"><input style="flex:1.4" data-numn="${i}" value="${esc(o.n)}" placeholder="Bezeichnung" autocomplete="off" autocorrect="off" spellcheck="false"><input data-numr="${i}" value="${esc(o.nr)}" placeholder="Nummer" inputmode="tel" autocomplete="off"></div>`).join('')}
+    <div class="row"><button class="btn primary" id="saveNums">Speichern</button><button class="btn" id="addNum">+ Zeile</button></div></div></div>`;
+}
 function viewTel(){
   return `<div class="field" style="margin-top:0"><input id="telq" placeholder="Nummer suchen, z. B. Revier 6" value="${esc(telQuery)}"></div>
    <div id="telOut" style="margin-top:12px">${telQuery.trim() ? telList() : telFolders()}</div>
-   <p class="small">Stand: FLS-Telefonliste Mai 2026, nur Dienststellen und Funktionsnummern. Eigene Nummern unter Notfall & Funk. Interne Nummern („intern“) nur aus dem Stadtnetz.</p>${disclaimer()}`;
+   ${!telQuery.trim() && telPath[0] === undefined ? telOwn() : ''}
+   <p class="small">Stand: FLS-Telefonliste Mai 2026, nur Dienststellen und Funktionsnummern. Interne Nummern („intern“) nur aus dem Stadtnetz.</p>${disclaimer()}`;
 }
 
 /* ================== Notfall ================== */
 function viewNotfall(){
-  const own = store.get('nums', [{n:'Städt. Vollzugsdienst / Tiernotdienst (6–22 Uhr)', nr:''},{n:'Leitstelle / Wache', nr:''},{n:'Nachsuchengespann', nr:''}]);
   const ehI = THEMES.findIndex(t => t.id === 'erstehilfe');
   return (typeof sosCard === 'function' ? sosCard() : '') + `<div class="sec">Notruf</div>
    <a class="call red" href="tel:110"><div><span>Polizei</span><br><b>110</b></div>${chev}</a>
    <a class="call red" href="tel:112"><div><span>Feuerwehr / Rettungsdienst</span><br><b>112</b></div>${chev}</a>
    ${ehI >= 0 ? `<a class="call" href="#t-erstehilfe"><div><span>Nachschlagen</span><br><b>⛑️ Erste Hilfe</b><br><small class="small">Wiederbelebung, Blutung, Seitenlage, Schock …</small></div>${chev}</a>` : ''}
-   <div class="sec">Eigene Nummern</div>
-   ${own.filter(o => o.nr).map(o => `<a class="call" href="tel:${esc(o.nr.replace(/\s/g,''))}"><div><span>${esc(o.n)}</span><br><b style="font-size:20px">${esc(o.nr)}</b></div>${chev}</a>`).join('')}
-   <div class="card open"><div class="body" style="padding-top:12px"><b>Nummern eintragen</b> <span class="small">(werden nur auf diesem Gerät gespeichert)</span>
-    ${own.map((o,i) => `<div class="field"><input style="flex:1.4" data-numn="${i}" value="${esc(o.n)}" placeholder="Bezeichnung"><input data-numr="${i}" value="${esc(o.nr)}" placeholder="Nummer" inputmode="tel"></div>`).join('')}
-    <div class="row"><button class="btn primary" id="saveNums">Speichern</button><button class="btn" id="addNum">+ Zeile</button></div></div></div>
    <div class="sec">Notruf absetzen (5 W)</div>
    <div class="card open"><div class="body" style="padding-top:12px"><ol class="num"><li><b>Wo</b> ist es passiert?</li><li><b>Was</b> ist passiert?</li><li><b>Wie viele</b> Verletzte oder Beteiligte?</li><li><b>Welche</b> Verletzungen bzw. Gefahren (Waffen)?</li><li><b>Warten</b> auf Rückfragen.</li></ol></div></div>
    <div class="sec">Lagemeldung per Funk</div>
@@ -1503,7 +1728,7 @@ app.addEventListener('click', e => {
   if(e.target.id === 'saveNums' || e.target.id === 'addNum'){
     const rows = [...document.querySelectorAll('[data-numn]')].map(inp => ({n: inp.value.trim(), nr: document.querySelector(`[data-numr="${inp.dataset.numn}"]`).value.trim()})).filter((o,i,a) => o.n || o.nr || e.target.id === 'addNum');
     if(e.target.id === 'addNum') rows.push({n:'', nr:''});
-    store.set('nums', rows); render(false); return; }
+    store.set('nums', rows); if(e.target.id === 'saveNums') toast('Nummern gespeichert'); render(false); return; }
   const c1 = e.target.closest('[data-qcat]'); if(c1){ quiz.cat = c1.dataset.qcat; quiz.grp = 'Alle'; quizRender(false); return; }
   const c2 = e.target.closest('[data-qgrp]'); if(c2){ quiz.grp = c2.dataset.qgrp; quizRender(false); return; }
   const c3 = e.target.closest('[data-qtyp]'); if(c3){ quiz.typ = c3.dataset.qtyp; quizRender(false); return; }
@@ -1555,7 +1780,7 @@ function showGate(){
   g.querySelector('form').addEventListener('submit', e => {
     e.preventDefault();
     const v = g.querySelector('#gpw').value;
-    if(pwHash(v) === D.pw){ store.set('unlock', D.pw); g.remove(); document.body.classList.remove('locked'); route(); }
+    if(pwHash(v) === D.pw){ store.set('unlock', D.pw); g.remove(); document.body.classList.remove('locked'); route(); setTimeout(() => { if(!store.get('introDone', false)) showIntro(); }, 500); }
     else { g.querySelector('#gerr').textContent = 'Falsches Passwort.'; g.querySelector('#gpw').select(); }
   });
   setTimeout(() => g.querySelector('#gpw').focus(), 100);
@@ -1568,10 +1793,91 @@ if(document.readyState === 'loading') document.addEventListener('DOMContentLoade
 /* Nachtmodus: dunkle, gedimmte Ansicht für den Nachtdienst */
 (() => { const b = document.getElementById('nightBtn'); if(!b) return;
   const set = on => { document.documentElement.classList.toggle('night', on); store.set('night', on); b.textContent = on ? '☀️' : '🌙'; b.setAttribute('aria-label', on ? 'Nachtmodus aus' : 'Nachtmodus an');
-    const m = document.querySelector('meta[name=theme-color]'); if(m) m.content = on ? '#000000' : '#0f1b2d'; };
+    const m = document.querySelector('meta[name=theme-color]'); if(m) m.content = on ? '#000000' : '#141a3d'; };
+  window.nightSet = set;
   set(!!store.get('night', false));
   b.addEventListener('click', () => { set(!document.documentElement.classList.contains('night')); toast(document.documentElement.classList.contains('night') ? 'Nachtmodus an' : 'Nachtmodus aus'); });
 })();
+
+/* Start: Begrüßung + Schicht-Info */
+const HERO_TAGE = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'], HERO_MON = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+function heroTime(){ const d = new Date(), p = n => String(n).padStart(2, '0'); return {t:p(d.getHours()) + ':' + p(d.getMinutes()), d:`${HERO_TAGE[d.getDay()]}, ${d.getDate()}. ${HERO_MON[d.getMonth()]} ${d.getFullYear()}`}; }
+function startHero(){
+  const v = typeof vcGet === 'function' ? vcGet() : {}, nm = [v.titel, (v.nachname || '').toUpperCase()].filter(Boolean).join(' ');
+  const ini = ((v.vorname || '')[0] || '') + ((v.nachname || '')[0] || '') || 'SVD';
+  const dg = v.dg ? 'Dienstgruppe ' + String(v.dg).replace(/^\s*(DG|Dienstgruppe)\s*/i, '') : 'Dienstgruppe –';
+  const w = typeof wvzStatus === 'function' ? wvzStatus() : null, h = heroTime();
+  return `<div class="hero">
+   <div class="herotop"><div class="herohi"><small>Willkommen,</small><b>${esc(nm || 'bitte Visitenkarte ausfüllen')}</b></div><button class="heroav" data-heroqr aria-label="Visitenkarte als QR-Code zeigen">${HERO_QR}</button></div>
+   <div class="heroshift"><span class="herolbl">Schicht-Info</span><div class="heroclock" id="heroClock">${h.t}</div><div class="herodate" id="heroDate">${h.d}</div>
+    <div class="herometa"><span>${esc(dg)}</span>${w ? `<a class="herostat${w.aktiv ? ' on' : ''}" href="#wvzkarte">WVZ: ${w.aktiv ? 'GILT' : 'nicht aktiv'}</a>` : ''}</div></div>
+  </div>`;
+}
+setInterval(() => { const c = document.getElementById('heroClock'); if(!c) return; const h = heroTime(); if(c.textContent !== h.t) c.textContent = h.t; const d = document.getElementById('heroDate'); if(d && d.textContent !== h.d) d.textContent = h.d; }, 5000);
+
+// QR-Knopf in der Begrüßung: Visitenkarte groß zeigen (oder zum Ausfüllen öffnen)
+const HERO_QR = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><path d="M14 14h3v3M21 14v.01M14 21h3M21 17v4M17.5 17.5h.01"/><rect x="5.6" y="5.6" width="1.8" height="1.8" fill="currentColor" stroke="none"/><rect x="16.6" y="5.6" width="1.8" height="1.8" fill="currentColor" stroke="none"/><rect x="5.6" y="16.6" width="1.8" height="1.8" fill="currentColor" stroke="none"/></svg>';
+document.addEventListener('click', e => { if(!e.target.closest('[data-heroqr]')) return;
+  const v = typeof vcGet === 'function' ? vcGet() : {};
+  if(typeof vcFull === 'function' && (v.vorname || v.nachname || v.tel || v.mobil || v.mail || v.mailWache)) vcFull(); else location.hash = '#visitenkarte';
+});
+
+/* Sonnenauf-/-untergang Stuttgart (NOAA-Näherung, offline) */
+function sunTimes(d, lat, lon){
+  lat = lat || 48.7758; lon = lon || 9.1829;
+  const rad = Math.PI / 180, day = Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(d.getFullYear(), 0, 0)) / 864e5);
+  const g = 2 * Math.PI / 365 * (day - 1);
+  const eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const ha = Math.acos(Math.cos(90.833 * rad) / (Math.cos(lat * rad) * Math.cos(decl)) - Math.tan(lat * rad) * Math.tan(decl)) / rad;
+  const base = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  return {rise:new Date(base + (720 - 4 * (lon + ha) - eq) * 6e4), set:new Date(base + (720 - 4 * (lon - ha) - eq) * 6e4)};
+}
+/* Automatischer Nachtmodus: 30 Min. nach Sonnenuntergang bis Sonnenaufgang; abends vorher etwas dunklerer Hintergrund */
+let NIGHT_AUTO_LAST = null;
+function nightAutoTick(force){
+  const now = new Date(), st = sunTimes(now), auto = store.get('nightAuto', true) !== false;
+  const nachts = now >= new Date(st.set.getTime() + 30 * 6e4) || now < st.rise;
+  const abend = !nachts && now >= new Date(st.set.getTime() - 60 * 6e4);
+  document.documentElement.classList.toggle('dusk', abend);
+  if(!auto){ NIGHT_AUTO_LAST = null; return; }
+  if(force || NIGHT_AUTO_LAST === null || NIGHT_AUTO_LAST !== nachts){ if(window.nightSet && (force || NIGHT_AUTO_LAST !== null || nachts !== !!store.get('night', false))) window.nightSet(nachts); NIGHT_AUTO_LAST = nachts; }
+}
+nightAutoTick(true); setInterval(() => nightAutoTick(false), 60000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) nightAutoTick(false); });
+document.addEventListener('change', e => { if(e.target.matches && e.target.matches('[data-nightauto]')){ store.set('nightAuto', e.target.checked); if(e.target.checked) nightAutoTick(true); toast(e.target.checked ? 'Nachtmodus schaltet automatisch' : 'Nachtmodus nur noch von Hand'); } });
+
+/* Einführung beim ersten Start (iPhone und Android) */
+const IS_IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IS_STANDALONE = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+function introSteps(){
+  const v = typeof vcGet === 'function' ? vcGet() : {};
+  const ios = `<ol class="num"><li>Unten in Safari auf <b>Teilen</b> (Quadrat mit Pfeil) tippen.</li><li><b>„Zum Home-Bildschirm“</b> wählen (ggf. nach unten scrollen).</li><li>Mit <b>„Hinzufügen“</b> bestätigen – die App startet dann im Vollbild.</li></ol>`;
+  const andr = `<ol class="num"><li>In Chrome oben rechts auf <b>⋮</b> tippen.</li><li><b>„Zum Startbildschirm hinzufügen“</b> bzw. <b>„App installieren“</b> wählen.</li><li>Bestätigen – das Symbol erscheint auf dem Startbildschirm.</li></ol>`;
+  return [
+    {t:'Willkommen beim SVD Streifenführer', b:`<p>Drei kurze Schritte, dann ist die App einsatzbereit. Alle Angaben bleiben <b>nur auf diesem Gerät</b>.</p>`},
+    {t:'1 · Visitenkarte ausfüllen', b:`<p>Name, Funktion, Dienstgruppe und Nebenstelle werden automatisch in alle Berichte übernommen und als QR-Visitenkarte geteilt.</p>${v.nachname ? '<p class="ok">✓ Bereits ausgefüllt</p>' : ''}<p><a class="btn primary" href="#visitenkarte" data-introclose>Visitenkarte öffnen</a></p>`},
+    {t:'2 · Signatur hinterlegen', b:`<p>Unterschrift einmal auf dem Display zeichnen oder ein Foto einer Unterschrift auf Papier importieren. Sie erscheint dann in den Berichten über dem Namen.</p>${v.sig ? '<p class="ok">✓ Signatur vorhanden</p>' : ''}<p><a class="btn primary" href="#visitenkarte" data-introclose data-introsig>Zur Signatur</a></p>`},
+    {t:'3 · Zum Homescreen hinzufügen', b:IS_STANDALONE() ? '<p class="ok">✓ Die App läuft bereits vom Homescreen.</p>' : `<div class="seg introos"><button class="${IS_IOS ? 'on' : ''}" data-introos="ios">iPhone</button><button class="${IS_IOS ? '' : 'on'}" data-introos="and">Android</button></div><div data-introtab="ios"${IS_IOS ? '' : ' hidden'}>${ios}</div><div data-introtab="and"${IS_IOS ? ' hidden' : ''}>${andr}</div><p class="small">Danach die App immer über das Symbol öffnen – so bleiben Berichte und Einstellungen erhalten.</p>`}
+  ];
+}
+function showIntro(){
+  if(document.getElementById('intro')) return;
+  const S = introSteps(); let i = 0;
+  const el = document.createElement('div'); el.id = 'intro'; el.className = 'intro';
+  const draw = () => { el.innerHTML = `<div class="introbox"><div class="introdots">${S.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div><h3>${S[i].t}</h3><div class="introbody">${S[i].b}</div>
+    <div class="row introbtns">${i > 0 ? '<button class="btn" data-intro="prev">Zurück</button>' : '<button class="btn" data-intro="skip">Überspringen</button>'}${i < S.length - 1 ? '<button class="btn primary" data-intro="next">Weiter</button>' : '<button class="btn primary" data-intro="done">Fertig</button>'}</div></div>`; };
+  draw(); document.body.appendChild(el);
+  const close = () => { store.set('introDone', true); el.remove(); };
+  el.addEventListener('click', e => {
+    const b = e.target.closest('[data-intro],[data-introos],[data-introclose]'); if(!b) return;
+    if(b.dataset.introos){ el.querySelectorAll('[data-introos]').forEach(x => x.classList.toggle('on', x === b)); el.querySelectorAll('[data-introtab]').forEach(x => x.hidden = x.dataset.introtab !== b.dataset.introos); return; }
+    if(b.hasAttribute('data-introclose')){ close(); if(b.hasAttribute('data-introsig')) setTimeout(() => { const s = document.getElementById('vcSigBox'); if(s) s.scrollIntoView({block:'center', behavior:'smooth'}); }, 400); return; }
+    const a = b.dataset.intro; if(a === 'next') i++; else if(a === 'prev') i--; else { close(); return; } draw();
+  });
+}
+setTimeout(() => { if(!store.get('introDone', false) && !document.body.classList.contains('locked')) showIntro(); }, 600);
+document.addEventListener('click', e => { if(e.target.closest('[data-introshow]')) showIntro(); });
 
 /* =========================================================
    AUSBILDER-MODUS: Bearbeiten ohne Programmierung
@@ -2175,9 +2481,12 @@ const abTitle = f => [f.name ? f.name.toUpperCase() : (f.firma || ''), f.vorname
 /* ---------- Ansichten ---------- */
 function viewBerichte(){
   const weg = abPurge(); if(weg) setTimeout(() => toast(`${weg} ${weg === 1 ? 'Bericht' : 'Berichte'} älter als 30 Tage automatisch gelöscht`), 50);
-  const list = abList();
+  const all = abList(), list = all.filter(r => !abIsEmpty(r));
+  if(list.length !== all.length) abSave(list); // leere Berichte (nichts eingetragen) still verwerfen
   return `<div class="thead">${ico('i_sign', '#e5dcf3')}<p>Berichte direkt auf dem Handy ausfüllen und als <b>Word- oder PDF-Datei</b> exportieren. Die Tagebuchnummer kann leer bleiben und auf der Wache ergänzt werden. Name, Funktion, Dienstgruppe, Nebenstelle und Signatur kommen aus der <a href="#visitenkarte">Visitenkarte</a>.</p></div>`
-   + grid([tile('#bericht/neu', 'i_sign', '#e5dcf3', 'Neuer Antreffbericht', 'Vorlage 32-21.1'), tile('#bericht/neu-abschlepp', 'i_tow', '#e5dcf3', 'Neue Abschleppmaßnahme', 'Vorlage 32-32.3'), tile('#bericht/neu-klein', 'i_warn', '#e5dcf3', 'Neue Standardanzeige', 'Müll, Schrottrad, Mängel …'), tile('#bericht/neu-tnd', 'i_paw', '#e5dcf3', 'Neuer TND-Bericht', 'Tiernotdienst'), tile('#bericht/neu-streife', 'i_route', '#e5dcf3', 'Neuer Streifenbericht', 'an 32-21.1, z. K. L-Einsatz'), tile('#bericht/neu-sonder', 'i_music', '#e5dcf3', 'Sondernutzungs&shy;anzeige', 'Straßenmusik, Betteln'), tile('#bericht/neu-vers', 'i_scooter', '#e5dcf3', 'Verstoß Pflicht&shy;versicherung', 'E-Scooter, Versicherungskennzeichen'), tile('#bericht/neu-akp', 'i_route', '#e5dcf3', 'AKP-Bericht', 'Sondereinsatz AKP und Umfeld'), tile('#bericht/neu-owi', 'i_euro', '#e5dcf3', 'Sammelbericht OWI-to-Go', 'Anzeigen & mdl. Verwarnungen'), tile('#bericht/neu-tierh', 'i_paw', '#e5dcf3', 'Tierhaltungs&shy;überprüfung', 'Haltung, Versorgung, Unterbringung'), tile('#bericht/neu-kampfh', 'i_dog', '#e5dcf3', 'Kampfhund&shy;kontrolle', 'Erlaubnis, Leine, Maulkorb')])
+   + `<div class="sec">Häufig</div>` + grid([tile('#bericht/neu', 'i_sign', '#e5dcf3', 'Neuer Antreffbericht', 'Vorlage 32-21.1'), tile('#bericht/neu-akp', 'i_route', '#e5dcf3', 'AKP-Bericht', 'Sondereinsatz AKP und Umfeld'), tile('#bericht/neu-sonder', 'i_music', '#e5dcf3', 'Sondernutzungs&shy;anzeige', 'Straßenmusik, Betteln')])
+   + `<div class="sec">Tiere</div>` + grid([tile('#bericht/neu-tnd', 'i_paw', '#e5dcf3', 'Neuer TND-Bericht', 'Tiernotdienst'), tile('#bericht/neu-tierh', 'i_paw', '#e5dcf3', 'Tierhaltungs&shy;überprüfung', 'Haltung, Versorgung, Unterbringung'), tile('#bericht/neu-kampfh', 'i_dog', '#e5dcf3', 'Kampfhund&shy;kontrolle', 'Erlaubnis, Leine, Maulkorb')])
+   + `<div class="sec">Weitere Berichte</div>` + grid([tile('#bericht/neu-abschlepp', 'i_tow', '#e5dcf3', 'Neue Abschleppmaßnahme', 'Vorlage 32-32.3'), tile('#bericht/neu-klein', 'i_warn', '#e5dcf3', 'Neue Standardanzeige', 'Müll, Schrottrad, Mängel …'), tile('#bericht/neu-streife', 'i_route', '#e5dcf3', 'Neuer Streifenbericht', 'an 32-21.1, z. K. L-Einsatz'), tile('#bericht/neu-vers', 'i_scooter', '#e5dcf3', 'Verstoß Pflicht&shy;versicherung', 'E-Scooter, Versicherungskennzeichen'), tile('#bericht/neu-owi', 'i_euro', '#e5dcf3', 'Sammelbericht OWI-to-Go', 'Anzeigen & mdl. Verwarnungen')])
    + (list.length ? `<div class="sec">Gespeicherte Berichte (${list.length})</div><p class="small" style="margin:-4px 0 8px">Nach links wischen: <b>Duplizieren</b> oder <b>Löschen</b>. Berichte werden 30 Tage nach der letzten Änderung automatisch gelöscht.</p>` + list.map(r => swWrap(r, r.typ === 'owi' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sammelbericht</span><br><b>OWI-to-Go & mdl. Verwarnungen</b><br><small class="small">${(() => { let o = 0, m = 0; OWI_ROWS.forEach((_, i) => { o += parseInt(r.f['o' + i], 10) || 0; m += parseInt(r.f['m' + i], 10) || 0; }); return o + ' OWI · ' + m + ' mdl.'; })()}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'tierh' || r.typ === 'kampfh' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · ${r.typ === 'tierh' ? 'Tierhaltungsüberprüfung' : 'Kampfhundkontrolle'}</span><br><b>${esc([r.f.name ? r.f.name.toUpperCase() : '', r.typ === 'kampfh' ? r.f.rasse : r.f.t0a].filter(Boolean).join(' · ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'akp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · AKP-Bericht</span><br><b>${esc([r.f.von, r.f.bis].filter(Boolean).join('–') || 'Sondereinsatz AKP')}${r.f.dg ? ' · DG ' + esc(r.f.dg) : ''}</b><br><small class="small">${esc(r.f.staerke || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'sonder' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Sondernutzung</span><br><b>${esc((SN_TYP[r.f.sTyp] || {t:'Art noch nicht gewählt'}).t)}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || r.f.spielort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'vers' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Pflichtversicherung</span><br><b>${esc(((r.f.vsNum || '') + ' ' + (r.f.vsBuch || '')).trim() || 'ohne Kennzeichen')}${r.f.name ? ' · ' + esc(r.f.name) : ''}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'streife' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Streifenbericht</span><br><b>${esc(r.f.gebiet || stRows(r.f).map(x => x.ort).filter(Boolean).slice(0, 2).join(', ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ek || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'tnd' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · TND-Bericht</span><br><b>${esc([r.f.vorgang, r.f.tierart].filter(Boolean).join(' · ') || 'ohne Angaben')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'klein' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Standardanzeige</span><br><b>${esc((kaType(r.f) || {}).t || 'Art noch nicht gewählt')}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : r.typ === 'abschlepp' ? `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Abschleppmaßnahme</span><br><b>${esc(r.f.kennz || 'ohne Kennzeichen')}</b><br><small class="small">${esc(r.f.ortAnkunft || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>` : `<a class="call" href="#bericht/${r.id}"><div><span>${esc(fmtD(r.f.datum))} · Antreffbericht · ${esc(r.f.art === 'Eigener Zusatz' ? (r.f.artFrei || '') : (r.f.art || 'ohne Art'))}</span><br><b>${esc(abTitle(r.f))}</b><br><small class="small">${esc(r.f.ort || '')}${r.exp ? ' · exportiert' : ''}</small></div>${chev}</a>`)).join('') : '')
    + (typeof bkCardHTML === 'function' ? bkCardHTML() : '')
    + `<div class="note" style="margin-top:14px"><b>Datenschutz:</b> Berichte liegen nur auf diesem Gerät. Ausweisfotos werden nicht gespeichert, nur der erkannte Text. Nach dem Export und der Abgabe auf der Wache den Bericht hier löschen. Möglichst nur auf dem Diensthandy nutzen.</div>` + disclaimer();
@@ -2303,6 +2612,7 @@ function abSetMany(o){ const r = abRec(); if(!r) return; Object.assign(r.f, o); 
 let abCur = null;
 const abHandler = e => {
   const t = e.target;
+  if(!t.isConnected) return; // Feld gehört zu einem bereits verlassenen Bericht
   if(t.dataset.p != null){ const p = abProfile(); p[t.dataset.p] = t.value; store.set('abprofil', p); return; }
   if(t.dataset.f != null && abCur) abSet(t.dataset.f, t.type === 'checkbox' ? t.checked : t.value);
 };
@@ -4290,6 +4600,16 @@ async function vsScan(file){
 /* Autolöschen auch beim App-Start */
 try { const n = abPurge(); if(n) setTimeout(() => toast(`${n} ${n === 1 ? 'Bericht' : 'Berichte'} älter als 30 Tage automatisch gelöscht`), 800); } catch(e){}
 
+/* Leere Berichte erkennen: nichts über die automatischen Vorgaben hinaus eingetragen */
+const AB_PRE = new Set(['datum', 'von', 'bis', 'sb', 'ek', 'funktion', 'unterschrift', 'nebenstelle', 'dg', 'an', 'zk', 'sigOn', 'tN']);
+const abVoid = v => v == null || v === '' || v === false || v === 0 || v === '0' || (Array.isArray(v) && !v.length) || (typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length);
+function abIsEmpty(r){
+  if(!r || !r.f) return true; if(r.exp) return false;
+  let b = null; try { b = r.blank ? JSON.parse(r.blank) : null; } catch(e){}
+  return Object.keys(r.f).every(k => AB_PRE.has(k) || abVoid(r.f[k]) || (b && JSON.stringify(b[k]) === JSON.stringify(r.f[k])));
+}
+{ const orig = abNew; abNew = function(typ){ const r = orig(typ); const l = abList(), x = l.find(y => y.id === r.id); if(x){ x.blank = JSON.stringify(x.f); abSave(l); r.blank = x.blank; } return r; }; }
+
 /* =========================================================
    SONDERNUTZUNGSANZEIGE: Straßenmusik und Betteln
    (Spielregeln nach Infoblatt Straßenmusik der LHS, Tatbestände nach Sonder-OWi-Sammlung 06.02.2026)
@@ -5124,6 +5444,11 @@ function viewVisitenkarte(){
      <h4 style="margin-top:18px">Kamera beim Scannen</h4>
      <label class="abck"><input type="checkbox" data-camlive${store.get('camlive', true) !== false ? ' checked' : ''}><span>Live-Kamera mit Suchrahmen</span></label>
      <p class="small">Aus: Es öffnet sich die normale Kamera-App ohne Suchrahmen – dafür fragt das Handy nie nach der Kamera-Freigabe. An: Die Freigabe wird höchstens einmal pro App-Start abgefragt.</p>
+     <h4 style="margin-top:18px">Nachtmodus</h4>
+     <label class="abck"><input type="checkbox" data-nightauto${store.get('nightAuto', true) !== false ? ' checked' : ''}><span>Automatisch: 30 Min. nach Sonnenuntergang an, bei Sonnenaufgang aus</span></label>
+     <p class="small">Der 🌙-Knopf oben schaltet jederzeit von Hand um. Eine Stunde vor Sonnenuntergang wird der Hintergrund bereits etwas dunkler.</p>
+     <h4 style="margin-top:18px">Einführung</h4>
+     <p><button class="btn" data-introshow>Einführung erneut zeigen</button></p>
      <p class="small">Wird automatisch gespeichert.</p>
     </div>
    </div></div>`;

@@ -1,0 +1,4 @@
+Lokal eingebundene Texterkennung (läuft vollständig auf dem Gerät):
+- tesseract.js 5.1.1, tesseract.js-core 5.1.1 – Apache License 2.0 (https://github.com/naptha/tesseract.js)
+- Tesseract-Sprachmodelle deu/eng (4.0.0_best_int) – Apache License 2.0 (https://github.com/tesseract-ocr/tessdata_best)
+- MRZ-Modell aus web-mrz-reader 2.0.3 – ISC License
